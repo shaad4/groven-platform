@@ -94,3 +94,26 @@ def test_websocket_rejects_other_client(tenant, client_user, client_profile, pro
         assert code == 4004
         await socket.disconnect()
     async_to_sync(check)()
+
+@pytest.mark.django_db
+def test_attachments_cannot_cross_request(tenant, client_profile, provider_user):
+    from apps.chat.repositories import MessageRepository
+    from apps.request_management.models import File
+    first = Request.objects.create(tenant=tenant, client=client_profile, provider=provider_user, title="One")
+    second = Request.objects.create(tenant=tenant, client=client_profile, provider=provider_user, title="Two")
+    own = File.objects.create(tenant=tenant, request=first, uploaded_by=provider_user, file_size_bytes=10, file_name="own")
+    other = File.objects.create(tenant=tenant, request=second, uploaded_by=provider_user, file_size_bytes=10, file_name="other")
+    deleted = File.objects.create(tenant=tenant, request=first, uploaded_by=provider_user, file_size_bytes=10, file_name="deleted", is_deleted=True)
+    message = MessageRepository.create(first, provider_user, "Files", [own.id, other.id, deleted.id])
+    assert list(message.attachments.values_list("file_id", flat=True)) == [own.id]
+
+
+@pytest.mark.django_db
+def test_chat_access_rejects_inactive_membership_and_wrong_tenant(tenant, pro_tenant, client_profile, client_user, client_membership, provider_user):
+    from apps.chat.access import get_chat_request
+    req = Request.objects.create(tenant=tenant, client=client_profile, provider=provider_user, title="Private")
+    assert get_chat_request(req.id, tenant, client_user) == req
+    assert get_chat_request(req.id, pro_tenant, client_user) is None
+    client_membership.is_active = False
+    client_membership.save()
+    assert get_chat_request(req.id, tenant, client_user) is None

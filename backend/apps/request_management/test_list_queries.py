@@ -16,6 +16,11 @@ def test_request_list_has_constant_query_count(tenant, client_profile, provider_
                             file_name="visible.txt", file_size_bytes=10)
         File.objects.create(tenant=tenant, request=req, uploaded_by=provider_user,
                             file_name="deleted.txt", file_size_bytes=10, is_deleted=True)
+    # Retain the pre-optimization query shape as a measurable baseline.
+    baseline = Request.objects.filter(tenant=tenant, is_deleted=False).select_related("client__user", "provider")
+    with CaptureQueriesContext(connection) as before:
+        RequestListSerializer(baseline, many=True).data
+    assert len(before) == count + 1
     with CaptureQueriesContext(connection) as queries:
         result = RequestListSerializer(RequestRepository.get_all_for_provider(tenant.id), many=True).data
     assert len(queries) == 1

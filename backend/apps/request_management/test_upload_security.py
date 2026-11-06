@@ -7,7 +7,7 @@ from apps.request_management.services import FileService
 
 
 @pytest.mark.django_db
-@pytest.mark.parametrize("tamper", [None, "key", "user", "name", "type", "size"])
+@pytest.mark.parametrize("tamper", [None, "key", "user", "name", "type", "size", "expired", "missing"])
 def test_upload_confirmation_binds_object(tenant, client_profile, provider_user, client_user, tamper):
     req = Request.objects.create(tenant=tenant, client=client_profile,
                                  provider=provider_user, title="Files")
@@ -30,6 +30,14 @@ def test_upload_confirmation_binds_object(tenant, client_profile, provider_user,
             args["file_type"] = "text/html"
         elif tamper == "size":
             args["file_size_bytes"] = 11
+        elif tamper == "expired":
+            from django.core import signing
+            with patch("django.core.signing.time.time", return_value=0):
+                payload = signing.dumps({}, salt="file-upload")
+            args["s3_key"] = f"tenants/{tenant.id}/requests/{req.id}/{payload}"
+        elif tamper == "missing":
+            from botocore.exceptions import ClientError
+            s3.head_object.side_effect = ClientError({"Error": {"Code": "404"}}, "HeadObject")
         if tamper:
             with pytest.raises(ValidationError):
                 FileService.confirm_upload(**args)
