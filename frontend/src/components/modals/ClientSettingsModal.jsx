@@ -251,7 +251,7 @@ function passwordStrength(pw) {
 
 //  Sections 
 
-function ProfileSection({ user, tenant }) {
+function ProfileSection({ user, tenant, onClose }) {
   const { colors } = useTenantBranding()
   const { accent, accentSoft, accentDark } = colors
   const [displayName, setDisplayName] = useState('')
