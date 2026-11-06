@@ -65,6 +65,8 @@ def _build_tenant_payload(tenant):
 
 
 class RefreshTokenView(APIView):
+    # A stale access header must not prevent validating the refresh cookie.
+    authentication_classes = []
     permission_classes = [AllowAny]
 
     def post(self, request):

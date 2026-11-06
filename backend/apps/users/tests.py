@@ -128,3 +128,16 @@ class TestUserViews:
         assert response.data["success"] is True
         assert response.data["data"]["needs_workspace"] is True
         assert "access" in response.data["data"]
+
+@pytest.mark.django_db
+def test_refresh_accepts_expired_access_header(api_client, provider_user):
+    from datetime import timedelta
+    from rest_framework_simplejwt.tokens import RefreshToken
+    refresh = RefreshToken.for_user(provider_user)
+    access = refresh.access_token
+    access.set_exp(lifetime=timedelta(seconds=-1))
+    api_client.credentials(HTTP_AUTHORIZATION=f"Bearer {access}")
+    api_client.cookies["refresh_token"] = str(refresh)
+    response = api_client.post("/api/auth/token/refresh/", {}, format="json")
+    assert response.status_code == 200
+    assert response.data["access"]
