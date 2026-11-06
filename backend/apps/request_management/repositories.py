@@ -1,4 +1,4 @@
-from django.db.models import Q
+from django.db.models import Count, Q
 from django.utils import timezone
 
 from apps.common.logger import logger
@@ -22,6 +22,7 @@ class RequestRepository:
                 tenant_id=tenant_id, is_deleted=False, client__is_deleted=False
             )
             .select_related("client__user", "provider")
+            .annotate(active_file_count=Count("files", filter=Q(files__is_deleted=False)))
             .order_by("-created_at")
         )
 
@@ -65,6 +66,7 @@ class RequestRepository:
                 tenant_id=tenant_id, client_id=client_id, is_deleted=False
             )
             .select_related("client__user", "provider")
+            .annotate(active_file_count=Count("files", filter=Q(files__is_deleted=False)))
             .order_by("-created_at")
         )
 

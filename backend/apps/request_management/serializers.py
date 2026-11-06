@@ -125,6 +125,8 @@ class RequestListSerializer(serializers.ModelSerializer):
         return obj.client.user.avatar_url if obj.client.user else None
 
     def get_file_count(self, obj):
+        if hasattr(obj, "active_file_count"):
+            return obj.active_file_count
         try:
             return obj.files.filter(is_deleted=False).count()
         except Exception:
