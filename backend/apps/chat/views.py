@@ -6,6 +6,7 @@ from rest_framework.views import APIView
 from apps.common.logger import logger
 from apps.request_management.models import Request
 
+from .access import get_chat_request
 from .repositories import MessageRepository
 from .serializers import MessageSerializer
 from .services import create_message, mark_messages_read
@@ -13,25 +14,11 @@ from .services import create_message, mark_messages_read
 # Create your views here.
 
 
-def _get_request_or_none(request_id, tenant):
-    try:
-        return Request.objects.get(
-            id=request_id,
-            tenant=tenant,
-            is_deleted=False,
-        )
-    except Request.DoesNotExist:
-        return None
-    except DatabaseError as e:
-        logger.error(f"[ChatViews._get_request_or_none] DB error: {e}")
-        return None
-
-
 class MessageListCreateView(APIView):
 
     def get(self, request, request_id):
         try:
-            req_obj = _get_request_or_none(request_id, request.tenant)
+            req_obj = get_chat_request(request_id, request.tenant, request.user)
             if req_obj is None:
                 return Response(
                     {"success": False, "message": "Request not found."},
@@ -51,7 +38,7 @@ class MessageListCreateView(APIView):
 
     def post(self, request, request_id):
         try:
-            req_obj = _get_request_or_none(request_id, request.tenant)
+            req_obj = get_chat_request(request_id, request.tenant, request.user)
             if req_obj is None:
                 return Response(
                     {"success": False, "message": "Request not found."},
@@ -103,7 +90,7 @@ class MarkMessagesReadView(APIView):
 
     def post(self, request, request_id):
         try:
-            req_obj = _get_request_or_none(request_id, request.tenant)
+            req_obj = get_chat_request(request_id, request.tenant, request.user)
             if req_obj is None:
                 return Response(
                     {"success": False, "message": "Request not found."},
