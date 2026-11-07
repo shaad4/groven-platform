@@ -83,3 +83,7 @@ Commands and disposable services are documented in
 
 These changes close the tested risks; they do not establish complete production
 readiness.
+
+Subsequent work adds idle expiry, staging-to-confirmed object copies and a manual
+migration-aware deployment workflow. See the [release/session follow-up](release-workflow-and-session-hardening.md); it supersedes the earlier
+remaining-risk and deployment-ordering notes above.

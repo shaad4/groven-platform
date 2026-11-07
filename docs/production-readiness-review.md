@@ -62,19 +62,23 @@ transfer size and browser startup timing still need staging verification.
   obtain a new presigned URL. Existing registered downloads remain compatible.
 - Concurrent confirmations now serialize with a request-row lock and a unique
   upload identity (migration 0007). Object scanning, quota enforcement and
-  post-confirm overwrite prevention still need a separate upload lifecycle design.
+  storage orphan cleanup still require staging work. New uploads now finalize
+  into server-only keys to prevent overwrite through presigned staging URLs.
 - Socket access is now rechecked before inbound/outbound events; idle revoked
-  sockets close on their next event. Timer-driven JWT expiry remains a follow-up.
+  sockets close on their next event. Idle JWT expiry now has a timer and frontend
+  session recovery; see the release/session follow-up.
 - List and chat-history payload sizes, other serializers, synchronous AI paths,
   and browser rendering still need profiling under realistic load. Optional AI
   clients now initialize on demand; missing Groq credentials no longer break
   application loading.
 - Lint warnings remain, including React dependency/rendering warnings. They need
   focused reviews; passing the test suite does not establish full feature coverage.
-- Existing deployment triggers directly on `develop` pushes. This branch's new
-  checks do not configure branch protection or gate that deployment workflow.
-  Require passing checks and staging validation before merging.
+- Deployment now uses an explicit reviewed SHA, reusable checks, maintenance-mode
+  migrations and coordinated restarts. Required environment reviewers, SSH host
+  keys and staging validation still need operator configuration.
 
 This is a tested hardening increment, not certification of production readiness.
 
 Latest security verification: [socket and upload hardening](security-hardening-followup.md).
+
+Latest release preparation: [workflow, storage and session expiry](release-workflow-and-session-hardening.md).
