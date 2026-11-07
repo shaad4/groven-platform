@@ -9,6 +9,23 @@ permissions:
 jobs:
   backend:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: groven_check
+          POSTGRES_USER: groven_check
+          POSTGRES_PASSWORD: local-test-only
+        ports: ['55432:5432']
+        options: >-
+          --health-cmd "pg_isready -U groven_check"
+          --health-interval 5s --health-timeout 5s --health-retries 12
+      redis:
+        image: redis:7-alpine
+        ports: ['56379:6379']
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s --health-timeout 5s --health-retries 12
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -17,7 +34,7 @@ jobs:
           cache: pip
           cache-dependency-path: backend/requirements*.txt
       - run: pip install -r backend/requirements-test.txt
-      - run: pytest --ds=config.test_settings --no-cov -q
+      - run: pytest --ds=config.integration_test_settings --migrations --no-cov -q
         working-directory: backend
   frontend:
     runs-on: ubuntu-latest

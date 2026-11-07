@@ -117,3 +117,34 @@ def test_chat_access_rejects_inactive_membership_and_wrong_tenant(tenant, pro_te
     client_membership.is_active = False
     client_membership.save()
     assert get_chat_request(req.id, tenant, client_user) is None
+
+@pytest.mark.django_db(transaction=True)
+def test_http_message_reaches_authenticated_websocket(provider_client, tenant, client_profile, client_user, provider_user):
+    from asgiref.sync import async_to_sync
+    from channels.db import database_sync_to_async
+    from channels.testing import WebsocketCommunicator
+    from rest_framework_simplejwt.tokens import RefreshToken
+    from config.asgi import application
+
+    req = Request.objects.create(tenant=tenant, client=client_profile,
+                                 provider=provider_user, title="Live chat")
+    token = RefreshToken.for_user(client_user).access_token
+
+    async def check():
+        socket = WebsocketCommunicator(
+            application, f"/ws/chat/{req.id}/?tenant={tenant.slug}&token={token}")
+        connected, _ = await socket.connect()
+        assert connected
+        try:
+            await socket.send_json_to({"type": "ping"})
+            assert await socket.receive_json_from() == {"type": "pong"}
+            response = await database_sync_to_async(provider_client.post)(
+                f"/api/requests/{req.id}/messages/", {"content": "Live delivery"}, format="json")
+            assert response.status_code == 201
+            event = await socket.receive_json_from(timeout=3)
+            assert event["type"] == "message"
+            assert event["content"] == "Live delivery"
+            assert event["sender_id"] == str(provider_user.id)
+        finally:
+            await socket.disconnect()
+    async_to_sync(check)()
