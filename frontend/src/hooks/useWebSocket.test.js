@@ -4,7 +4,8 @@ jest.mock('react', () => ({
   useEffect: (effect) => mockEffects.push(effect),
   useRef: (value) => ({ current: value }),
 }))
-jest.mock('react-redux', () => ({ useDispatch: () => mockDispatch }))
+jest.mock('react-redux', () => ({ useDispatch: () => mockDispatch, useStore: () => ({}) }))
+jest.mock('../api/socketSession', () => ({ recoverSocketSession: jest.fn() }))
 import { useWebSocket } from './useWebSocket'
 
 test('old close events cannot reconnect after cleanup and a new connection', () => {
@@ -37,6 +38,29 @@ test('old close events cannot reconnect after cleanup and a new connection', () 
   expect(ref.current).toBeNull()
   jest.runOnlyPendingTimers()
   expect(sockets).toHaveLength(3)
+  jest.useRealTimers()
+  delete global.WebSocket
+})
+
+import { recoverSocketSession } from '../api/socketSession'
+
+test('token expiry refreshes the session without reconnecting the expired URL', async () => {
+  jest.useFakeTimers()
+  recoverSocketSession.mockResolvedValue(undefined)
+  let socket
+  global.WebSocket = jest.fn(function () {
+    this.close = jest.fn()
+    socket = this
+  })
+  useWebSocket('ws://localhost/ws/chat/?token=expired', jest.fn(), 'chat')
+  mockEffects.shift()()
+  const stop = mockEffects.shift()()
+  socket.onclose({ code: 4008 })
+  await Promise.resolve()
+  expect(recoverSocketSession).toHaveBeenCalledWith(expect.anything(), 'expired')
+  jest.runOnlyPendingTimers()
+  expect(global.WebSocket).toHaveBeenCalledTimes(1)
+  stop()
   jest.useRealTimers()
   delete global.WebSocket
 })

@@ -92,6 +92,7 @@ class JWTTenantAuthMiddleware(BaseMiddleware):
             await self._close_unauthorized(send)
             return
 
+        scope["token_expires_at"] = validated["exp"]
         scope["user"] = user
         scope["tenant"] = tenant
         scope["tenant_membership"] = membership

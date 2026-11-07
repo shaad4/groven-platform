@@ -52,3 +52,17 @@ def test_revoked_feed_cannot_receive_events(tenant, provider_user, provider_memb
         assert await socket.receive_output(timeout=3) == {"type": "websocket.close", "code": 4003}
         await socket.disconnect()
     async_to_sync(check)()
+
+@pytest.mark.django_db(transaction=True)
+def test_idle_feed_closes_when_access_token_expires(tenant, provider_user, provider_membership):
+    from datetime import timedelta
+    token = RefreshToken.for_user(provider_user).access_token
+    token.set_exp(lifetime=timedelta(seconds=2))
+
+    async def check():
+        socket = WebsocketCommunicator(application, f"/ws/feed/?tenant={tenant.slug}&token={token}")
+        assert (await socket.connect())[0]
+        # No client or group traffic: the expiry timer itself must close it.
+        assert await socket.receive_output(timeout=3) == {"type": "websocket.close", "code": 4008}
+        await socket.disconnect()
+    async_to_sync(check)()

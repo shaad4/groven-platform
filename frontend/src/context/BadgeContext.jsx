@@ -13,8 +13,7 @@ import dashboardApi from '../api/dashboard.api'
 import { useAuth } from './AuthContext'
 import { selectAccessToken } from '../features/auth/authSlice'
 
-import { useDispatch } from 'react-redux'
-import { setStatus, removeConnection } from '../features/ws/wsSlice'
+import { useWebSocket } from '../hooks/useWebSocket'
 
 import { wsUrl } from '../utils/urls'
 
@@ -44,7 +43,6 @@ function playNotificationSound() {
 export function BadgeProvider({ children }) {
   const { user } = useAuth()
   const accessToken = useSelector(selectAccessToken)
-  const dispatch = useDispatch()
 
 
   // ── sidebar badges (provider only) ────────────────────────────────────────
@@ -125,39 +123,11 @@ export function BadgeProvider({ children }) {
   }, [])
 
   // ── single WS connection — ws/feed/ works for both roles ──────────────────
-  const wsRef      = useRef(null)
-  const retryRef   = useRef(null)
-  const delayRef   = useRef(1000)
-  const unmounted  = useRef(false)
-
-  const connectFeed = useCallback(() => {
-    if (unmounted.current || !accessToken || !userId) return
-
-    const hostname = window.location.hostname
-    const parts = hostname.split('.')
-
-    const isSubdomain = parts.length >= 3 
-    if (!isSubdomain) return
-
-    const tenant = parts[0]
-
-    const url = wsUrl(
-      `/ws/feed/?token=${accessToken}&tenant=${tenant}`
-    )
-
-    const ws = new WebSocket(url)
-    wsRef.current = ws
-
-    ws.onopen = () => {
-      if (unmounted.current) return ws.close()
-      delayRef.current = 1000
-      dispatch(setStatus({ key: 'feed', status: 'connected' }))
-    }
-
-    ws.onmessage = (e) => {
-      try {
-        const msg = JSON.parse(e.data)
-
+  const parts = window.location.hostname.split('.')
+  const feedUrl = accessToken && userId && parts.length >= 3
+    ? wsUrl(`/ws/feed/?token=${accessToken}&tenant=${parts[0]}`)
+    : null
+  useWebSocket(feedUrl, (msg) => {
         // ── bell notifications (both roles) ───────────────────────────────
         if (msg.type === 'notification') {
           const newNotif = {
@@ -196,34 +166,11 @@ export function BadgeProvider({ children }) {
           }))
         }
 
-      } catch { /* malformed frame */ }
-    }
-
-    ws.onclose = () => {
-      if (unmounted.current) return
-      dispatch(setStatus({ key: 'feed', status: 'disconnected' }))
-      const delay = delayRef.current
-      delayRef.current = Math.min(delay * 2, 30000)
-      retryRef.current = setTimeout(connectFeed, delay)
-    }
-
-    ws.onerror = () => ws.close()
-  }, [accessToken, userId, dispatch])
+  }, 'feed')
 
   useEffect(() => {
-    unmounted.current = false
-    const isSubdomain = window.location.hostname.split('.').length >= 3
-    if (user && accessToken && isSubdomain) {
-      connectFeed()
-      loadNotifications()
-    }
-    return () => {
-      unmounted.current = true
-      clearTimeout(retryRef.current)
-      wsRef.current?.close()
-      dispatch(removeConnection('feed'))
-    }
-  }, [userId, accessToken, connectFeed, loadNotifications, dispatch])
+    if (feedUrl) loadNotifications()
+  }, [feedUrl, loadNotifications])
 
   // ── listener registration ──────────────────────────────────────────────────
   const registerActivityListener = useCallback((cb) => {
