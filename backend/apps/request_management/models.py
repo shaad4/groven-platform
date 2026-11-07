@@ -206,6 +206,8 @@ class File(models.Model):
     file_name = models.CharField(max_length=500)
     file_url = models.TextField()
     s3_key = models.TextField()
+    # Nullable for legacy uploads; signed uploads have a database-unique identity.
+    upload_id = models.UUIDField(null=True, blank=True, unique=True, editable=False)
     file_size_bytes = models.BigIntegerField()
     file_type = models.CharField(max_length=100)  # MIME type
     file_extension = models.CharField(max_length=20)

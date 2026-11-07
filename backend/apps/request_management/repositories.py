@@ -1,3 +1,4 @@
+from django.db import transaction
 from django.db.models import Count, Q
 from django.utils import timezone
 
@@ -201,10 +202,10 @@ class RequestActivityRepository:
         )
 
         try:
-            push_activity(
+            transaction.on_commit(lambda: push_activity(
                 activity=activity,
                 provider_id=request_obj.provider_id,
-            )
+            ))
         except Exception as e:
             logger.error(f"[RequestActivityRepository.log] push_activity failed: {e}")
 
@@ -298,6 +299,7 @@ class FileRepository:
         file_extension,
         delivery=None,
         is_delivery_file=False,
+        upload_id=None,
     ):
 
         return File.objects.create(
@@ -307,6 +309,7 @@ class FileRepository:
             file_name=file_name,
             file_url=file_url,
             s3_key=s3_key,
+            upload_id=upload_id,
             file_size_bytes=file_size_bytes,
             file_type=file_type,
             file_extension=file_extension,

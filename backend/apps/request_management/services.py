@@ -526,12 +526,13 @@ class FileService:
             if not s3_key.startswith(prefix):
                 raise signing.BadSignature("Wrong request")
             upload = signing.loads(s3_key[len(prefix):], salt="file-upload", max_age=900)
+            upload_id = uuid.UUID(upload["nonce"])
             expected = {"tenant": str(tenant.id), "request": str(request_id),
                         "user": str(uploaded_by.id), "type": file_type,
                         "name": hashlib.sha256(file_name.encode()).hexdigest()}
             if any(upload.get(key) != value for key, value in expected.items()):
                 raise signing.BadSignature("Upload details changed")
-        except (signing.BadSignature, ValueError, TypeError):
+        except (signing.BadSignature, ValueError, TypeError, KeyError):
             raise ValidationError("Invalid or expired upload. Request a new upload URL.")
 
         s3 = boto3.client("s3", region_name=settings.AWS_S3_REGION_NAME,
@@ -546,35 +547,46 @@ class FileService:
                 or metadata.get("ContentType") != file_type):
             raise ValidationError("Uploaded object does not match the supplied details.")
 
-        existing = File.objects.filter(tenant=tenant, request=request_obj,
-                                       s3_key=s3_key, is_deleted=False).first()
-        if existing:
-            return existing
-        extension = file_name.rsplit(".", 1)[-1].lower() if "." in file_name else ""
-        file_url = f"https://{settings.AWS_STORAGE_BUCKET_NAME}.s3.{settings.AWS_S3_REGION_NAME}.amazonaws.com/{s3_key}"
+        # S3 verification happens outside the transaction. A short row lock
+        # serializes confirmations across workers without holding a lock on I/O.
+        with transaction.atomic():
+            try:
+                request_obj = Request.objects.select_for_update().get(
+                    pk=request_id, tenant=tenant, is_deleted=False)
+            except Request.DoesNotExist:
+                raise RequestNotFound("Request not found.")
+            existing = File.objects.filter(tenant=tenant, request=request_obj,
+                                           s3_key=s3_key).first()
+            if existing:
+                if existing.is_deleted:
+                    raise ValidationError("This upload was deleted. Request a new upload URL.")
+                return existing
+            extension = file_name.rsplit(".", 1)[-1].lower() if "." in file_name else ""
+            file_url = f"https://{settings.AWS_STORAGE_BUCKET_NAME}.s3.{settings.AWS_S3_REGION_NAME}.amazonaws.com/{s3_key}"
 
-        file_obj = FileRepository.create(
-            tenant=tenant,
-            request_obj=request_obj,
-            uploaded_by=uploaded_by,
-            file_name=file_name,
-            s3_key=s3_key,
-            file_url=file_url,
-            file_size_bytes=file_size_bytes,
-            file_type=file_type,
-            file_extension=extension,
-        )
+            file_obj = FileRepository.create(
+                tenant=tenant,
+                request_obj=request_obj,
+                uploaded_by=uploaded_by,
+                file_name=file_name,
+                s3_key=s3_key,
+                upload_id=upload_id,
+                file_url=file_url,
+                file_size_bytes=file_size_bytes,
+                file_type=file_type,
+                file_extension=extension,
+            )
 
-        RequestActivityRepository.log(
-            request_obj=request_obj,
-            event_type=RequestActivity.EventType.FILE_UPLOADED,
-            description=f"File '{file_name}' uploaded.",
-            actor=uploaded_by,
-            actor_source=RequestActivity.ActorSource.USER,
-            metadata={"file_id": str(file_obj.id), "file_name": file_name},
-        )
+            RequestActivityRepository.log(
+                request_obj=request_obj,
+                event_type=RequestActivity.EventType.FILE_UPLOADED,
+                description=f"File '{file_name}' uploaded.",
+                actor=uploaded_by,
+                actor_source=RequestActivity.ActorSource.USER,
+                metadata={"file_id": str(file_obj.id), "file_name": file_name},
+            )
 
-        return file_obj
+            return file_obj
 
     @staticmethod
     def generate_download_url(s3_key):
