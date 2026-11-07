@@ -125,7 +125,7 @@ export function BadgeProvider({ children }) {
   // ── single WS connection — ws/feed/ works for both roles ──────────────────
   const parts = window.location.hostname.split('.')
   const feedUrl = accessToken && userId && parts.length >= 3
-    ? wsUrl(`/ws/feed/?token=${accessToken}&tenant=${parts[0]}`)
+    ? wsUrl(`/ws/feed/?tenant=${parts[0]}`)
     : null
   useWebSocket(feedUrl, (msg) => {
         // ── bell notifications (both roles) ───────────────────────────────
@@ -166,11 +166,11 @@ export function BadgeProvider({ children }) {
           }))
         }
 
-  }, 'feed')
+  }, 'feed', null, accessToken)
 
   useEffect(() => {
     if (feedUrl) loadNotifications()
-  }, [feedUrl, loadNotifications])
+  }, [feedUrl, accessToken, loadNotifications])
 
   // ── listener registration ──────────────────────────────────────────────────
   const registerActivityListener = useCallback((cb) => {

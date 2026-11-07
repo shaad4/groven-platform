@@ -41,7 +41,7 @@ def get_membership(user, tenant):
 class JWTTenantAuthMiddleware(BaseMiddleware):
     """
     WebSocket middleware that:
-    1. Reads ?token=<access_token> from the WS URL query string
+    1. Reads a bearer token from a groven.auth.<JWT> offered subprotocol
     2. Reads ?tenant=<slug> from the WS URL query string
     3. Validates the token via simplejwt
     4. Confirms the user has an active membership in that tenant
@@ -50,16 +50,20 @@ class JWTTenantAuthMiddleware(BaseMiddleware):
 
     async def __call__(self, scope, receive, send):
         query_string = scope.get("query_string", b"").decode()
-        params = parse_qs(query_string)
+        params = parse_qs(query_string, keep_blank_values=True)
 
-        token_list = params.get("token", [])
+        protocols = scope.get("subprotocols", [])
+        token_list = [protocol[len("groven.auth."):] for protocol in protocols
+                      if protocol.startswith("groven.auth.")]
         slug_list = params.get("tenant", [])
 
         scope["user"] = AnonymousUser()
         scope["tenant"] = None
         scope["tenant_membership"] = None
 
-        if not token_list or not slug_list:
+        # Never fall back to credentials in URLs, or accept ambiguous credentials.
+        if ("token" in params or "groven.v1" not in protocols
+                or len(token_list) != 1 or not token_list[0] or len(slug_list) != 1):
             await self._close_unauthorized(send)
             return
 
@@ -92,6 +96,11 @@ class JWTTenantAuthMiddleware(BaseMiddleware):
             await self._close_unauthorized(send)
             return
 
+        scope["websocket_protocol"] = "groven.v1"
+        # Downstream application code does not need to retain the bearer header.
+        scope["subprotocols"] = ["groven.v1"]
+        scope["headers"] = [(name, value) for name, value in scope.get("headers", [])
+                            if name.lower() != b"sec-websocket-protocol"]
         scope["token_expires_at"] = validated["exp"]
         scope["user"] = user
         scope["tenant"] = tenant

@@ -6,7 +6,7 @@ import { setStatus, removeConnection } from '../features/ws/wsSlice'
 const BASE_DELAY = 1000
 const MAX_DELAY = 30000
 
-export function useWebSocket(url, onMessage, key = 'default', socketRef = null) {
+export function useWebSocket(url, onMessage, key = 'default', socketRef = null, accessToken = null) {
   const dispatch = useDispatch()
   const store = useStore()
   const onMessageRef = useRef(onMessage)
@@ -23,7 +23,7 @@ export function useWebSocket(url, onMessage, key = 'default', socketRef = null) 
     async function refreshExpiredSession() {
       if (disposed) return
       try {
-        await recoverSocketSession(store, new URL(url).searchParams.get('token'))
+        await recoverSocketSession(store, accessToken)
       } catch (error) {
         if (!disposed && ![401, 403].includes(error.response?.status)) {
           retryTimer = setTimeout(refreshExpiredSession, delay)
@@ -37,7 +37,7 @@ export function useWebSocket(url, onMessage, key = 'default', socketRef = null) 
       // An offline connection may outlive its token before it can receive the
       // server's expiry close event. Refresh before reopening that stale URL.
       try {
-        const token = new URL(url).searchParams.get('token')
+        const token = accessToken
         const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')))
         if (Number.isFinite(payload.exp) && payload.exp * 1000 <= Date.now()) {
           refreshExpiredSession()
@@ -45,7 +45,9 @@ export function useWebSocket(url, onMessage, key = 'default', socketRef = null) 
         }
       } catch { /* let the server validate missing or malformed tokens */ }
       dispatch(setStatus({ key, status: 'reconnecting' }))
-      const ws = new WebSocket(url)
+      const protocols = ['groven.v1']
+      if (accessToken) protocols.push(`groven.auth.${accessToken}`)
+      const ws = new WebSocket(url, protocols)
       socket = ws
       if (socketRef) socketRef.current = ws
       ws.onopen = () => {
@@ -81,5 +83,5 @@ export function useWebSocket(url, onMessage, key = 'default', socketRef = null) 
       if (socketRef?.current === socket) socketRef.current = null
       dispatch(removeConnection(key))
     }
-  }, [url, key, dispatch, socketRef, store])
+  }, [url, key, dispatch, socketRef, store, accessToken])
 }

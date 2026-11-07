@@ -52,9 +52,10 @@ test('token expiry refreshes the session without reconnecting the expired URL', 
     this.close = jest.fn()
     socket = this
   })
-  useWebSocket('ws://localhost/ws/chat/?token=expired', jest.fn(), 'chat')
+  useWebSocket('ws://localhost/ws/chat/?tenant=check', jest.fn(), 'chat', null, 'expired')
   mockEffects.shift()()
   const stop = mockEffects.shift()()
+  expect(global.WebSocket).toHaveBeenCalledWith('ws://localhost/ws/chat/?tenant=check', ['groven.v1', 'groven.auth.expired'])
   socket.onclose({ code: 4008 })
   await Promise.resolve()
   expect(recoverSocketSession).toHaveBeenCalledWith(expect.anything(), 'expired')
@@ -69,7 +70,7 @@ test('a reconnect with an already expired JWT refreshes before opening a socket'
   recoverSocketSession.mockResolvedValue(undefined)
   const token = `header.${btoa(JSON.stringify({ exp: 1 }))}.signature`
   global.WebSocket = jest.fn()
-  useWebSocket(`ws://localhost/ws/chat/?token=${token}`, jest.fn(), 'chat')
+  useWebSocket('ws://localhost/ws/chat/?tenant=check', jest.fn(), 'chat', null, token)
   mockEffects.shift()()
   const stop = mockEffects.shift()()
   await Promise.resolve()

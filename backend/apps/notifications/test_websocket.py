@@ -15,8 +15,8 @@ def test_feed_delivery_is_workspace_scoped(tenant, pro_tenant, provider_user, pr
     token = RefreshToken.for_user(provider_user).access_token
 
     async def check():
-        first = WebsocketCommunicator(application, f"/ws/feed/?tenant={tenant.slug}&token={token}")
-        second = WebsocketCommunicator(application, f"/ws/feed/?tenant={pro_tenant.slug}&token={token}")
+        first = WebsocketCommunicator(application, f"/ws/feed/?tenant={tenant.slug}", subprotocols=["groven.v1", f"groven.auth.{token}"])
+        second = WebsocketCommunicator(application, f"/ws/feed/?tenant={pro_tenant.slug}", subprotocols=["groven.v1", f"groven.auth.{token}"])
         assert (await first.connect())[0]
         assert (await second.connect())[0]
         try:
@@ -39,7 +39,7 @@ def test_revoked_feed_cannot_receive_events(tenant, provider_user, provider_memb
     token = RefreshToken.for_user(provider_user).access_token
 
     async def check():
-        socket = WebsocketCommunicator(application, f"/ws/feed/?tenant={tenant.slug}&token={token}")
+        socket = WebsocketCommunicator(application, f"/ws/feed/?tenant={tenant.slug}", subprotocols=["groven.v1", f"groven.auth.{token}"])
         assert (await socket.connect())[0]
         await database_sync_to_async(TenantMembership.objects.filter(pk=provider_membership.pk).update)(is_active=False)
         if direction == "incoming":
@@ -60,7 +60,7 @@ def test_idle_feed_closes_when_access_token_expires(tenant, provider_user, provi
     token.set_exp(lifetime=timedelta(seconds=2))
 
     async def check():
-        socket = WebsocketCommunicator(application, f"/ws/feed/?tenant={tenant.slug}&token={token}")
+        socket = WebsocketCommunicator(application, f"/ws/feed/?tenant={tenant.slug}", subprotocols=["groven.v1", f"groven.auth.{token}"])
         assert (await socket.connect())[0]
         # No client or group traffic: the expiry timer itself must close it.
         assert await socket.receive_output(timeout=3) == {"type": "websocket.close", "code": 4008}

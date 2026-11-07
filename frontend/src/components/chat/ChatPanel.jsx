@@ -203,7 +203,7 @@ export default function ChatPanel({
   // WebSocket 
   const tenant = window.location.hostname.split('.')[0]
   const socketUrl = accessToken
-    ? wsUrl(`/ws/chat/${requestId}/?token=${accessToken}&tenant=${tenant}`)
+    ? wsUrl(`/ws/chat/${requestId}/?tenant=${tenant}`)
     : null
 
   const handleWsMessage = useCallback((msg) => {
@@ -276,7 +276,7 @@ export default function ChatPanel({
     }
   }, [currentUser?.id, requestId, onSignal])
 
-  useWebSocket(socketUrl, handleWsMessage, `chat-${requestId}`, wsRef)
+  useWebSocket(socketUrl, handleWsMessage, `chat-${requestId}`, wsRef, accessToken)
 
   // ── File attachments ─────────────────────────────────────────
   const handleAttachFiles = useCallback(async (fileList) => {

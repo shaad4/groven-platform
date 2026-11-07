@@ -27,7 +27,7 @@ class RevocableTenantConsumer(AsyncJsonWebsocketConsumer):
                     await task
 
     async def accept(self, subprotocol=None, headers=None):
-        await super().accept(subprotocol=subprotocol, headers=headers)
+        await super().accept(subprotocol=self.scope.get("websocket_protocol", subprotocol), headers=headers)
         expires = self.scope.get("token_expires_at")
         if expires is not None:
             async def expire():

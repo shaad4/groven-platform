@@ -132,7 +132,7 @@ def test_http_message_reaches_authenticated_websocket(provider_client, tenant, c
 
     async def check():
         socket = WebsocketCommunicator(
-            application, f"/ws/chat/{req.id}/?tenant={tenant.slug}&token={token}")
+            application, f"/ws/chat/{req.id}/?tenant={tenant.slug}", subprotocols=["groven.v1", f"groven.auth.{token}"])
         connected, _ = await socket.connect()
         assert connected
         try:
@@ -179,7 +179,7 @@ def test_open_chat_revalidates_access(tenant, client_profile, client_user, clien
             Request.objects.filter(pk=req.pk).update(is_deleted=True)
 
     async def check():
-        socket = WebsocketCommunicator(application, f"/ws/chat/{req.id}/?tenant={tenant.slug}&token={token}")
+        socket = WebsocketCommunicator(application, f"/ws/chat/{req.id}/?tenant={tenant.slug}", subprotocols=["groven.v1", f"groven.auth.{token}"])
         assert (await socket.connect())[0]
         await database_sync_to_async(revoke)()
         if direction == "incoming":
