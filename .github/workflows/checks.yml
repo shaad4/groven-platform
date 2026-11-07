@@ -1,5 +1,10 @@
 name: Application checks
 on:
+  workflow_call:
+    inputs:
+      ref:
+        required: false
+        type: string
   pull_request:
     branches: [develop]
   push:
@@ -28,11 +33,14 @@ jobs:
           --health-interval 5s --health-timeout 5s --health-retries 12
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.sha }}
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
           cache: pip
           cache-dependency-path: backend/requirements*.txt
+      - run: python -m unittest discover -s scripts/tests -v
       - run: pip install -r backend/requirements-test.txt
       - run: pytest --ds=config.integration_test_settings --migrations --no-cov -q
         working-directory: backend
@@ -43,6 +51,8 @@ jobs:
         working-directory: frontend
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.sha }}
       - uses: actions/setup-node@v4
         with:
           node-version: '24'

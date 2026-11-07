@@ -1,23 +1,63 @@
-name: Deploy to Production
+name: Deploy reviewed production release
 on:
-  push:
-    branches:
-      - develop
+  workflow_dispatch:
+    inputs:
+      commit_sha:
+        description: 'Reviewed full commit SHA already on develop; migrations and downtime approved'
+        required: true
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: groven-production-deploy
+  cancel-in-progress: false
 jobs:
-  deploy:
+  validate:
+    if: github.ref == 'refs/heads/develop'
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-      - name: Deploy to EC2
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USERNAME }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          script: |
-            cd ~/grove-platform
-            git fetch origin develop
-            git reset --hard origin/develop
-            docker compose up -d --build
-            docker compose ps
+      - name: Validate immutable revision
+        env:
+          DEPLOY_SHA: ${{ inputs.commit_sha }}
+        run: '[[ "$DEPLOY_SHA" =~ ^[0-9a-f]{40}$ ]]'
+  checks:
+    needs: validate
+    uses: ./.github/workflows/checks.yml
+    with:
+      ref: ${{ inputs.commit_sha }}
+  deploy:
+    needs: checks
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Deploy the tested revision
+        env:
+          DEPLOY_SHA: ${{ inputs.commit_sha }}
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          EC2_USERNAME: ${{ secrets.EC2_USERNAME }}
+          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+          EC2_KNOWN_HOSTS: ${{ secrets.EC2_KNOWN_HOSTS }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$DEPLOY_SHA" =~ ^[0-9a-f]{40}$ ]]
+          [[ "$EC2_HOST" =~ ^[a-zA-Z0-9.-]+$ ]]
+          [[ "$EC2_USERNAME" =~ ^[a-zA-Z0-9_-]+$ ]]
+          test -n "$EC2_KNOWN_HOSTS"
+          key_file=$(mktemp)
+          hosts_file=$(mktemp)
+          trap 'rm -f "$key_file" "$hosts_file"' EXIT
+          chmod 600 "$key_file" "$hosts_file"
+          printf '%s\n' "$EC2_SSH_KEY" > "$key_file"
+          printf '%s\n' "$EC2_KNOWN_HOSTS" > "$hosts_file"
+          ssh -i "$key_file" -o BatchMode=yes -o StrictHostKeyChecking=yes \
+            -o UserKnownHostsFile="$hosts_file" "$EC2_USERNAME@$EC2_HOST" \
+            bash -s -- "$DEPLOY_SHA" <<'REMOTE'
+          set -euo pipefail
+          cd ~/grove-platform
+          test -z "$(git status --porcelain --untracked-files=no)"
+          git fetch origin develop
+          git merge-base --is-ancestor "$1" origin/develop
+          git checkout --detach "$1"
+          GROVEN_ALLOW_DEPLOY=1 bash scripts/deploy-production.sh --execute
+          REMOTE
