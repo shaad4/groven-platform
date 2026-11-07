@@ -12,7 +12,8 @@ for name, source in [
     ('before', subprocess.check_output(['git', 'show', '2d7b9b6:frontend/nginx.conf'], text=True)),
     ('after', Path('frontend/nginx.conf').read_text()),
 ]:
-    source = source[source.rfind('\nserver {'):]
+    preamble = source.split('server {', 1)[0]
+    source = preamble + source[source.rfind('\nserver {'):]
     source = source.replace('listen 443 ssl;', 'listen 80;')
     source = source.replace('server_name groven.in *.groven.in;', 'server_name localhost;')
     source = '\n'.join(line for line in source.splitlines() if 'ssl_certificate' not in line)

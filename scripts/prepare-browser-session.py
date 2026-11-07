@@ -36,7 +36,9 @@ subprocess.run(['openssl', 'req', '-x509', '-newkey', 'rsa:2048', '-nodes',
                 '-days', '1', '-subj', '/CN=groven.localhost', '-addext',
                 'subjectAltName=DNS:groven.localhost,DNS:*.groven.localhost'],
                check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-(fixtures / 'default.conf').write_text('''server {
+(fixtures / 'default.conf').write_text(
+    (root / 'frontend/nginx.conf').read_text().split('server {', 1)[0] + '''server {
+ access_log /var/log/nginx/access.log groven_safe;
  listen 443 ssl;
  server_name groven.localhost *.groven.localhost;
  ssl_certificate /fixtures/cert.pem;
@@ -48,8 +50,7 @@ subprocess.run(['openssl', 'req', '-x509', '-newkey', 'rsa:2048', '-nodes',
   proxy_set_header X-Forwarded-Proto https;
  }
  location /ws/ {
-  access_log off;
-  error_log /dev/null;
+  if ($args !~ "^tenant=[A-Za-z0-9_-]+$") { return 400; }
   proxy_pass http://groven-backend:59800;
   proxy_http_version 1.1;
   proxy_set_header Upgrade $http_upgrade;

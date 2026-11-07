@@ -10,3 +10,12 @@ CORS_ALLOWED_ORIGINS = ['https://check.groven.localhost:59443']
 SIMPLE_JWT = {**SIMPLE_JWT, 'ACCESS_TOKEN_LIFETIME': timedelta(seconds=8)}  # noqa: F405
 # No worker is run during the rehearsal; prevent external task execution.
 CELERY_TASK_ALWAYS_EAGER = False
+
+# Capture real application log records for the local credential-leak regression.
+LOGGING = {
+    'version': 1, 'disable_existing_loggers': False,
+    'handlers': {'file': {'class': 'logging.FileHandler',
+                          'filename': '/tmp/groven-ws-app-events.log'}},
+    'root': {'handlers': ['file'], 'level': 'INFO'},
+    'loggers': {'apps.common.logger': {'handlers': ['file'], 'level': 'INFO', 'propagate': False}},
+}
