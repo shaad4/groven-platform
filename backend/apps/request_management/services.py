@@ -8,7 +8,7 @@ from botocore.exceptions import ClientError
 from django.conf import settings
 from django.core.cache import cache
 from django.db import transaction
-from django.db.models import F
+from django.db.models import F, Q
 from django.utils import timezone
 
 from apps.common.logger import logger
@@ -487,7 +487,7 @@ class FileService:
             "name": hashlib.sha256(file_name.encode()).hexdigest(),
             "nonce": uuid.uuid4().hex,
         }, salt="file-upload", compress=True)
-        s3_key = f"tenants/{tenant_id}/requests/{request_id}/{upload}"
+        s3_key = f"staging/tenants/{tenant_id}/requests/{request_id}/{upload}"
 
         try:
             presigned = s3.generate_presigned_post(
@@ -523,9 +523,10 @@ class FileService:
 
         prefix = f"tenants/{tenant.id}/requests/{request_id}/"
         try:
-            if not s3_key.startswith(prefix):
+            signed_prefix = "staging/" + prefix if s3_key.startswith("staging/") else prefix
+            if not s3_key.startswith(signed_prefix):
                 raise signing.BadSignature("Wrong request")
-            upload = signing.loads(s3_key[len(prefix):], salt="file-upload", max_age=900)
+            upload = signing.loads(s3_key[len(signed_prefix):], salt="file-upload", max_age=900)
             upload_id = uuid.UUID(upload["nonce"])
             expected = {"tenant": str(tenant.id), "request": str(request_id),
                         "user": str(uploaded_by.id), "type": file_type,
@@ -534,6 +535,13 @@ class FileService:
                 raise signing.BadSignature("Upload details changed")
         except (signing.BadSignature, ValueError, TypeError, KeyError):
             raise ValidationError("Invalid or expired upload. Request a new upload URL.")
+
+        existing = File.objects.filter(tenant=tenant, request=request_obj).filter(
+            Q(upload_id=upload_id) | Q(s3_key=s3_key)).first()
+        if existing:
+            if existing.is_deleted:
+                raise ValidationError("This upload was deleted. Request a new upload URL.")
+            return existing
 
         s3 = boto3.client("s3", region_name=settings.AWS_S3_REGION_NAME,
                           aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
@@ -547,6 +555,25 @@ class FileService:
                 or metadata.get("ContentType") != file_type):
             raise ValidationError("Uploaded object does not match the supplied details.")
 
+        # The client can reuse its presigned POST until expiry. Never register
+        # that writable staging object as a download: copy verified bytes to a
+        # fresh server-only key. Each attempt gets a distinct destination, so a
+        # retry cannot overwrite the object selected by a concurrent winner.
+        if not metadata.get("ETag"):
+            raise ValidationError("Uploaded object has no verification tag.")
+        confirmed_key = f"{prefix}confirmed/{upload_id}/{uuid.uuid4().hex}"
+        source = {"Bucket": settings.AWS_STORAGE_BUCKET_NAME, "Key": s3_key}
+        if metadata.get("VersionId"):
+            source["VersionId"] = metadata["VersionId"]
+        try:
+            s3.copy_object(
+                Bucket=settings.AWS_STORAGE_BUCKET_NAME, Key=confirmed_key,
+                CopySource=source, CopySourceIfMatch=metadata["ETag"],
+                MetadataDirective="REPLACE", ContentType=file_type,
+            )
+        except ClientError:
+            raise ValidationError("Upload changed or could not be finalized. Retry the upload.")
+
         # S3 verification happens outside the transaction. A short row lock
         # serializes confirmations across workers without holding a lock on I/O.
         with transaction.atomic():
@@ -555,21 +582,21 @@ class FileService:
                     pk=request_id, tenant=tenant, is_deleted=False)
             except Request.DoesNotExist:
                 raise RequestNotFound("Request not found.")
-            existing = File.objects.filter(tenant=tenant, request=request_obj,
-                                           s3_key=s3_key).first()
+            existing = File.objects.filter(tenant=tenant, request=request_obj).filter(
+                Q(upload_id=upload_id) | Q(s3_key=s3_key)).first()
             if existing:
                 if existing.is_deleted:
                     raise ValidationError("This upload was deleted. Request a new upload URL.")
                 return existing
             extension = file_name.rsplit(".", 1)[-1].lower() if "." in file_name else ""
-            file_url = f"https://{settings.AWS_STORAGE_BUCKET_NAME}.s3.{settings.AWS_S3_REGION_NAME}.amazonaws.com/{s3_key}"
+            file_url = f"https://{settings.AWS_STORAGE_BUCKET_NAME}.s3.{settings.AWS_S3_REGION_NAME}.amazonaws.com/{confirmed_key}"
 
             file_obj = FileRepository.create(
                 tenant=tenant,
                 request_obj=request_obj,
                 uploaded_by=uploaded_by,
                 file_name=file_name,
-                s3_key=s3_key,
+                s3_key=confirmed_key,
                 upload_id=upload_id,
                 file_url=file_url,
                 file_size_bytes=file_size_bytes,

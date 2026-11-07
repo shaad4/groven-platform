@@ -14,7 +14,7 @@ def test_upload_confirmation_binds_object(tenant, client_profile, provider_user,
     with patch("apps.request_management.services.boto3.client") as factory:
         s3 = factory.return_value
         s3.generate_presigned_post.return_value = {"url": "https://example.com", "fields": {}}
-        s3.head_object.return_value = {"ContentLength": 10, "ContentType": "text/plain"}
+        s3.head_object.return_value = {"ContentLength": 10, "ContentType": "text/plain", "ETag": '"verified-etag"'}
         upload = FileService.generate_presigned_upload_url(
             tenant.id, req.id, "hello.txt", "text/plain", provider_user.id)
         args = dict(tenant=tenant, request_id=req.id, uploaded_by=provider_user,
@@ -44,7 +44,9 @@ def test_upload_confirmation_binds_object(tenant, client_profile, provider_user,
             assert not req.files.exists()
         else:
             result = FileService.confirm_upload(**args)
-            assert result.s3_key == upload["s3_key"]
+            assert result.s3_key != upload["s3_key"]
+            assert "/confirmed/" in result.s3_key
+            s3.copy_object.assert_called_once()
             assert FileService.confirm_upload(**args).id == result.id
             assert req.files.count() == 1
 
@@ -65,7 +67,7 @@ def test_concurrent_confirmations_create_one_file_and_activity(tenant, client_pr
 
         def head(**kwargs):
             barrier.wait()  # all four requests reach verification before any confirms
-            return {"ContentLength": 10, "ContentType": "text/plain"}
+            return {"ContentLength": 10, "ContentType": "text/plain", "ETag": '"verified-etag"'}
         s3.head_object.side_effect = head
 
         def confirm(_):
@@ -103,7 +105,7 @@ def test_deleted_upload_cannot_be_reconfirmed(tenant, client_profile, provider_u
     with patch("apps.request_management.services.boto3.client") as factory:
         s3 = factory.return_value
         s3.generate_presigned_post.return_value = {"url": "https://example.com", "fields": {}}
-        s3.head_object.return_value = {"ContentLength": 10, "ContentType": "text/plain"}
+        s3.head_object.return_value = {"ContentLength": 10, "ContentType": "text/plain", "ETag": '"verified-etag"'}
         upload = FileService.generate_presigned_upload_url(tenant.id, req.id, "one.txt", "text/plain", provider_user.id)
         args = (tenant, req.id, provider_user, "one.txt", upload["s3_key"], 10, "text/plain")
         file = FileService.confirm_upload(*args)
@@ -119,7 +121,7 @@ def test_file_registration_rolls_back_if_activity_write_fails(tenant, client_pro
     with patch("apps.request_management.services.boto3.client") as factory:
         s3 = factory.return_value
         s3.generate_presigned_post.return_value = {"url": "https://example.com", "fields": {}}
-        s3.head_object.return_value = {"ContentLength": 10, "ContentType": "text/plain"}
+        s3.head_object.return_value = {"ContentLength": 10, "ContentType": "text/plain", "ETag": '"verified-etag"'}
         upload = FileService.generate_presigned_upload_url(tenant.id, req.id, "one.txt", "text/plain", provider_user.id)
         with patch("apps.request_management.repositories.RequestActivity.objects.create", side_effect=RuntimeError("write failed")), patch("apps.request_management.repositories.push_activity") as publish:
             with pytest.raises(RuntimeError, match="write failed"):
@@ -149,3 +151,40 @@ def test_upload_identity_migration_preserves_legacy_duplicate_keys(tenant, clien
         MigrationExecutor(connection).migrate(current)
     assert req.files.count() == 2
     assert all(file.upload_id is None for file in req.files.all())
+
+@pytest.mark.django_db
+def test_finalization_fails_if_staging_object_changes(tenant, client_profile, provider_user):
+    from botocore.exceptions import ClientError
+    req = Request.objects.create(tenant=tenant, client=client_profile, provider=provider_user, title="Changed upload")
+    with patch("apps.request_management.services.boto3.client") as factory:
+        s3 = factory.return_value
+        s3.generate_presigned_post.return_value = {"url": "https://example.com", "fields": {}}
+        s3.head_object.return_value = {"ContentLength": 10, "ContentType": "text/plain", "ETag": '"old"'}
+        s3.copy_object.side_effect = ClientError({"Error": {"Code": "PreconditionFailed"}}, "CopyObject")
+        upload = FileService.generate_presigned_upload_url(tenant.id, req.id, "one.txt", "text/plain", provider_user.id)
+        with pytest.raises(ValidationError, match="changed"):
+            FileService.confirm_upload(tenant, req.id, provider_user, "one.txt", upload["s3_key"], 10, "text/plain")
+        assert s3.copy_object.call_args.kwargs["CopySourceIfMatch"] == '"old"'
+        assert not req.files.exists()
+
+@pytest.mark.django_db
+def test_replaying_staging_upload_cannot_change_registered_download(tenant, client_profile, provider_user):
+    req = Request.objects.create(tenant=tenant, client=client_profile, provider=provider_user, title="Immutable download")
+    objects = {}
+    with patch("apps.request_management.services.boto3.client") as factory:
+        s3 = factory.return_value
+        s3.generate_presigned_post.return_value = {"url": "https://example.com", "fields": {}}
+        upload = FileService.generate_presigned_upload_url(tenant.id, req.id, "one.txt", "text/plain", provider_user.id)
+        assert upload["s3_key"].startswith("staging/")
+        objects[upload["s3_key"]] = b"original!!"
+        s3.head_object.return_value = {"ContentLength": 10, "ContentType": "text/plain", "ETag": '"original"'}
+        def copy(**kwargs):
+            objects[kwargs["Key"]] = objects[kwargs["CopySource"]["Key"]]
+            return {"CopyObjectResult": {"ETag": '"original"'}}
+        s3.copy_object.side_effect = copy
+        args = (tenant, req.id, provider_user, "one.txt", upload["s3_key"], 10, "text/plain")
+        file = FileService.confirm_upload(*args)
+        objects[upload["s3_key"]] = b"replaced!!"  # reuse still-valid client POST
+        assert objects[file.s3_key] == b"original!!"
+        assert FileService.confirm_upload(*args).id == file.id
+        s3.copy_object.assert_called_once()
