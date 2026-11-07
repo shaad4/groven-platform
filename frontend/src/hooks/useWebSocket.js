@@ -34,6 +34,16 @@ export function useWebSocket(url, onMessage, key = 'default', socketRef = null) 
 
     function connect() {
       if (disposed || !url) return
+      // An offline connection may outlive its token before it can receive the
+      // server's expiry close event. Refresh before reopening that stale URL.
+      try {
+        const token = new URL(url).searchParams.get('token')
+        const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')))
+        if (Number.isFinite(payload.exp) && payload.exp * 1000 <= Date.now()) {
+          refreshExpiredSession()
+          return
+        }
+      } catch { /* let the server validate missing or malformed tokens */ }
       dispatch(setStatus({ key, status: 'reconnecting' }))
       const ws = new WebSocket(url)
       socket = ws

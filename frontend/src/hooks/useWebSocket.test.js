@@ -64,3 +64,17 @@ test('token expiry refreshes the session without reconnecting the expired URL', 
   jest.useRealTimers()
   delete global.WebSocket
 })
+
+test('a reconnect with an already expired JWT refreshes before opening a socket', async () => {
+  recoverSocketSession.mockResolvedValue(undefined)
+  const token = `header.${btoa(JSON.stringify({ exp: 1 }))}.signature`
+  global.WebSocket = jest.fn()
+  useWebSocket(`ws://localhost/ws/chat/?token=${token}`, jest.fn(), 'chat')
+  mockEffects.shift()()
+  const stop = mockEffects.shift()()
+  await Promise.resolve()
+  expect(global.WebSocket).not.toHaveBeenCalled()
+  expect(recoverSocketSession).toHaveBeenCalledWith(expect.anything(), token)
+  stop()
+  delete global.WebSocket
+})
