@@ -35,9 +35,11 @@ export function useWebSocket(url, onMessage, key = 'default', socketRef = null) 
           onMessageRef.current?.(JSON.parse(event.data))
         } catch { /* ignore malformed frames */ }
       }
-      ws.onclose = () => {
+      ws.onclose = (event) => {
         if (disposed) return
         dispatch(setStatus({ key, status: 'disconnected' }))
+        // Access revocation or a missing request cannot be fixed by retrying.
+        if ([4003, 4004].includes(event?.code)) return
         retryTimer = setTimeout(connect, delay)
         delay = Math.min(delay * 2, MAX_DELAY)
       }

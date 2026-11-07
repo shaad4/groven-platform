@@ -21,7 +21,7 @@ def get_user(user_id):
 @database_sync_to_async
 def get_tenant(slug):
     try:
-        return Tenant.objects.get(slug=slug, is_active=True)
+        return Tenant.objects.get(slug=slug, is_active=True, is_suspended=False)
     except Tenant.DoesNotExist:
         return None
 

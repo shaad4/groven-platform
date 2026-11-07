@@ -7,7 +7,8 @@ def get_chat_request(request_id, tenant, user):
     if tenant is None or not user or not user.is_authenticated or not user.is_active:
         return None
     membership = TenantMembership.objects.filter(
-        tenant=tenant, user=user, is_active=True
+        tenant=tenant, user=user, is_active=True, user__is_active=True,
+        tenant__is_active=True, tenant__is_suspended=False
     ).first()
     if membership is None:
         return None

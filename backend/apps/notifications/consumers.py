@@ -1,12 +1,12 @@
 from channels.db import database_sync_to_async
-from channels.generic.websocket import AsyncJsonWebsocketConsumer
+from apps.tenants.ws_consumers import RevocableTenantConsumer
 
 from apps.common.logger import logger
 
 from .utils import get_feed_group_name
 
 
-class NotificationFeedConsumer(AsyncJsonWebsocketConsumer):
+class NotificationFeedConsumer(RevocableTenantConsumer):
     """
     One consumer for both providers and clients.
     The ws_middleware already validated JWT + tenant membership
@@ -18,7 +18,7 @@ class NotificationFeedConsumer(AsyncJsonWebsocketConsumer):
         self.user = self.scope["user"]
         self.tenant = self.scope["tenant"]
         self.membership = self.scope["tenant_membership"]
-        self.group_name = get_feed_group_name(str(self.user.id))
+        self.group_name = get_feed_group_name(str(self.user.id), str(self.tenant.id))
 
         await self.channel_layer.group_add(self.group_name, self.channel_name)
         await self.accept()

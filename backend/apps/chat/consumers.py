@@ -1,5 +1,5 @@
 from channels.db import database_sync_to_async
-from channels.generic.websocket import AsyncJsonWebsocketConsumer
+from apps.tenants.ws_consumers import RevocableTenantConsumer
 
 from apps.common.logger import logger
 from apps.request_management.models import Request
@@ -8,7 +8,10 @@ from .access import get_chat_request
 from .services import get_chat_group_name
 
 
-class RequestChatConsumer(AsyncJsonWebsocketConsumer):
+class RequestChatConsumer(RevocableTenantConsumer):
+
+    def has_current_access(self):
+        return get_chat_request(self.request_id, self.tenant, self.user) is not None
 
     async def connect(self):
         self.request_id = self.scope["url_route"]["kwargs"]["request_id"]

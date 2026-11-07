@@ -7,8 +7,8 @@ from apps.settings.repositories import UserSettingsRepository
 from .models import Notification
 
 
-def get_feed_group_name(user_id):
-    return f"feed_{user_id}"
+def get_feed_group_name(user_id, tenant_id):
+    return f"feed_{tenant_id}_{user_id}"
 
 
 _IN_APP_PREF_KEY = {
@@ -84,7 +84,7 @@ def create_notification(
         ),
     }
 
-    group_name = get_feed_group_name(str(recipient.id))
+    group_name = get_feed_group_name(str(recipient.id), str(tenant.id))
 
     try:
         channel_layer = get_channel_layer()
@@ -117,7 +117,7 @@ def push_activity(*, activity, provider_id):
         "created_at": activity.created_at.isoformat(),
     }
 
-    group_name = get_feed_group_name(str(provider_id))
+    group_name = get_feed_group_name(str(provider_id), str(activity.tenant_id))
 
     try:
         channel_layer = get_channel_layer()

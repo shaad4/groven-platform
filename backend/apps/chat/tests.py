@@ -148,3 +148,46 @@ def test_http_message_reaches_authenticated_websocket(provider_client, tenant, c
         finally:
             await socket.disconnect()
     async_to_sync(check)()
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.parametrize("change", ["membership", "user", "tenant", "suspension", "ownership", "deleted"])
+@pytest.mark.parametrize("direction", ["incoming", "outgoing"])
+def test_open_chat_revalidates_access(tenant, client_profile, client_user, client_membership, provider_user, change, direction):
+    from asgiref.sync import async_to_sync
+    from channels.db import database_sync_to_async
+    from channels.layers import get_channel_layer
+    from channels.testing import WebsocketCommunicator
+    from rest_framework_simplejwt.tokens import RefreshToken
+    from apps.chat.services import get_chat_group_name
+    from config.asgi import application
+
+    req = Request.objects.create(tenant=tenant, client=client_profile, provider=provider_user, title="Revocation")
+    token = RefreshToken.for_user(client_user).access_token
+
+    def revoke():
+        if change == "membership":
+            type(client_membership).objects.filter(pk=client_membership.pk).update(is_active=False)
+        elif change == "user":
+            type(client_user).objects.filter(pk=client_user.pk).update(is_active=False)
+        elif change == "tenant":
+            type(tenant).objects.filter(pk=tenant.pk).update(is_active=False)
+        elif change == "suspension":
+            type(tenant).objects.filter(pk=tenant.pk).update(is_suspended=True)
+        elif change == "ownership":
+            type(client_profile).objects.filter(pk=client_profile.pk).update(user=provider_user)
+        else:
+            Request.objects.filter(pk=req.pk).update(is_deleted=True)
+
+    async def check():
+        socket = WebsocketCommunicator(application, f"/ws/chat/{req.id}/?tenant={tenant.slug}&token={token}")
+        assert (await socket.connect())[0]
+        await database_sync_to_async(revoke)()
+        if direction == "incoming":
+            await socket.send_json_to({"type": "call_offer", "sdp": "must not relay"})
+        else:
+            await get_channel_layer().group_send(get_chat_group_name(req.id), {
+                "type": "chat.read_receipt", "request_id": str(req.id), "reader_id": str(provider_user.id)})
+        event = await socket.receive_output(timeout=3)
+        assert event == {"type": "websocket.close", "code": 4003}
+        await socket.disconnect()
+    async_to_sync(check)()
