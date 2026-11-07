@@ -188,3 +188,38 @@ def test_replaying_staging_upload_cannot_change_registered_download(tenant, clie
         assert objects[file.s3_key] == b"original!!"
         assert FileService.confirm_upload(*args).id == file.id
         s3.copy_object.assert_called_once()
+
+@pytest.mark.django_db(transaction=True)
+def test_failed_upload_migration_rolls_back_then_recovers(tenant, client_profile, provider_user):
+    from django.db import connection, migrations
+    from django.db.migrations.executor import MigrationExecutor
+    from django.db.migrations.recorder import MigrationRecorder
+    if connection.vendor != 'postgresql':
+        pytest.skip('Transactional DDL recovery is checked on PostgreSQL')
+    previous = [('request_management', '0006_request_overdue_notified_at')]
+    current = [('request_management', '0007_file_upload_id')]
+    req = Request.objects.create(tenant=tenant, client=client_profile, provider=provider_user, title='Recovery')
+    try:
+        executor = MigrationExecutor(connection)
+        executor.migrate(previous)
+        historical = executor.loader.project_state(previous).apps.get_model('request_management', 'File')
+        legacy = historical.objects.create(tenant_id=tenant.pk, request_id=req.pk,
+            uploaded_by_id=provider_user.pk, file_name='preserved.txt', file_size_bytes=10, s3_key='legacy-recovery-key')
+        original = migrations.AddField.database_forwards
+        def fail_after_ddl(operation, *args, **kwargs):
+            original(operation, *args, **kwargs)
+            if operation.name == 'upload_id':
+                raise RuntimeError('simulated failure after column creation')
+        with patch.object(migrations.AddField, 'database_forwards', fail_after_ddl):
+            with pytest.raises(RuntimeError, match='simulated failure'):
+                MigrationExecutor(connection).migrate(current)
+        with connection.cursor() as cursor:
+            columns = {column.name for column in connection.introspection.get_table_description(cursor, 'files')}
+        assert 'upload_id' not in columns
+        assert not MigrationRecorder.Migration.objects.filter(app='request_management', name='0007_file_upload_id').exists()
+        assert historical.objects.get(pk=legacy.pk).s3_key == 'legacy-recovery-key'
+    finally:
+        MigrationExecutor(connection).migrate(current)
+    restored = req.files.get(pk=legacy.pk)
+    assert restored.file_name == 'preserved.txt'
+    assert restored.upload_id is None
