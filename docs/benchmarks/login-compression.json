@@ -1,0 +1,134 @@
+[
+  {
+    "variant": "before",
+    "run": 1,
+    "errors": [],
+    "title": "Groven — Client Management Without The Chaos",
+    "text": "Welcome back\n\nSign in to access your portals.\n\nEmail address\nPassword\nForgot password?\nSign in\nor\nContinue with Google\n\n",
+    "fcp": 3160,
+    "lcp": 3612,
+    "domContentLoaded": 3088.6999999997206,
+    "assetBytes": 855967
+  },
+  {
+    "variant": "after",
+    "run": 1,
+    "errors": [],
+    "title": "Groven — Client Management Without The Chaos",
+    "text": "Welcome back\n\nSign in to access your portals.\n\nEmail address\nPassword\nForgot password?\nSign in\nor\nContinue with Google\n\n",
+    "fcp": 1432,
+    "lcp": 1884,
+    "domContentLoaded": 1358.1000000000931,
+    "assetBytes": 497345
+  },
+  {
+    "variant": "before",
+    "run": 2,
+    "errors": [],
+    "title": "Groven — Client Management Without The Chaos",
+    "text": "Welcome back\n\nSign in to access your portals.\n\nEmail address\nPassword\nForgot password?\nSign in\nor\nContinue with Google\n\n",
+    "fcp": 3152,
+    "lcp": 3584,
+    "domContentLoaded": 3082,
+    "assetBytes": 855967
+  },
+  {
+    "variant": "after",
+    "run": 2,
+    "errors": [],
+    "title": "Groven — Client Management Without The Chaos",
+    "text": "Welcome back\n\nSign in to access your portals.\n\nEmail address\nPassword\nForgot password?\nSign in\nor\nContinue with Google\n\n",
+    "fcp": 1400,
+    "lcp": 1880,
+    "domContentLoaded": 1309.2999999998137,
+    "assetBytes": 497345
+  },
+  {
+    "variant": "before",
+    "run": 3,
+    "errors": [],
+    "title": "Groven — Client Management Without The Chaos",
+    "text": "Welcome back\n\nSign in to access your portals.\n\nEmail address\nPassword\nForgot password?\nSign in\nor\nContinue with Google\n\n",
+    "fcp": 3168,
+    "lcp": 3636,
+    "domContentLoaded": 3094.8000000002794,
+    "assetBytes": 855967
+  },
+  {
+    "variant": "after",
+    "run": 3,
+    "errors": [],
+    "title": "Groven — Client Management Without The Chaos",
+    "text": "Welcome back\n\nSign in to access your portals.\n\nEmail address\nPassword\nForgot password?\nSign in\nor\nContinue with Google\n\n",
+    "fcp": 1368,
+    "lcp": 1800,
+    "domContentLoaded": 1300.6999999997206,
+    "assetBytes": 497345
+  },
+  {
+    "variant": "before",
+    "run": 4,
+    "errors": [],
+    "title": "Groven — Client Management Without The Chaos",
+    "text": "Welcome back\n\nSign in to access your portals.\n\nEmail address\nPassword\nForgot password?\nSign in\nor\nContinue with Google\n\n",
+    "fcp": 3156,
+    "lcp": 3624,
+    "domContentLoaded": 3081,
+    "assetBytes": 855967
+  },
+  {
+    "variant": "after",
+    "run": 4,
+    "errors": [],
+    "title": "Groven — Client Management Without The Chaos",
+    "text": "Welcome back\n\nSign in to access your portals.\n\nEmail address\nPassword\nForgot password?\nSign in\nor\nContinue with Google\n\n",
+    "fcp": 1388,
+    "lcp": 1804,
+    "domContentLoaded": 1301.1000000000931,
+    "assetBytes": 497345
+  },
+  {
+    "variant": "before",
+    "run": 5,
+    "errors": [],
+    "title": "Groven — Client Management Without The Chaos",
+    "text": "Welcome back\n\nSign in to access your portals.\n\nEmail address\nPassword\nForgot password?\nSign in\nor\nContinue with Google\n\n",
+    "fcp": 3216,
+    "lcp": 3684,
+    "domContentLoaded": 3114.600000000093,
+    "assetBytes": 855967
+  },
+  {
+    "variant": "after",
+    "run": 5,
+    "errors": [],
+    "title": "Groven — Client Management Without The Chaos",
+    "text": "Welcome back\n\nSign in to access your portals.\n\nEmail address\nPassword\nForgot password?\nSign in\nor\nContinue with Google\n\n",
+    "fcp": 1408,
+    "lcp": 1840,
+    "domContentLoaded": 1333.3999999999069,
+    "assetBytes": 497345
+  },
+  {
+    "variant": "before",
+    "run": 6,
+    "errors": [],
+    "title": "Groven — Client Management Without The Chaos",
+    "text": "Welcome back\n\nSign in to access your portals.\n\nEmail address\nPassword\nForgot password?\nSign in\nor\nContinue with Google\n\n",
+    "fcp": 3172,
+    "lcp": 3588,
+    "domContentLoaded": 3090.7000000001863,
+    "assetBytes": 855967
+  },
+  {
+    "variant": "after",
+    "run": 6,
+    "errors": [],
+    "title": "Groven — Client Management Without The Chaos",
+    "text": "Welcome back\n\nSign in to access your portals.\n\nEmail address\nPassword\nForgot password?\nSign in\nor\nContinue with Google\n\n",
+    "fcp": 1396,
+    "lcp": 1852,
+    "domContentLoaded": 1327.5,
+    "assetBytes": 497345
+  }
+]

@@ -35,8 +35,11 @@ npm test -- --runInBand
 npm run build
 ```
 
-Backend: 60 tests passed (SQLite, in-memory cache/channel layer, mocked external
-services). Frontend: 28 tests passed. Production Vite build succeeds.
+Initial validation: 60 tests passed with SQLite. Follow-up validation: 63 tests
+passed with real PostgreSQL 16 migrations and Redis 7, including HTTP-to-WebSocket
+message delivery; one opt-in benchmark skipped. External AI, email and S3 remain
+mocked. Frontend: 28 tests passed. Production Vite build succeeds. See
+[integration and performance follow-up](integration-performance-results.md).
 
 The list-query regression test compares the previous query shape to the new one:
 1 request: 2 -> 1 SQL queries; 20 requests: 21 -> 1. Deleted files remain excluded.
@@ -50,11 +53,10 @@ transfer size and browser startup timing still need staging verification.
 
 ## Remaining release checks and risks
 
-- Run PostgreSQL migrations and integration tests with Redis, real S3, real
-  browser sessions and production-like data. The isolated suite uses SQLite and
-  the repository's existing `--nomigrations` test setting.
-- Verify nginx configuration and `Content-Encoding` using deployed certificates
-  and upstreams. nginx is not installed in this environment.
+- Local PostgreSQL migrations and Redis integration now pass. Real S3, staging
+  sessions and production-like tenant distributions remain release checks.
+- Full nginx configuration syntax and actual gzip responses now pass locally.
+  Verify deployed certificates, API upstreams and cache/CDN behavior in staging.
 - Confirm S3 identity permits HeadObject (s3:GetObject); confirmation now fails
   closed if verification is unavailable. Uploads begun before this change must
   obtain a new presigned URL. Existing registered downloads remain compatible.
@@ -64,9 +66,9 @@ transfer size and browser startup timing still need staging verification.
 - Existing sockets are authorized on connection, not continuously reauthorized
   when membership or request ownership changes. Add revocation/expiry handling.
 - List and chat-history payload sizes, other serializers, synchronous AI paths,
-  and browser rendering still need profiling under realistic load. Optional
-  Groq credentials currently construct an AI client at import time; missing
-  credentials can prevent startup and should be addressed separately.
+  and browser rendering still need profiling under realistic load. Optional AI
+  clients now initialize on demand; missing Groq credentials no longer break
+  application loading.
 - Lint warnings remain, including React dependency/rendering warnings. They need
   focused reviews; passing the test suite does not establish full feature coverage.
 - Existing deployment triggers directly on `develop` pushes. This branch's new
