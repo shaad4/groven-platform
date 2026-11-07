@@ -60,11 +60,11 @@ transfer size and browser startup timing still need staging verification.
 - Confirm S3 identity permits HeadObject (s3:GetObject); confirmation now fails
   closed if verification is unavailable. Uploads begun before this change must
   obtain a new presigned URL. Existing registered downloads remain compatible.
-- Concurrent upload-confirm retries can still create duplicate rows: no unique
-  database constraint was introduced. Object scanning, quota enforcement and
-  post-confirm overwrite prevention need a separate upload lifecycle design.
-- Existing sockets are authorized on connection, not continuously reauthorized
-  when membership or request ownership changes. Add revocation/expiry handling.
+- Concurrent confirmations now serialize with a request-row lock and a unique
+  upload identity (migration 0007). Object scanning, quota enforcement and
+  post-confirm overwrite prevention still need a separate upload lifecycle design.
+- Socket access is now rechecked before inbound/outbound events; idle revoked
+  sockets close on their next event. Timer-driven JWT expiry remains a follow-up.
 - List and chat-history payload sizes, other serializers, synchronous AI paths,
   and browser rendering still need profiling under realistic load. Optional AI
   clients now initialize on demand; missing Groq credentials no longer break
@@ -76,3 +76,5 @@ transfer size and browser startup timing still need staging verification.
   Require passing checks and staging validation before merging.
 
 This is a tested hardening increment, not certification of production readiness.
+
+Latest security verification: [socket and upload hardening](security-hardening-followup.md).

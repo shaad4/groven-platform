@@ -107,9 +107,9 @@ denied previously; local checks do not prove the hosted job has passed.
 - No production or staging credentials/data: authenticated browser workflows,
   multi-user load, background jobs, email/payment integrations and production
   p95/p99 latency are not verified.
-- Existing socket sessions are not reauthorized on membership revocation.
-- Concurrent upload confirmations lack a unique database constraint; sequential
-  retries are covered, simultaneous retries may duplicate rows. Presigned POST
-  reuse within its lifetime remains possible.
+- Socket revocation checks were added in the subsequent [security follow-up](security-hardening-followup.md).
+- Concurrent upload confirmations now have locking and database uniqueness; see
+  the security follow-up and migration requirement. Presigned POST reuse within
+  its lifetime remains possible.
 - Real TLS, CDN/proxy behavior and API/WebSocket routing require deployment-level
   validation. The checks here neither deploy nor certify production readiness.
