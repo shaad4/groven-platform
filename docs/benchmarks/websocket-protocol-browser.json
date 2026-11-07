@@ -1,0 +1,11 @@
+{
+  "loginStatus": 200,
+  "secureHttpOnlyCookie": true,
+  "successfulRefreshes": 2,
+  "websocketConnections": 2,
+  "tokenRotated": true,
+  "credentialsAbsentFromUrls": true,
+  "negotiatedProtocol": "groven.v1",
+  "rejectedRefreshRedirectedToLogin": true,
+  "javascriptErrors": []
+}

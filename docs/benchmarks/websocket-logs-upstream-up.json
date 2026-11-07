@@ -1,0 +1,12 @@
+{
+  "legacy_query_status": 400,
+  "header_probe_status": 403,
+  "upstream_down": false,
+  "credential_matches": 0,
+  "log_bytes_checked": {
+    "nginx_access_and_errors": 8810,
+    "application_events": 2768,
+    "daphne_access": 4746,
+    "daphne_errors": 0
+  }
+}

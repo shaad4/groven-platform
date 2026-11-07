@@ -84,3 +84,7 @@ Latest security verification: [socket and upload hardening](security-hardening-f
 Latest release preparation: [workflow, storage and session expiry](release-workflow-and-session-hardening.md).
 
 Later verification: [read-only upload audit, authenticated browser refresh and migration recovery](upload-audit-browser-and-recovery.md).
+
+The observed WebSocket query-token logging exposure is addressed by the
+[credential transport and log-safety change](websocket-credential-transport.md),
+which also documents rollout requirements and remaining infrastructure limits.

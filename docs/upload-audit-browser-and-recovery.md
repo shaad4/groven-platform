@@ -109,3 +109,7 @@ increment; the local production build and authenticated browser rehearsal passed
 
 Further live cleanup or deployed-workflow verification must wait for the relevant
 credentials and operator decisions. These results do not certify production readiness.
+
+The observed WebSocket query-token logging exposure is addressed by the
+[credential transport and log-safety change](websocket-credential-transport.md),
+which also documents rollout requirements and remaining infrastructure limits.
