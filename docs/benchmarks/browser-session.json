@@ -1,0 +1,9 @@
+{
+  "loginStatus": 200,
+  "secureHttpOnlyCookie": true,
+  "successfulRefreshes": 2,
+  "websocketConnections": 2,
+  "tokenRotated": true,
+  "rejectedRefreshRedirectedToLogin": true,
+  "javascriptErrors": []
+}

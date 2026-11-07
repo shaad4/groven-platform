@@ -126,3 +126,5 @@ pytest --ds=config.integration_test_settings --migrations --no-cov -q
 Live S3 integration, authenticated browser cookie/reconnect flows, real deployments,
 production load and hosted CI still require verification. These changes are
 prepared and locally tested, not proof of production readiness.
+
+Later verification: [read-only upload audit, authenticated browser refresh and migration recovery](upload-audit-browser-and-recovery.md).

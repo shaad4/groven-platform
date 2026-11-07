@@ -82,3 +82,5 @@ This is a tested hardening increment, not certification of production readiness.
 Latest security verification: [socket and upload hardening](security-hardening-followup.md).
 
 Latest release preparation: [workflow, storage and session expiry](release-workflow-and-session-hardening.md).
+
+Later verification: [read-only upload audit, authenticated browser refresh and migration recovery](upload-audit-browser-and-recovery.md).
