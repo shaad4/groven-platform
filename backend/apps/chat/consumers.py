@@ -4,6 +4,7 @@ from channels.generic.websocket import AsyncJsonWebsocketConsumer
 from apps.common.logger import logger
 from apps.request_management.models import Request
 
+from .access import get_chat_request
 from .services import get_chat_group_name
 
 
@@ -112,11 +113,7 @@ class RequestChatConsumer(AsyncJsonWebsocketConsumer):
     @database_sync_to_async
     def _get_request(self):
         try:
-            return Request.objects.get(
-                id=self.request_id,
-                tenant=self.tenant,
-                is_deleted=False,
-            )
+            return get_chat_request(self.request_id, self.tenant, self.user)
         except Request.DoesNotExist:
             return None
         except Exception as e:

@@ -1,3 +1,7 @@
+import hashlib
+import uuid
+from django.core import signing
+from rest_framework.exceptions import ValidationError
 import boto3
 from botocore.client import Config
 from botocore.exceptions import ClientError
@@ -477,7 +481,13 @@ class FileService:
         )
 
         extension = file_name.rsplit(".", 1)[-1].lower() if "." in file_name else ""
-        s3_key = f"tenants/{tenant_id}/requests/{request_id}/{timezone.now().strftime('%Y%m%d%H%M%S')}_{file_name}"
+        upload = signing.dumps({
+            "tenant": str(tenant_id), "request": str(request_id),
+            "user": str(uploaded_by_id), "type": file_type,
+            "name": hashlib.sha256(file_name.encode()).hexdigest(),
+            "nonce": uuid.uuid4().hex,
+        }, salt="file-upload", compress=True)
+        s3_key = f"tenants/{tenant_id}/requests/{request_id}/{upload}"
 
         try:
             presigned = s3.generate_presigned_post(
@@ -511,6 +521,35 @@ class FileService:
         if not request_obj:
             raise RequestNotFound("Request not found.")
 
+        prefix = f"tenants/{tenant.id}/requests/{request_id}/"
+        try:
+            if not s3_key.startswith(prefix):
+                raise signing.BadSignature("Wrong request")
+            upload = signing.loads(s3_key[len(prefix):], salt="file-upload", max_age=900)
+            expected = {"tenant": str(tenant.id), "request": str(request_id),
+                        "user": str(uploaded_by.id), "type": file_type,
+                        "name": hashlib.sha256(file_name.encode()).hexdigest()}
+            if any(upload.get(key) != value for key, value in expected.items()):
+                raise signing.BadSignature("Upload details changed")
+        except (signing.BadSignature, ValueError, TypeError):
+            raise ValidationError("Invalid or expired upload. Request a new upload URL.")
+
+        s3 = boto3.client("s3", region_name=settings.AWS_S3_REGION_NAME,
+                          aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+                          aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY)
+        try:
+            metadata = s3.head_object(Bucket=settings.AWS_STORAGE_BUCKET_NAME, Key=s3_key)
+        except ClientError:
+            raise ValidationError("Uploaded object could not be verified.")
+        if (metadata["ContentLength"] != file_size_bytes
+                or not 0 < file_size_bytes <= 50 * 1024 * 1024
+                or metadata.get("ContentType") != file_type):
+            raise ValidationError("Uploaded object does not match the supplied details.")
+
+        existing = File.objects.filter(tenant=tenant, request=request_obj,
+                                       s3_key=s3_key, is_deleted=False).first()
+        if existing:
+            return existing
         extension = file_name.rsplit(".", 1)[-1].lower() if "." in file_name else ""
         file_url = f"https://{settings.AWS_STORAGE_BUCKET_NAME}.s3.{settings.AWS_S3_REGION_NAME}.amazonaws.com/{s3_key}"
 

@@ -48,6 +48,8 @@ class MessageRepository:
                 files = File.objects.filter(
                     id__in=attachment_ids,
                     tenant=request_obj.tenant,
+                    request=request_obj,
+                    is_deleted=False,
                 )
                 for file_obj in files:
                     MessageAttachmentRepository.create(message, file_obj)
