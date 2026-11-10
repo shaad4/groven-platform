@@ -14,9 +14,23 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+
 from django.contrib import admin
-from django.urls import path
+from django.urls import include, path
+
+from apps.plans.urls import webhook_urlpatterns
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path("admin/", admin.site.urls),
+    path("api/auth/", include("apps.users.urls")),
+    path("api/clients/", include("apps.clients.urls")),
+    path("api/tenants/", include("apps.tenants.urls")),
+    path("api/requests/", include("apps.request_management.urls")),
+    path("api/dashboard/", include("apps.dashboard.urls")),
+    path("api/", include("apps.chat.urls")),
+    path("api/notifications/", include("apps.notifications.urls")),
+    path("api/settings/", include("apps.settings.urls")),
+    path("api/billing/", include("apps.plans.urls")),
+    path("api/webhooks/", include(webhook_urlpatterns)),
+    path("api/grove-admin/", include("apps.grove_admin.urls")),
 ]

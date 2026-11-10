@@ -10,7 +10,13 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
+import os
+from datetime import timedelta
 from pathlib import Path
+
+from celery.schedules import crontab
+from corsheaders.defaults import default_headers
+from decouple import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,75 +26,94 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-4k+6vgfeclzrbgq@qe76fdxeyvhu)47%7v-=-%b^$$b*6dka_k'
+SECRET_KEY = config("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = config("DEBUG", cast=bool)
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="localhost").split(",")
+ALLOWED_HOSTS += [".lvh.me"]  # covers api.lvh.me, saniya.lvh.me, etc.
 
+AUTH_USER_MODEL = "users.User"
 
 # Application definition
 
 INSTALLED_APPS = [
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-
+    "daphne",
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
     # third party
+    "channels",
     "rest_framework",
     "rest_framework_simplejwt",
+    "rest_framework_simplejwt.token_blacklist",
     "corsheaders",
-
-    # Grove apps
-    "apps.accounts",
+    "storages",
+    "log_request_id",
+    # Groven apps
+    "apps.users",
     "apps.clients",
     "apps.plans",
     "apps.tenants",
-
+    "apps.notifications",
+    "apps.request_management",
+    "apps.dashboard",
+    "apps.chat",
+    "apps.settings",
+    "apps.grove_admin",
 ]
 
 MIDDLEWARE = [
+    "django.middleware.security.SecurityMiddleware",
     "corsheaders.middleware.CorsMiddleware",
-    'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "apps.tenants.middleware.TenantMiddleware",  # tenant middleware
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "log_request_id.middleware.RequestIDMiddleware",
+    "config.request_logging.RequestLoggingMiddleware",
 ]
 
-ROOT_URLCONF = 'config.urls'
+ROOT_URLCONF = "config.urls"
 
 TEMPLATES = [
     {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
             ],
         },
     },
 ]
 
-WSGI_APPLICATION = 'config.wsgi.application'
+
+WSGI_APPLICATION = "config.wsgi.application"
 
 
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": config("DB_NAME"),
+        "USER": config("DB_USER"),
+        "PASSWORD": config("DB_PASSWORD"),
+        "HOST": config("DB_HOST"),
+        "PORT": config("DB_PORT"),
+        "CONN_MAX_AGE": config("CONN_MAX_AGE", default=60, cast=int),
     }
 }
 
@@ -96,18 +121,19 @@ DATABASES = {
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
 
+
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
 
@@ -115,16 +141,254 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/6.0/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = "UTC"
 
 USE_I18N = True
 
 USE_TZ = True
 
+CELERY_TIMEZONE = "UTC"
+CELERY_ENABLE_UTC = True
+
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = "static/"
+
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+
+# JWT
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=15),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+    "ROTATE_REFRESH_TOKENS": False,
+    "BLACKLIST_AFTER_ROTATION": False,
+    "USER_ID_FIELD": "id",
+    "USER_ID_CLAIM": "user_id",
+}
+
+# DRF
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ),
+    "DEFAULT_PERMISSION_CLASSES": (
+        "rest_framework.permissions.IsAuthenticated",
+        "apps.tenants.permissions.BelongsToTenant",
+    ),
+    "DEFAULT_RENDERER_CLASSES": ("rest_framework.renderers.JSONRenderer",),
+    "EXCEPTION_HANDLER": "config.exceptions.grove_exception_handler",
+}
+
+
+# CORS
+CORS_ALLOWED_ORIGINS = [
+    "http://lvh.me:5173",
+    "https://lvh.me:5173",
+    "http://localhost:5173",
+    "https://localhost:5173",
+    "https://groven.in",
+]
+
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r"^https?://.*\.lvh\.me:5173$",
+    r"^https://.*\.groven\.in$",
+]
+
+CORS_ALLOW_CREDENTIALS = True
+
+CORS_ALLOW_HEADERS = list(default_headers) + [
+    "x-tenant-slug",
+]
+
+CSRF_TRUSTED_ORIGINS = [
+    "http://lvh.me:5173",
+    "https://lvh.me:5173",
+    "http://*.lvh.me:5173",
+    "https://*.lvh.me:5173",
+    "https://lvh.me:8443",
+    "https://*.lvh.me:8443",
+    "https://groven.in",
+    "https://*.groven.in",
+]
+
+
+# Celery
+CELERY_BROKER_URL = config("REDIS_URL", default="redis://localhost:6379/0")
+CELERY_RESULT_BACKEND = config("REDIS_URL", default="redis://localhost:6379/0")
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+
+# Email
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = config("EMAIL_HOST", default="smtp.gmail.com")
+EMAIL_PORT = config("EMAIL_PORT", cast=int, default=587)
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = config("EMAIL_HOST_USER", default="")
+EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD", default="")
+DEFAULT_FROM_EMAIL = config("EMAIL_HOST_USER", default="logonxavi77@gmail.com")
+
+FRONTEND_URL = config("FRONTEND_URL")
+COOKIE_DOMAIN = config("COOKIE_DOMAIN", default=".lvh.me")
+
+GOOGLE_CLIENT_ID = config("GOOGLE_CLIENT_ID")
+
+# S3 Setup
+AWS_ACCESS_KEY_ID = config("AWS_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY = config("AWS_SECRET_ACCESS_KEY")
+AWS_STORAGE_BUCKET_NAME = config("AWS_STORAGE_BUCKET_NAME")
+AWS_S3_REGION_NAME = config("AWS_S3_REGION_NAME", default="ap-south-1")
+AWS_S3_FILE_OVERWRITE = False
+AWS_DEFAULT_ACL = None  # bucket policy controls access, not object ACL
+AWS_S3_SIGNATURE_VERSION = "s3v4"
+AWS_S3_ADDRESSING_STYLE = "virtual"
+
+# Redis cache backend
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": config("REDIS_URL", default="redis://localhost:6379/1"),
+    }
+}
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [config("REDIS_URL", default="redis://localhost:6379/0")],
+        },
+    }
+}
+
+# Celery Beat Configs
+
+CELERY_BEAT_SCHEDULE = {
+    # Every hour — expire stale invites
+    "expire-old-invites": {
+        "task": "apps.clients.tasks.expire_old_invites",
+        "schedule": crontab(minute=0),  # top of every hour
+    },
+    # Nightly 2am IST — purge soft-deleted records older than 30 days
+    "purge-soft-deleted-records": {
+        "task": "apps.request_management.tasks.purge_soft_deleted_records",
+        "schedule": crontab(hour=2, minute=0),
+    },
+    # Nightly 3am IST — deactivate clients silent for 90+ days
+    "mark-inactive-clients": {
+        "task": "apps.clients.tasks.mark_inactive_clients",
+        "schedule": crontab(hour=3, minute=0),
+    },
+    # Every 15 min — email fallback for users who missed WS notifications
+    "email-fallback-offline-users": {
+        "task": "apps.notifications.tasks.email_fallback_for_offline_users",
+        "schedule": crontab(minute="*/15"),
+    },
+    # Monday 8am IST — weekly provider digest
+    "weekly-provider-summary": {
+        "task": "apps.notifications.tasks.send_weekly_provider_summary",
+        "schedule": crontab(hour=2, minute=30),
+    },
+    # Every 30 min — refresh Redis tenant usage cache
+    "cache-tenant-usage-stats": {
+        "task": "apps.tenants.tasks.cache_tenant_usage_stats",
+        "schedule": crontab(minute="*/30"),
+    },
+    # Every Hour - Check for any overdue and alert (In-app/Email)
+    "notify-overdue-requests": {
+        "task": "apps.notifications.tasks.notify_overdue_requests",
+        "schedule": crontab(minute=0),  # top of every hour
+    },
+    # clinet insights
+    "generate-client-insights": {
+        "task": "apps.clients.tasks.generate_client_insights",
+        "schedule": crontab(hour=4, minute=0),
+    },
+}
+
+
+# Logger Config
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "standard": {
+            "format": ("[{asctime}] " "{levelname:<8} " "{name:<25} " "{message}"),
+            "style": "{",
+        },
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "standard",
+        },
+        "file": {
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": BASE_DIR / "logs" / "grove.log",
+            "maxBytes": 10 * 1024 * 1024,
+            "backupCount": 5,
+            "formatter": "standard",
+        },
+        "app_file": {
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": BASE_DIR / "logs" / "grove_app.log",
+            "maxBytes": 10 * 1024 * 1024,
+            "backupCount": 5,
+            "formatter": "standard",
+        },
+    },
+    "loggers": {
+        "apps.common.logger": {
+            "handlers": ["console", "app_file"],
+            "level": "INFO",
+            "propagate": False,  # stops it also going into grove.log
+        },
+    },
+    "root": {
+        "handlers": ["console", "file"],
+        "level": "INFO",
+    },
+}
+
+SECURE_CROSS_ORIGIN_OPENER_POLICY = "unsafe-none"
+
+# AI (Config)
+GEMINI_API_KEY = config("GEMINI_API_KEY")
+GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/openai/"
+AI_MODEL_FAST = "gemini-2.5-flash-lite"  # categorisation cheap, high frequency
+AI_MODEL_QUALITY = "gemini-2.5-flash-lite"  # summaries, notes, replies
+
+
+GROQ_API_KEY = config("GROQ_API_KEY", default="")
+GROQ_BASE_URL = "https://api.groq.com/openai/v1"
+AI_FALLBACK_MODEL = "openai/gpt-oss-120b"
+
+
+# Stripe
+STRIPE_SECRET_KEY = config("STRIPE_SECRET_KEY", default="")
+STRIPE_WEBHOOK_SECRET = config("STRIPE_WEBHOOK_SECRET", default="")
+STRIPE_PRICE_ID_PRO = config("STRIPE_PRICE_ID_PRO", default="")
+
+# Configuration
+
+EMAIL_FALLBACK_DELAY_MINUTES = (
+    5  # Email Fallback Message Delay Time (notification-tasks)
+)
+
+LOGO_URL_BRANDING = (
+    "https://grove-upload.s3.ap-south-2.amazonaws.com/branding/grove-logo-green.png"
+)
+
+CACHE_TTL = 120  # Dashboard stats cash timeout (Dashboard - views)
+
+PAGE_SIZE = 500  # Activity Page size
+
+
+CLIENT_INSIGHT_TTL = 60 * 60 * 36
+
+GROVE_ADMIN_EMAIL = config("GROVE_ADMIN_EMAIL")
+GROVE_ADMIN_PASSWORD = config("GROVE_ADMIN_PASSWORD")

@@ -1,0 +1,95 @@
+services:
+  postgres:
+    image: postgres:16
+    restart: always
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - grove_network
+
+  redis:
+    image: redis:7-alpine
+    restart: always
+    networks:
+      - grove_network
+
+  backend:
+    build: ./backend
+    restart: always
+    command: gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 3
+    env_file: .env
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - grove_network
+
+  daphne:
+    build: ./backend
+    restart: always
+    command: daphne -b 0.0.0.0 -p 8001 config.asgi:application
+    env_file: .env
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - grove_network
+
+  celery_worker:
+    build: ./backend
+    restart: always
+    command: celery -A config worker --loglevel=info
+    env_file: .env
+    depends_on:
+      - redis
+      - postgres
+    networks:
+      - grove_network
+
+  celery_beat:
+    build: ./backend
+    restart: always
+    command: celery -A config beat --loglevel=info
+    env_file: .env
+    depends_on:
+      - redis
+      - postgres
+    networks:
+      - grove_network
+
+  nginx:
+    build: ./frontend
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+    depends_on:
+      - backend
+      - daphne
+    networks:
+      - grove_network
+
+  dozzle:
+    image: amir20/dozzle:latest
+    container_name: dozzle
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./dozzle-data:/data
+    ports:
+      - "8080:8080"
+    environment:
+      - DOZZLE_AUTH_PROVIDER=simple
+
+volumes:
+  postgres_data:
+
+networks:
+  grove_network:
+    driver: bridge

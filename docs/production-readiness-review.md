@@ -1,0 +1,76 @@
+# Groven production-readiness review
+
+Branch: `optimize/production-readiness`. Base: current `origin/develop`,
+`2d7b9b67cf5374108edab64ae544452a0dd06cea`. No merge or deployment performed.
+
+## Changes
+
+- Shared HTTP/WebSocket chat authorization requires active workspace membership;
+  clients can only access their own non-deleted requests. Providers retain the
+  existing workspace-wide inbox policy. Chat attachments must belong to the same
+  request and must not be deleted.
+- Upload keys carry signed, expiring metadata binding the uploader, tenant,
+  request, filename and content type, plus a random nonce to avoid collisions.
+  Confirmation verifies S3 object existence, size and content type. Sequential
+  retries return the existing file. The API response/input shape is unchanged.
+- Refresh-cookie authentication ignores stale access headers.
+- Request lists aggregate active file counts in the list query.
+- WebSocket effects own their timers and sockets, preventing old close events
+  from reconnecting after navigation or React StrictMode cleanup.
+- Frontend asset locations inherit gzip settings. Client walkthrough replay
+  receives its missing close callback.
+- Isolated test settings and CI checks cover backend tests, frontend lint,
+  frontend tests and production builds without production credentials.
+
+## Reproducible checks and measurements
+
+```sh
+python -m pip install -r backend/requirements-test.txt
+cd backend
+pytest --ds=config.test_settings --no-cov -q
+# From frontend:
+npm ci
+npm run lint
+npm test -- --runInBand
+npm run build
+```
+
+Backend: 60 tests passed (SQLite, in-memory cache/channel layer, mocked external
+services). Frontend: 28 tests passed. Production Vite build succeeds.
+
+The list-query regression test compares the previous query shape to the new one:
+1 request: 2 -> 1 SQL queries; 20 requests: 21 -> 1. Deleted files remain excluded.
+These are measured serializer/query counts, not production response-time claims.
+
+Local baseline Vite build: 1.42 seconds; after the socket changes: 1.41 seconds.
+This difference is noise and is not evidence of faster startup. The baseline main
+JS chunk was 420.95 kB, 138.77 kB gzip (~67% fewer transfer bytes when gzip is
+negotiated). This is Vite's compression estimate; actual nginx response headers,
+transfer size and browser startup timing still need staging verification.
+
+## Remaining release checks and risks
+
+- Run PostgreSQL migrations and integration tests with Redis, real S3, real
+  browser sessions and production-like data. The isolated suite uses SQLite and
+  the repository's existing `--nomigrations` test setting.
+- Verify nginx configuration and `Content-Encoding` using deployed certificates
+  and upstreams. nginx is not installed in this environment.
+- Confirm S3 identity permits HeadObject (s3:GetObject); confirmation now fails
+  closed if verification is unavailable. Uploads begun before this change must
+  obtain a new presigned URL. Existing registered downloads remain compatible.
+- Concurrent upload-confirm retries can still create duplicate rows: no unique
+  database constraint was introduced. Object scanning, quota enforcement and
+  post-confirm overwrite prevention need a separate upload lifecycle design.
+- Existing sockets are authorized on connection, not continuously reauthorized
+  when membership or request ownership changes. Add revocation/expiry handling.
+- List and chat-history payload sizes, other serializers, synchronous AI paths,
+  and browser rendering still need profiling under realistic load. Optional
+  Groq credentials currently construct an AI client at import time; missing
+  credentials can prevent startup and should be addressed separately.
+- Lint warnings remain, including React dependency/rendering warnings. They need
+  focused reviews; passing the test suite does not establish full feature coverage.
+- Existing deployment triggers directly on `develop` pushes. This branch's new
+  checks do not configure branch protection or gate that deployment workflow.
+  Require passing checks and staging validation before merging.
+
+This is a tested hardening increment, not certification of production readiness.
