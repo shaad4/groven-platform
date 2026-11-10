@@ -13,7 +13,6 @@ import {
   Clock3,
   FileText,
   Download,
-  Sparkles,
   Send,
   Paperclip,
   MessageSquare,
@@ -32,14 +31,16 @@ import { useTenantBranding } from '../../context/TenantBrandingContext'
 import { useWebRTC } from '../../hooks/useWebRTC'
 import VideoCall from '../../components/chat/VideoCall'
 
+import usePortalDialog from '../../components/client/usePortalDialog'
+import { RequestStatus } from '../../components/client/RequestSummary'
 import { useWalkthrough } from '../../context/WalkthroughContext'
 // ─── Status config (Upgraded to Tailwind Tokens) ──────────────────────────────
 
 const STATUS_CONFIG = {
   received:    { label: 'Submitted',   step: 0, pill: 'bg-surface text-text-sub border-border/60', dot: 'bg-text-dim' },
-  in_review:   { label: 'In review',   step: 1, pill: 'bg-amber-50 text-amber-700 border-amber-200', dot: 'bg-amber-500' },
-  in_progress: { label: 'In progress', step: 2, pill: 'bg-indigo-50 text-indigo-700 border-indigo-200', dot: 'bg-indigo-500' },
-  delivered:   { label: 'Action Needed', step: 3, pill: 'bg-primary-light text-primary-dark border-grove-200 animate-pulse', dot: 'bg-primary' },
+  in_review:   { label: 'In review',   step: 1, pill: 'bg-status-review-bg text-status-review-text border-status-review-text/20', dot: 'bg-amber-500' },
+  in_progress: { label: 'In progress', step: 2, pill: 'bg-status-progress-bg text-status-progress-text border-status-progress-text/20', dot: 'bg-indigo-500' },
+  delivered:   { label: 'Ready for review', step: 3, pill: 'bg-primary-light text-primary-ink border-primary/20', dot: 'bg-primary' },
   closed:      { label: 'Completed',   step: 4, pill: 'bg-surface/50 text-text-dim border-border/40', dot: 'bg-border' },
 }
 
@@ -69,14 +70,15 @@ function getDueDateText(date) {
 
 // ─── Delivery Review Modal ────────────────────────────────────────────────────
 
-function DeliveryReviewModal({ delivery, onClose, onSubmit, loading }) {
+function DeliveryReviewModal({ delivery, onClose, onSubmit, loading, error }) {
   const { colors } = useTenantBranding()
   const { accent, accentSoft, accentDark } = colors
-  const [step, setStep] = useState('choice') 
+  const [step, setStep] = useState('choice')
   const [reworkMessage, setReworkMessage] = useState('')
   const [hoveredApprove, setHoveredApprove] = useState(false)
   const [hoveredSubmit, setHoveredSubmit] = useState(false)
   const [focusedTextarea, setFocusedTextarea] = useState(false)
+  const dialogRef = usePortalDialog(true, () => { if (!loading) onClose() })
 
   return (
     <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center px-0 sm:px-4">
@@ -88,7 +90,7 @@ function DeliveryReviewModal({ delivery, onClose, onSubmit, loading }) {
       />
 
       {/* Sheet / Modal */}
-      <div className="relative w-full sm:max-w-md bg-white sm:rounded-2xl rounded-t-3xl shadow-soft overflow-hidden animate-in slide-in-from-bottom-4 sm:slide-in-from-bottom-8 duration-300">
+      <div ref={dialogRef} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="delivery-review-heading" className="relative max-h-[90dvh] overflow-y-auto w-full sm:max-w-md bg-layout-card sm:rounded-2xl rounded-t-3xl shadow-soft animate-in slide-in-from-bottom-4 sm:slide-in-from-bottom-8 duration-300">
 
         {/* Handle (mobile) */}
         <div className="flex justify-center pt-3 pb-1 sm:hidden">
@@ -98,7 +100,7 @@ function DeliveryReviewModal({ delivery, onClose, onSubmit, loading }) {
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-border/50">
           <div>
-            <h2 className="text-base font-semibold text-text-main tracking-tight">
+            <h2 id="delivery-review-heading" className="text-base font-semibold text-text-main tracking-tight">
               {step === 'choice' ? 'Review Delivery' : 'Request Rework'}
             </h2>
             <p className="text-xs text-text-dim mt-0.5 font-medium">
@@ -107,6 +109,7 @@ function DeliveryReviewModal({ delivery, onClose, onSubmit, loading }) {
           </div>
 
           <button
+            aria-label="Close delivery review"
             onClick={onClose}
             disabled={loading}
             className="h-8 w-8 rounded-full bg-surface flex items-center justify-center text-text-dim hover:text-text-main hover:bg-border/50 transition-colors disabled:opacity-50"
@@ -117,6 +120,7 @@ function DeliveryReviewModal({ delivery, onClose, onSubmit, loading }) {
 
         {/* Body */}
         <div className="p-6">
+          {error && <p role="alert" className="mb-4 rounded-xl bg-status-danger-bg p-3 text-sm text-status-danger-text">{error}</p>}
 
           {step === 'choice' ? (
             <div className="space-y-3">
@@ -137,21 +141,21 @@ function DeliveryReviewModal({ delivery, onClose, onSubmit, loading }) {
                   backgroundColor: hoveredApprove ? `${accent}20` : `${accent}12`
                 }}
               >
-                <div 
-                  className="h-10 w-10 rounded-xl bg-white flex items-center justify-center shrink-0 border shadow-sm"
+                <div
+                  className="h-10 w-10 rounded-xl bg-layout-card flex items-center justify-center shrink-0 border shadow-sm"
                   style={{ borderColor: `${accent}20` }}
                 >
                   {loading ? (
-                    <Loader2 size={18} className="animate-spin" style={{ color: accent }} />
+                    <Loader2 size={18} className="animate-spin" style={{ color: 'var(--primary-text)' }} />
                   ) : (
-                    <CheckCircle2 size={18} style={{ color: accent }} />
+                    <CheckCircle2 size={18} style={{ color: 'var(--primary-text)' }} />
                   )}
                 </div>
                 <div>
-                  <p className="text-sm font-semibold" style={{ color: accentDark }}>
+                  <p className="text-sm font-semibold" style={{ color: 'var(--primary-text)' }}>
                     Approve & Close
                   </p>
-                  <p className="text-xs mt-0.5 font-medium" style={{ color: accent }}>
+                  <p className="text-xs mt-0.5 font-medium" style={{ color: 'var(--primary-text)' }}>
                     Marks this request as completed
                   </p>
                 </div>
@@ -185,6 +189,7 @@ function DeliveryReviewModal({ delivery, onClose, onSubmit, loading }) {
               </p>
 
               <textarea
+                aria-label="Changes requested"
                 value={reworkMessage}
                 onChange={e => setReworkMessage(e.target.value)}
                 placeholder="e.g. The logo needs to be centered and the font size increased on mobile..."
@@ -192,9 +197,9 @@ function DeliveryReviewModal({ delivery, onClose, onSubmit, loading }) {
                 autoFocus
                 className="w-full rounded-xl border bg-surface/50 px-4 py-3 text-sm text-text-main placeholder:text-text-dim resize-none transition-all shadow-sm"
                 style={{
-                  borderColor: focusedTextarea ? accent : 'rgba(0,0,0,0.06)',
+                  borderColor: focusedTextarea ? accent : 'var(--border)',
                   boxShadow: focusedTextarea ? `0 0 0 2px ${accentSoft}` : '',
-                  backgroundColor: focusedTextarea ? '#ffffff' : ''
+                  backgroundColor: focusedTextarea ? 'var(--card)' : ''
                 }}
                 onFocus={() => setFocusedTextarea(true)}
                 onBlur={() => setFocusedTextarea(false)}
@@ -250,12 +255,15 @@ export default function ClientRequestDetailPage() {
   const [deliveries, setDeliveries] = useState([])
   const [loading, setLoading]       = useState(true)
   const [showChat, setShowChat]     = useState(false)
+  const chatDialogRef = usePortalDialog(showChat, () => setShowChat(false))
   const [isMobile, setIsMobile] = useState(
-    typeof window !== 'undefined' ? window.innerWidth < 1024 : false
+    typeof window !== 'undefined' ? window.innerWidth < 1536 : false
   )
 
+  const [isDesktopLayout, setIsDesktopLayout] = useState(() => window.innerWidth >= 1024)
+
   useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 1024)
+    const handleResize = () => { setIsMobile(window.innerWidth < 1536); setIsDesktopLayout(window.innerWidth >= 1024) }
     window.addEventListener('resize', handleResize)
     return () => window.removeEventListener('resize', handleResize)
   }, [])
@@ -269,11 +277,13 @@ export default function ClientRequestDetailPage() {
   // ── Mobile Navigation State ──
   // 'details' | 'deliveries'
   const [mobileView, setMobileView] = useState('details')
+  const initialViewRequest = useRef(null)
 
   // Review modal
   const [reviewModal, setReviewModal]   = useState(null)  // delivery object | null
   const [reviewLoading, setReviewLoading] = useState(false)
-  
+  const [reviewError, setReviewError] = useState('')
+
   // Edit Request
   const [isEditing, setIsEditing]   = useState(false)
   const [editTitle, setEditTitle]   = useState('')
@@ -288,23 +298,21 @@ export default function ClientRequestDetailPage() {
   const [focusedEditTitle, setFocusedEditTitle] = useState(false)
   const [focusedEditDesc, setFocusedEditDesc] = useState(false)
   const [hoveredReviewBtn, setHoveredReviewBtn] = useState(false)
-  const [hoveredChatFAB, setHoveredChatFAB] = useState(false)
-  const [hoveredVideoBtn, setHoveredVideoBtn] = useState(false)
-  const [hoveredMobileVideoBtn, setHoveredMobileVideoBtn] = useState(false)
+
 
   const { width: sidebarWidth, onMouseDown: startSidebarResize } = usePanelResize({
     storageKey: 'client-request-sidebar-width',
-    initialWidth: 340,
-    minWidth: 280,
-    maxWidth: 480,
+    initialWidth: 300,
+    minWidth: 260,
+    maxWidth: 380,
     direction: 'left',
   })
 
   const { width: chatWidth, onMouseDown: startChatResize } = usePanelResize({
     storageKey: 'client-request-chat-width',
-    initialWidth: 360,
-    minWidth: 300,
-    maxWidth: 650,
+    initialWidth: 320,
+    minWidth: 280,
+    maxWidth: 460,
     direction: 'right',
   })
 
@@ -313,12 +321,12 @@ export default function ClientRequestDetailPage() {
   const chatWsRef = useRef(null)
 
   const sendSignal = useCallback((payload) => {
-   
+
     if (chatWsRef.current?.readyState === WebSocket.OPEN){
       chatWsRef.current.send(JSON.stringify(payload))
-    } 
+    }
 
-  })
+  }, [])
 
   const {
     callState, localStream, remoteStream,
@@ -337,6 +345,10 @@ export default function ClientRequestDetailPage() {
       ])
       setReq(reqRes.data.data)
       setDeliveries(delRes.data.data || [])
+      if (initialViewRequest.current !== requestId) {
+        initialViewRequest.current = requestId
+        setMobileView(reqRes.data.data?.status === 'delivered' ? 'deliveries' : 'details')
+      }
     } catch {
       // safe fallback
     } finally {
@@ -361,7 +373,7 @@ export default function ClientRequestDetailPage() {
     } finally {
       setEditLoading(false)
     }
-  } 
+  }
 
   useEffect(() => {
     return registerPortalListener((msg) => {
@@ -375,7 +387,7 @@ export default function ClientRequestDetailPage() {
           )
         }
         if (msg.type === 'files_delivered') {
-          setTimeout(() => fetchAll(), 1500)  
+          setTimeout(() => fetchAll(), 1500)
         }
       }
 
@@ -387,12 +399,13 @@ export default function ClientRequestDetailPage() {
 
   const handleReview = async (deliveryId, action, message) => {
     setReviewLoading(true)
+    setReviewError('')
     try {
       await requestsApi.reviewDelivery(requestId, deliveryId, action, message)
       await fetchAll()
       setReviewModal(null)
     } catch {
-      // safe fallback
+      setReviewError('We couldn’t save your review. Please try again.')
     } finally {
       setReviewLoading(false)
     }
@@ -404,7 +417,7 @@ export default function ClientRequestDetailPage() {
     return (
       <ClientLayout fullBleed>
         <div className="h-[calc(100vh-64px)] flex items-center justify-center">
-          <Loader2 size={24} className="animate-spin" style={{ color: accent }} />
+          <Loader2 size={24} className="animate-spin" style={{ color: 'var(--primary-text)' }} />
         </div>
       </ClientLayout>
     )
@@ -425,8 +438,8 @@ export default function ClientRequestDetailPage() {
             onClick={() => navigate('/my-requests')}
             onMouseEnter={() => setHoveredBackToReqs(true)}
             onMouseLeave={() => setHoveredBackToReqs(false)}
-            className="mt-6 h-10 px-5 rounded-xl border border-border/60 bg-white text-sm font-semibold text-text-main shadow-sm transition-colors"
-            style={{ backgroundColor: hoveredBackToReqs ? '#FAFBFA' : '#FFFFFF' }}
+            className="mt-6 h-10 px-5 rounded-xl border border-border/60 bg-layout-card text-sm font-semibold text-text-main shadow-sm transition-colors"
+            style={{ backgroundColor: hoveredBackToReqs ? 'var(--surface)' : 'var(--card)' }}
           >
             Back to Requests
           </button>
@@ -449,7 +462,7 @@ export default function ClientRequestDetailPage() {
       <style>{`
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        
+
         .attachment-card:hover {
           border-color: ${accent}80 !important;
         }
@@ -457,16 +470,16 @@ export default function ClientRequestDetailPage() {
           background-color: ${accentSoft} !important;
         }
         .attachment-card:hover .attachment-icon {
-          color: ${accent} !important;
+          color: var(--primary-text) !important;
         }
         .attachment-card:hover .attachment-title {
-          color: ${accent} !important;
+          color: var(--primary-text) !important;
         }
         .attachment-download:hover {
           background-color: ${accentSoft} !important;
-          color: ${accent} !important;
+          color: var(--primary-text) !important;
         }
-        
+
         .resize-handle:hover {
           background-color: ${accent}0d !important;
         }
@@ -476,82 +489,67 @@ export default function ClientRequestDetailPage() {
         .resize-handle:hover .resize-dot {
           background-color: ${accent}66 !important;
         }
-        
+
         .review-btn {
-          border-color: ${accent} !important;
-          color: ${accent} !important;
+          border-color: var(--primary-text) !important;
+          color: var(--primary-text) !important;
         }
         .review-btn:hover {
-          background-color: ${accent} !important;
+          background-color: var(--primary-text) !important;
           color: #ffffff !important;
         }
-        
+
         .chat-btn-icon:hover {
-          color: ${accent} !important;
+          color: var(--primary-text) !important;
           background-color: ${accentSoft} !important;
         }
       `}</style>
 
       {/* Spacer to prevent overlap from mobile top-bar in the layout */}
 
-      <div className="flex flex-col h-[calc(100dvh-60px)] lg:h-[100dvh] overflow-hidden bg-layout-page relative">
+      <div className="flex flex-col h-full overflow-hidden bg-layout-page relative">
 
         {/* ── HEADER ──────────────────────────────────────────────────────── */}
-        <div className="h-[72px] border-b border-border/50 bg-white px-4 lg:px-6 flex items-center justify-between shrink-0 shadow-sm z-20 relative">
+        <header className="flex min-h-[88px] shrink-0 items-center justify-between gap-3 border-b border-border bg-layout-card px-4 py-4 lg:px-6">
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2 text-[11px] font-bold tracking-wider text-text-dim uppercase mb-1">
-              <button
-                onClick={() => navigate('/my-requests')}
-                className="hover:text-text-main transition-colors"
-              >
-                My Requests
-              </button>
-              <ChevronRight size={12} className="opacity-50" />
-              <span className="truncate max-w-[150px] lg:max-w-[300px]">ID: #{req.id?.substring(0,6)}</span>
-            </div>
-
-            <div className="flex items-center gap-3 flex-wrap">
-              <h1 className="text-base lg:text-lg font-semibold text-text-main tracking-tight truncate max-w-[200px] sm:max-w-[400px] lg:max-w-[500px]">
-                {req.title}
-              </h1>
-              <span className={`inline-flex items-center gap-1.5 rounded-md border px-2 py-0.5 text-[10px] font-bold tracking-wide uppercase hidden sm:flex ${cfg.pill}`}>
-                {cfg.label}
-              </span>
-            </div>
+            <button onClick={() => navigate('/my-requests')} className="mb-2 flex items-center gap-1.5 text-xs text-text-sub hover:text-text-main">My requests<ChevronRight size={12} /><span>#{String(req.id).slice(0, 6)}</span></button>
+            <h1 className="break-words text-lg font-semibold leading-6 tracking-tight text-text-main sm:text-xl">{req.title}</h1>
           </div>
-        </div>
+          <div className="hidden shrink-0 items-center gap-3 sm:flex"><RequestStatus status={req.status} /><button onClick={() => setShowChat(true)} className="hidden min-h-11 items-center gap-2 rounded-xl border border-border px-3 text-xs font-medium text-text-sub lg:flex 2xl:hidden"><MessageSquare size={16} />Discussion</button></div>
+        </header>
 
         {/* ── MOBILE TABS (Details vs Deliveries ONLY) ────────────────────── */}
-        <div className="lg:hidden flex p-3 border-b border-border/50 bg-white shrink-0 z-10">
+        <div className="lg:hidden flex p-3 border-b border-border/50 bg-layout-card shrink-0 z-10">
           <div className="flex w-full bg-surface/50 p-1.5 rounded-xl border border-border/40">
             <button
               onClick={() => setMobileView('details')}
-              className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all ${
-                mobileView === 'details' ? 'bg-white text-text-main shadow-sm ring-1 ring-border/50' : 'text-text-dim hover:text-text-main'
+              className={`flex min-h-11 flex-1 items-center justify-center gap-1.5 px-1 text-xs font-semibold rounded-lg transition-all ${
+                mobileView === 'details' ? 'bg-layout-card text-text-main shadow-sm ring-1 ring-border/50' : 'text-text-dim hover:text-text-main'
               }`}
             >
-              Details
+              <FileText size={14} />Details
             </button>
             <button
               onClick={() => setMobileView('deliveries')}
-              className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all flex items-center justify-center gap-1.5 ${
-                mobileView === 'deliveries' ? 'bg-white text-text-main shadow-sm ring-1 ring-border/50' : 'text-text-dim hover:text-text-main'
+              className={`min-h-11 flex-1 px-1 text-xs font-semibold rounded-lg transition-all flex items-center justify-center gap-1.5 ${
+                mobileView === 'deliveries' ? 'bg-layout-card text-text-main shadow-sm ring-1 ring-border/50' : 'text-text-dim hover:text-text-main'
               }`}
             >
-              Deliveries
+              <Download size={14} />Deliveries
               {deliveries.length > 0 && (
-                <span 
-                  className="px-1.5 py-0.5 rounded-md text-[9px] border"
+                <span
+                  className="px-1.5 py-0.5 rounded-md text-xs border"
                   style={
                     mobileView === 'deliveries'
-                      ? { backgroundColor: accentSoft, color: accentDark, borderColor: `${accent}20` }
-                      : { backgroundColor: '#F7F8F7', color: '#9EA89E', borderColor: 'rgba(0,0,0,0.06)' }
+                      ? { backgroundColor: accentSoft, color: 'var(--primary-text)', borderColor: `${accent}20` }
+                      : { backgroundColor: 'var(--surface)', color: 'var(--text-dim)', borderColor: 'var(--border)' }
                   }
                 >
                   {deliveries.length}
                 </span>
               )}
             </button>
+            <button data-tour={isMobile ? "client-request-chat" : undefined} onClick={() => setShowChat(true)} className="flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-lg px-1 text-xs font-semibold text-text-sub"><MessageSquare size={14} />Chat</button>
           </div>
         </div>
 
@@ -560,8 +558,8 @@ export default function ClientRequestDetailPage() {
 
           {/* LEFT SIDEBAR (DETAILS) */}
           <div
-            style={window.innerWidth >= 1024 ? { width: `${sidebarWidth}px` } : {}}
-            className={`${mobileView === 'details' ? 'flex' : 'hidden'} lg:flex flex-col w-full lg:w-[360px] border-r border-border/50 bg-white overflow-y-auto no-scrollbar shrink-0 h-full`}
+            style={isDesktopLayout ? { width: `${sidebarWidth}px` } : {}}
+            className={`${mobileView === 'details' ? 'flex' : 'hidden'} lg:flex flex-col w-full lg:w-[300px] border-r border-border/50 bg-layout-card overflow-y-auto no-scrollbar shrink-0 h-full`}
           >
             <div className="p-5 lg:p-6 space-y-6 pb-24 lg:pb-6"> {/* Added pb-24 for mobile FAB clearance */}
 
@@ -569,7 +567,7 @@ export default function ClientRequestDetailPage() {
               <div data-tour="client-request-progress">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-sm font-semibold text-text-main">Progress</h2>
-                  <span className="text-xs font-semibold" style={{ color: accent }}>{cfg.label}</span>
+                  <span className="text-xs font-semibold" style={{ color: 'var(--primary-text)' }}>{cfg.label}</span>
                 </div>
 
                 <div className="space-y-0">
@@ -579,28 +577,28 @@ export default function ClientRequestDetailPage() {
                     return (
                       <div key={step} className="flex gap-4">
                         <div className="flex flex-col items-center">
-                          <div 
+                          <div
                             className="h-5 w-5 rounded-full border flex items-center justify-center transition-colors"
                             style={{
-                              backgroundColor: isCurrent || isDone ? accent : '#F7F8F7',
-                              borderColor: isCurrent || isDone ? accent : 'rgba(0,0,0,0.06)'
+                              backgroundColor: isCurrent || isDone ? accent : 'var(--surface)',
+                              borderColor: isCurrent || isDone ? accent : 'var(--border)'
                             }}
                           >
                             {isDone    && <CheckCircle2 size={12} className="text-white" />}
                             {isCurrent && <div className="h-2 w-2 rounded-full bg-white shadow-sm" />}
                           </div>
                           {index < STATUS_STEPS.length - 1 && (
-                            <div 
-                              className="w-0.5 h-8 my-1 rounded-full" 
-                              style={{ backgroundColor: isDone ? `${accent}4d` : 'rgba(0,0,0,0.06)' }}
+                            <div
+                              className="w-0.5 h-8 my-1 rounded-full"
+                              style={{ backgroundColor: isDone ? `${accent}4d` : 'var(--border)' }}
                             />
                           )}
                         </div>
                         <div className="pb-4 pt-0.5">
-                          <p 
+                          <p
                             className="text-sm font-semibold transition-colors"
                             style={{
-                              color: isCurrent ? accent : isDone ? '#1C201C' : '#9EA89E'
+                              color: isCurrent ? 'var(--primary-text)' : isDone ? 'var(--text-main)' : 'var(--text-dim)'
                             }}
                           >
                             {STATUS_CONFIG[step].label}
@@ -616,7 +614,7 @@ export default function ClientRequestDetailPage() {
                   })}
                 </div>
               </div>
-              
+
               <div className="h-px bg-border/40 w-full" />
 
               {/* Meta */}
@@ -624,7 +622,7 @@ export default function ClientRequestDetailPage() {
                 <div className="flex flex-col gap-1">
                   <div className="flex items-center gap-1.5 text-text-dim mb-1">
                     <Calendar size={14} />
-                    <p className="text-[10px] font-bold uppercase tracking-wider">Submitted</p>
+                    <p className="text-xs font-bold uppercase tracking-wider">Submitted</p>
                   </div>
                   <p className="text-sm font-semibold text-text-main">{formatDate(req.created_at)}</p>
                 </div>
@@ -633,10 +631,10 @@ export default function ClientRequestDetailPage() {
                   <div className="flex flex-col gap-1">
                     <div className="flex items-center gap-1.5 text-text-dim mb-1">
                       <Clock3 size={14} />
-                      <p className="text-[10px] font-bold uppercase tracking-wider">Due Date</p>
+                      <p className="text-xs font-bold uppercase tracking-wider">Due Date</p>
                     </div>
                     <p className="text-sm font-semibold text-text-main">{formatDate(req.due_date)}</p>
-                    <p className="text-[11px] font-bold" style={{ color: accent }}>{getDueDateText(req.due_date)}</p>
+                    <p className="text-xs font-bold" style={{ color: 'var(--primary-text)' }}>{getDueDateText(req.due_date)}</p>
                   </div>
                 )}
               </div>
@@ -658,7 +656,7 @@ export default function ClientRequestDetailPage() {
                       className="h-7 px-3 rounded-md border border-border/60 flex items-center gap-1.5 text-xs font-semibold text-text-sub transition-colors shadow-sm"
                       onMouseEnter={() => setHoveredEditBtn(true)}
                       onMouseLeave={() => setHoveredEditBtn(false)}
-                      style={{ backgroundColor: hoveredEditBtn ? '#FAFBFA' : '#FFFFFF' }}
+                      style={{ backgroundColor: hoveredEditBtn ? 'var(--surface)' : 'var(--card)' }}
                     >
                       <Pencil size={12} />
                       Edit
@@ -675,9 +673,9 @@ export default function ClientRequestDetailPage() {
                         onChange={e => setEditTitle(e.target.value)}
                         className="w-full rounded-xl border bg-surface/30 px-4 py-2.5 text-sm text-text-main focus:outline-none transition-all shadow-sm"
                         style={{
-                          borderColor: focusedEditTitle ? accent : 'rgba(0,0,0,0.06)',
+                          borderColor: focusedEditTitle ? accent : 'var(--border)',
                           boxShadow: focusedEditTitle ? `0 0 0 2px ${accentSoft}` : '',
-                          backgroundColor: focusedEditTitle ? '#ffffff' : ''
+                          backgroundColor: focusedEditTitle ? 'var(--card)' : ''
                         }}
                         onFocus={() => setFocusedEditTitle(true)}
                         onBlur={() => setFocusedEditTitle(false)}
@@ -691,9 +689,9 @@ export default function ClientRequestDetailPage() {
                         rows={5}
                         className="w-full rounded-xl border bg-surface/30 px-4 py-3 text-sm text-text-main resize-none focus:outline-none transition-all shadow-sm"
                         style={{
-                          borderColor: focusedEditDesc ? accent : 'rgba(0,0,0,0.06)',
+                          borderColor: focusedEditDesc ? accent : 'var(--border)',
                           boxShadow: focusedEditDesc ? `0 0 0 2px ${accentSoft}` : '',
-                          backgroundColor: focusedEditDesc ? '#ffffff' : ''
+                          backgroundColor: focusedEditDesc ? 'var(--card)' : ''
                         }}
                         onFocus={() => setFocusedEditDesc(true)}
                         onBlur={() => setFocusedEditDesc(false)}
@@ -714,7 +712,7 @@ export default function ClientRequestDetailPage() {
                         onMouseEnter={() => setHoveredCancelBtn(true)}
                         onMouseLeave={() => setHoveredCancelBtn(false)}
                         className="flex-1 h-10 rounded-xl border border-border/60 text-sm font-semibold text-text-sub transition-colors disabled:opacity-50"
-                        style={{ backgroundColor: hoveredCancelBtn ? '#FAFBFA' : '#FFFFFF' }}
+                        style={{ backgroundColor: hoveredCancelBtn ? 'var(--surface)' : 'var(--card)' }}
                       >
                         Cancel
                       </button>
@@ -762,7 +760,7 @@ export default function ClientRequestDetailPage() {
                       href={file.download_url}
                       target="_blank"
                       rel="noreferrer"
-                      className="attachment-card group flex items-center gap-3 rounded-xl border border-border/60 px-3 py-3 hover:shadow-soft hover:-translate-y-[1px] bg-white transition-all duration-200"
+                      className="attachment-card group flex items-center gap-3 rounded-xl border border-border/60 px-3 py-3 hover:shadow-soft hover:-translate-y-[1px] bg-layout-card transition-all duration-200"
                     >
                       <div className="attachment-icon-bg h-10 w-10 rounded-lg bg-surface flex items-center justify-center shrink-0 transition-colors">
                         <FileText size={18} className="attachment-icon text-text-dim" />
@@ -770,9 +768,9 @@ export default function ClientRequestDetailPage() {
                       <div className="flex-1 min-w-0">
                         <p className="attachment-title text-sm font-semibold text-text-main truncate transition-colors">{file.file_name}</p>
                         <div className="flex items-center gap-2 mt-0.5">
-                          <span className="text-[11px] font-medium text-text-dim">{formatFileSize(file.file_size_bytes)}</span>
+                          <span className="text-xs font-medium text-text-dim">{formatFileSize(file.file_size_bytes)}</span>
                           <span className="text-border">•</span>
-                          <span className="text-[10px] font-bold text-text-dim uppercase tracking-wider">{file.file_extension}</span>
+                          <span className="text-xs font-bold text-text-dim uppercase tracking-wider">{file.file_extension}</span>
                         </div>
                       </div>
                       <button
@@ -792,6 +790,7 @@ export default function ClientRequestDetailPage() {
                             window.open(file.download_url, '_blank')
                           }
                         }}
+                        aria-label={`Download ${file.file_name}`}
                         className="attachment-download shrink-0 h-8 w-8 rounded-full flex items-center justify-center text-text-dim transition-colors"
                       >
                         <Download size={14} />
@@ -828,29 +827,29 @@ export default function ClientRequestDetailPage() {
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto no-scrollbar p-5 lg:px-8 lg:pb-8 pb-24"> {/* Added pb-24 for mobile FAB clearance */}
+            <div className="flex-1 overflow-y-auto no-scrollbar p-5 lg:px-5 2xl:px-8 lg:pb-8 pb-24"> {/* Added pb-24 for mobile FAB clearance */}
 
               {/* ── Pending review banner ──────────────────────────────────── */}
               {req.status === 'delivered' && deliveries.length > 0 && (
-                <div 
-                  className="mb-6 rounded-2xl border p-4 lg:p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4 shadow-sm animate-in fade-in slide-in-from-top-2 duration-300"
-                  style={{ borderColor: `${accent}40`, backgroundColor: accentSoft }}
+                <div
+                  className="mb-6 rounded-2xl border border-primary/25 bg-primary-light p-4 lg:p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4 shadow-sm animate-in fade-in slide-in-from-top-2 duration-300 dark:border-border dark:bg-layout-card"
                 >
                   <div className="flex items-center gap-3 lg:gap-4">
-                    <div 
-                      className="h-10 w-10 lg:h-12 lg:w-12 rounded-xl bg-white border shadow-sm flex items-center justify-center shrink-0"
+                    <div
+                      className="h-10 w-10 lg:h-12 lg:w-12 rounded-xl bg-layout-card border shadow-sm flex items-center justify-center shrink-0"
                       style={{ borderColor: `${accent}20` }}
                     >
-                      <CheckCircle2 size={20} style={{ color: accent }} />
+                      <CheckCircle2 size={20} style={{ color: 'var(--primary-text)' }} />
                     </div>
                     <div>
-                      <p className="text-sm font-bold" style={{ color: accentDark }}>Your delivery is ready for review</p>
-                      <p className="text-xs font-medium mt-0.5 lg:mt-1" style={{ color: accent }}>Approve to close, or request changes.</p>
+                      <p className="text-sm font-bold text-primary-ink dark:text-text-main">Your delivery is ready for review</p>
+                      <p className="text-xs font-medium mt-0.5 lg:mt-1 text-primary-ink dark:text-text-sub">Approve to close, or request changes.</p>
                     </div>
                   </div>
                   <button
                     onClick={() => {
                       const latest = deliveries.find(d => d.delivery_number === latestDeliveryNumber)
+                      setReviewError('')
                       setReviewModal(latest)
                     }}
                     onMouseEnter={() => setHoveredReviewBtn(true)}
@@ -866,7 +865,7 @@ export default function ClientRequestDetailPage() {
               {deliveries.length === 0 ? (
                 <div className="h-full flex items-center justify-center pb-20">
                   <div className="max-w-sm text-center">
-                    <div className="h-16 w-16 rounded-2xl bg-white border border-border/60 shadow-sm flex items-center justify-center mx-auto mb-5">
+                    <div className="h-16 w-16 rounded-2xl bg-layout-card border border-border/60 shadow-sm flex items-center justify-center mx-auto mb-5">
                       <Send size={24} className="text-text-dim" />
                     </div>
                     <h3 className="text-base font-semibold text-text-main">No deliveries yet</h3>
@@ -884,10 +883,10 @@ export default function ClientRequestDetailPage() {
                     return (
                       <div
                         key={delivery.id}
-                        className="rounded-2xl bg-white shadow-sm overflow-hidden border transition-all duration-300 animate-in slide-in-from-bottom-4"
+                        className="rounded-2xl bg-layout-card shadow-sm overflow-hidden border transition-all duration-300 animate-in slide-in-from-bottom-4"
                         style={{
                           animationDelay: `${idx * 100}ms`,
-                          borderColor: isPendingReview ? `${accent}66` : 'rgba(0,0,0,0.06)',
+                          borderColor: isPendingReview ? `${accent}66` : 'var(--border)',
                           boxShadow: isPendingReview ? `0 0 0 1px ${accent}1a, var(--tw-shadow)` : ''
                         }}
                       >
@@ -900,12 +899,12 @@ export default function ClientRequestDetailPage() {
                                   Delivery #{delivery.delivery_number}
                                 </h3>
                                 {isPendingReview ? (
-                                  <div className="h-6 px-2.5 rounded-md bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-sm">
-                                    <div className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
-                                    Awaiting Review
+                                  <div className="h-6 px-2.5 rounded-md bg-status-review-bg text-status-review-text border border-status-review-text/20 text-xs font-medium flex items-center gap-1.5">
+                                    <div className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                                    Awaiting review
                                   </div>
                                 ) : (
-                                  <div className="h-6 px-2.5 rounded-md bg-surface text-text-sub border border-border/60 text-[10px] font-bold uppercase tracking-wider flex items-center">
+                                  <div className="h-6 px-2.5 rounded-md bg-surface text-text-sub border border-border/60 text-xs font-bold uppercase tracking-wider flex items-center">
                                     Delivered
                                   </div>
                                 )}
@@ -916,7 +915,7 @@ export default function ClientRequestDetailPage() {
                             {/* Per-card review button */}
                             {isPendingReview && (
                               <button
-                                onClick={() => setReviewModal(delivery)}
+                                onClick={() => { setReviewError(''); setReviewModal(delivery) }}
                                 className="review-btn hidden lg:flex h-9 px-4 rounded-lg border text-xs font-bold transition-all shadow-sm items-center gap-2"
                               >
                                 <CheckCircle2 size={14} />
@@ -934,7 +933,7 @@ export default function ClientRequestDetailPage() {
                               {delivery.message}
                             </p>
                           )}
-                          
+
                           {!!delivery.links?.length && (
                             <div className="space-y-3 mb-6">
                               <h4 className="text-xs font-bold uppercase tracking-wider text-text-dim mb-2">Links</h4>
@@ -944,7 +943,7 @@ export default function ClientRequestDetailPage() {
                                   href={link.url}
                                   target="_blank"
                                   rel="noreferrer"
-                                  className="attachment-card group flex items-center gap-4 rounded-xl border border-border/60 bg-white px-4 py-3 hover:shadow-soft transition-all"
+                                  className="attachment-card group flex items-center gap-4 rounded-xl border border-border/60 bg-layout-card px-4 py-3 hover:shadow-soft transition-all"
                                 >
                                   <div className="attachment-icon-bg h-10 w-10 rounded-lg bg-surface flex items-center justify-center shrink-0 transition-colors">
                                     <ExternalLink size={18} className="attachment-icon text-text-dim transition-colors" />
@@ -954,7 +953,7 @@ export default function ClientRequestDetailPage() {
                                       {link.label || link.url}
                                     </p>
                                     {link.label && (
-                                      <p className="text-[11px] font-medium text-text-dim truncate mt-0.5">{link.url}</p>
+                                      <p className="text-xs font-medium text-text-dim truncate mt-0.5">{link.url}</p>
                                     )}
                                   </div>
                                 </a>
@@ -971,7 +970,7 @@ export default function ClientRequestDetailPage() {
                                 href={file.download_url}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="attachment-card group flex items-center gap-4 rounded-xl border border-border/60 bg-white px-4 py-3 hover:shadow-soft transition-all"
+                                className="attachment-card group flex items-center gap-4 rounded-xl border border-border/60 bg-layout-card px-4 py-3 hover:shadow-soft transition-all"
                               >
                                 <div className="attachment-icon-bg h-10 w-10 rounded-lg bg-surface flex items-center justify-center shrink-0 transition-colors">
                                   <FileText size={18} className="attachment-icon text-text-dim transition-colors" />
@@ -979,9 +978,9 @@ export default function ClientRequestDetailPage() {
                                 <div className="flex-1 min-w-0">
                                   <p className="attachment-title text-sm font-semibold text-text-main truncate transition-colors">{file.file_name}</p>
                                   <div className="flex items-center gap-2 mt-0.5">
-                                    <span className="text-[11px] font-medium text-text-dim">{formatFileSize(file.file_size_bytes)}</span>
+                                    <span className="text-xs font-medium text-text-dim">{formatFileSize(file.file_size_bytes)}</span>
                                     <span className="text-border">•</span>
-                                    <span className="text-[10px] font-bold uppercase tracking-wider text-text-dim">{file.file_extension}</span>
+                                    <span className="text-xs font-bold uppercase tracking-wider text-text-dim">{file.file_extension}</span>
                                   </div>
                                 </div>
                                 <button
@@ -1001,6 +1000,7 @@ export default function ClientRequestDetailPage() {
                                       window.open(file.download_url, '_blank')
                                     }
                                   }}
+                                  aria-label={`Download ${file.file_name}`}
                                   className="attachment-download shrink-0 h-9 w-9 rounded-full flex items-center justify-center text-text-dim transition-colors"
                                 >
                                   <Download size={16} />
@@ -1023,7 +1023,7 @@ export default function ClientRequestDetailPage() {
           {/* Chat resize handle (Desktop Only) */}
           <div
             onMouseDown={startChatResize}
-            className="resize-handle hidden lg:flex w-2 shrink-0 relative cursor-col-resize group items-center justify-center bg-transparent z-10 transition-colors"
+            className="resize-handle hidden 2xl:flex w-2 shrink-0 relative cursor-col-resize group items-center justify-center bg-transparent z-10 transition-colors"
           >
             <div className="resize-line absolute inset-y-0 left-1/2 -translate-x-1/2 w-px bg-transparent transition-colors" />
             <div className="relative z-10 flex flex-col gap-[3px] opacity-0 group-hover:opacity-100 transition-opacity">
@@ -1033,114 +1033,39 @@ export default function ClientRequestDetailPage() {
             </div>
           </div>
 
-          {/* ── DESKTOP CHAT COLUMN ────────────────────────────────────────── */}
+          {/* One persistent chat connection across desktop, sheet, and mobile layouts. */}
           <div
-            data-tour={!isMobile ? "client-request-chat" : undefined}
-            style={{ width: `${chatWidth}px` }}
-            className="hidden lg:flex border-l border-border/50 bg-white flex-col shrink-0 h-full overflow-hidden shadow-[-4px_0_24px_-8px_rgba(0,0,0,0.02)]"
+            ref={chatDialogRef}
+            tabIndex={isMobile ? -1 : undefined}
+            role={isMobile && showChat ? 'dialog' : undefined}
+            aria-modal={isMobile && showChat ? true : undefined}
+            aria-label="Request discussion"
+            data-tour={!isMobile ? 'client-request-chat' : undefined}
+            style={!isMobile ? { width: `${chatWidth}px` } : undefined}
+            className={isMobile
+              ? `${showChat ? 'flex' : 'hidden'} fixed inset-0 z-[60] flex-col bg-layout-card lg:inset-y-4 lg:left-auto lg:right-4 lg:w-[440px] lg:rounded-2xl lg:border lg:border-border lg:shadow-xl`
+              : 'flex h-full shrink-0 flex-col overflow-hidden border-l border-border bg-layout-card'}
           >
-            <div className="h-[72px] border-b border-border/50 px-6 flex items-center justify-between shrink-0 bg-white">
-              <div>
-                <h2 className="text-base font-semibold text-text-main tracking-tight">Discussion</h2>
-                <p className="text-xs font-medium text-text-sub mt-0.5">Live with provider</p>
-              </div>
+            <div className="flex h-[72px] shrink-0 items-center justify-between border-b border-border bg-layout-card px-5">
+              <div><h2 className="text-base font-semibold tracking-tight text-text-main">Discussion</h2><p className="mt-0.5 text-xs text-text-sub">Keep every detail in context</p></div>
               <div className="flex items-center gap-2">
-                {req?.status !== 'closed' && (
-                  <button
-                    onClick={startCall}
-                    className="chat-btn-icon h-8 w-8 flex items-center justify-center rounded-xl text-text-dim transition-all"
-                    title="Start video call"
-                  >
-                    <Video size={16} />
-                  </button>
-                )}
+                {req?.status !== 'closed' && <button onClick={startCall} className="chat-btn-icon flex h-10 w-10 items-center justify-center rounded-xl text-text-sub" title="Start video call" aria-label="Start video call"><Video size={18} /></button>}
                 <ConnectionPill connectionKey={`chat-${requestId}`} />
+                {isMobile && <button aria-label="Close discussion" onClick={() => setShowChat(false)} className="flex h-10 w-10 items-center justify-center rounded-xl bg-surface text-text-main"><X size={18} /></button>}
               </div>
             </div>
-
-            <ChatPanel
-              clientName={req?.provider_name || 'Provider'}
-              requestId={requestId}
-              requestStatus={req?.status}
-              activities={[]}
-              wsRef={chatWsRef}
-              onSignal={handleSignal}
-              isClient={true}
-              accent={accent}
-              accentSoft={accentSoft}
-              accentDark={accentDark}
-            />
+            <div className="min-h-0 flex-1 overflow-hidden"><ChatPanel clientName={req?.provider_name || 'Provider'} requestId={requestId} requestStatus={req?.status} activities={[]} wsRef={chatWsRef} onSignal={handleSignal} isClient accent={accent} accentSoft={accentSoft} accentDark={accentDark} /></div>
           </div>
-
         </div>
-
       </div>
-
-      {/* ── MOBILE CHAT FAB ───────────────────────────────────────────────── */}
-      {!showChat && (
-        <div className="lg:hidden fixed bottom-[90px] right-4 z-40" data-tour={isMobile ? "client-request-chat" : undefined}>
-          <button
-            onClick={() => setShowChat(true)}
-            onMouseEnter={() => setHoveredChatFAB(true)}
-            onMouseLeave={() => setHoveredChatFAB(false)}
-            className="h-14 w-14 rounded-full text-white shadow-soft flex items-center justify-center active:scale-95 transition-all"
-            style={{ backgroundColor: hoveredChatFAB ? accentDark : accent }}
-          >
-            <MessageSquare size={24} />
-          </button>
-        </div>
-      )}
-
-      {/* ── MOBILE FULLSCREEN CHAT OVERLAY ────────────────────────────────── */}
-      {showChat && (
-        <div className="lg:hidden fixed inset-0 z-50 bg-white flex flex-col animate-in slide-in-from-bottom-full duration-300">
-          {/* Header */}
-          <div className="h-[72px] border-b border-border/50 px-5 flex items-center justify-between shrink-0 bg-white/95 backdrop-blur-md">
-            <div>
-              <h2 className="text-base font-semibold text-text-main tracking-tight">Discussion</h2>
-              <p className="text-xs font-medium text-text-sub mt-0.5">Live with provider</p>
-            </div>
-            <div className="flex items-center gap-2">
-              {req?.status !== 'closed' && (
-                <button
-                  onClick={startCall}
-                  className="chat-btn-icon h-8 w-8 flex items-center justify-center rounded-xl text-text-dim transition-all"
-                  title="Start video call"
-                >
-                  <Video size={16} />
-                </button>
-              )}
-              <button
-                onClick={() => setShowChat(false)}
-                className="h-10 w-10 rounded-full bg-surface flex items-center justify-center hover:bg-border/50 transition-colors"
-              >
-                <X size={18} className="text-text-main" />
-              </button>
-            </div>
-          </div>
-
-          {/* Actual Chat Component filling the screen */}
-          <div className="flex-1 overflow-hidden">
-            <ChatPanel
-              clientName={req?.provider_name || 'Provider'}
-              requestId={requestId}
-              requestStatus={req?.status}
-              activities={[]}
-              isClient={true}
-              accent={accent}
-              accentSoft={accentSoft}
-              accentDark={accentDark}
-            />
-          </div>
-        </div>
-      )}
 
       {/* ── DELIVERY REVIEW MODAL ─────────────────────────────────────────── */}
       {reviewModal && (
         <DeliveryReviewModal
           delivery={reviewModal}
           loading={reviewLoading}
-          onClose={() => !reviewLoading && setReviewModal(null)}
+          error={reviewError}
+          onClose={() => { if (!reviewLoading) { setReviewModal(null); setReviewError('') } }}
           onSubmit={handleReview}
         />
       )}

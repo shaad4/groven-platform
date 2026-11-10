@@ -12,6 +12,7 @@ import {
 import { deleteAccount } from '../../api/settings.api'
 import { useTenantBranding } from '../../context/TenantBrandingContext'
 import { useWalkthrough } from '../../context/WalkthroughContext'
+import usePortalDialog from '../client/usePortalDialog'
 import { RotateCcw } from 'lucide-react'
 
 // Nav 
@@ -42,7 +43,7 @@ function Toggle({ checked, onChange, disabled }) {
         disabled ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'
       }`}
       style={{
-        backgroundColor: checked ? accent : '#D1D5D1',
+        backgroundColor: checked ? accent : 'var(--border)',
       }}
       onFocus={e => {
         e.target.style.boxShadow = `0 0 0 2px ${accentSoft}`
@@ -67,9 +68,9 @@ function Input({ value, onChange, placeholder, maxLength, readOnly, className = 
       placeholder={placeholder}
       maxLength={maxLength}
       readOnly={readOnly}
-      className={`w-full h-9 px-3 rounded-lg border text-[13px] transition-all focus:outline-none ${readOnly
-          ? 'border-[#E8EAE8] bg-[#F7F8F7] text-[#9EA89E] cursor-not-allowed'
-          : 'border-[#E0E4E0] bg-white text-[#141A14] placeholder:text-[#C5CAC5]'
+      className={`w-full h-11 px-3 rounded-lg border text-sm transition-all focus:outline-none ${readOnly
+          ? 'border-border bg-surface text-text-dim cursor-not-allowed'
+          : 'border-border bg-layout-card text-text-main placeholder:text-text-dim'
         } ${className}`}
       onFocus={e => {
         if (!readOnly) {
@@ -93,14 +94,14 @@ function PasswordInput({ label, value, onChange, placeholder }) {
   const { accent, accentSoft } = colors
   return (
     <div>
-      <label className="block text-[11px] font-medium text-[#6B756B] uppercase tracking-wide mb-1.5">{label}</label>
+      <label className="block text-xs font-medium text-text-sub uppercase tracking-wide mb-1.5">{label}</label>
       <div className="relative">
         <input
           type={show ? 'text' : 'password'}
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
-          className="w-full h-9 px-3 pr-9 rounded-lg border border-[#E0E4E0] bg-white text-[13px] text-[#141A14] placeholder:text-[#C5CAC5] focus:outline-none transition-all"
+          className="w-full h-11 px-3 pr-9 rounded-lg border border-border bg-layout-card text-sm text-text-main placeholder:text-text-dim focus:outline-none transition-all"
           onFocus={e => {
             e.target.style.borderColor = accent
             e.target.style.boxShadow = `0 0 0 2px ${accentSoft}`
@@ -110,7 +111,7 @@ function PasswordInput({ label, value, onChange, placeholder }) {
             e.target.style.boxShadow = ''
           }}
         />
-        <button type="button" onClick={() => setShow(!show)} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#9EA89E] hover:text-[#4A544A] transition-colors">
+        <button type="button" aria-label={show ? "Hide password" : "Show password"} onClick={() => setShow(!show)} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-text-dim hover:text-text-sub transition-colors">
           {show ? <EyeOff size={14} /> : <Eye size={14} />}
         </button>
       </div>
@@ -119,7 +120,7 @@ function PasswordInput({ label, value, onChange, placeholder }) {
 }
 
 function Label({ children }) {
-  return <label className="block text-[11px] font-medium text-[#6B756B] uppercase tracking-wide mb-1.5">{children}</label>
+  return <label className="block text-xs font-medium text-text-sub uppercase tracking-wide mb-1.5">{children}</label>
 }
 
 function FormRow({ label, hint, children }) {
@@ -127,22 +128,22 @@ function FormRow({ label, hint, children }) {
     <div>
       {label && <Label>{label}</Label>}
       {children}
-      {hint && <p className="text-[11px] text-[#9EA89E] mt-1.5 leading-relaxed">{hint}</p>}
+      {hint && <p className="text-xs text-text-dim mt-1.5 leading-relaxed">{hint}</p>}
     </div>
   )
 }
 
 function Toast({ type, message }) {
   const { colors } = useTenantBranding()
-  const { accent, accentSoft, accentDark } = colors
+  const { accent, accentSoft } = colors
   if (!message) return null
   return (
     <div
-      className="inline-flex items-center gap-1.5 text-[12px] px-2.5 py-1.5 rounded-lg border"
+      className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-lg border"
       style={
         type === 'success'
-          ? { backgroundColor: accentSoft, borderColor: `${accent}40`, color: accentDark }
-          : { backgroundColor: '#fef2f2', borderColor: '#fecaca', color: '#b91c1c' }
+          ? { backgroundColor: accentSoft, borderColor: `${accent}40`, color: 'var(--primary-text)' }
+          : { backgroundColor: 'var(--danger-bg)', borderColor: 'var(--danger-text)', color: 'var(--danger-text)' }
       }
     >
       {type === 'success' ? <Check size={12} /> : <X size={12} />}
@@ -154,7 +155,7 @@ function Toast({ type, message }) {
 function Btn({ children, onClick, loading, variant = 'primary', size = 'md', disabled, className = '' }) {
   const { colors } = useTenantBranding()
   const { accent, accentDark } = colors
-  const sizes = { sm: 'px-3 py-1.5 text-[12px]', md: 'px-3.5 py-2 text-[13px]' }
+  const sizes = { sm: 'px-3 py-1.5 text-xs', md: 'px-3.5 py-2 text-sm' }
 
   const isDanger = className.includes('bg-red') || className.includes('text-red')
   const style = variant === 'primary' && !disabled && !loading && !isDanger
@@ -170,8 +171,8 @@ function Btn({ children, onClick, loading, variant = 'primary', size = 'md', dis
         variant === 'primary'
           ? 'text-white shadow-sm'
           : variant === 'ghost'
-            ? 'bg-transparent text-[#4A544A] hover:bg-[#F2F4F2] border border-[#E0E4E0]'
-            : 'bg-transparent text-red-600 border border-red-200 hover:bg-red-50'
+            ? 'bg-transparent text-text-sub hover:bg-surface border border-border'
+            : 'bg-transparent text-status-danger-text border border-red-200 hover:bg-status-danger-bg'
       } ${className}`}
       style={style}
       onMouseEnter={e => {
@@ -190,41 +191,33 @@ function Btn({ children, onClick, loading, variant = 'primary', size = 'md', dis
   )
 }
 
-function Divider() {
-  return <div className="border-t border-[#F0F2F0] my-5" />
-}
-
 function SectionTitle({ title, description }) {
   return (
     <div className="mb-6">
-      <h3 className="text-[15px] font-semibold text-[#141A14]">{title}</h3>
-      {description && <p className="text-[12px] text-[#9EA89E] mt-0.5">{description}</p>}
+      <h3 className="text-[15px] font-semibold text-text-main">{title}</h3>
+      {description && <p className="text-xs text-text-dim mt-0.5">{description}</p>}
     </div>
   )
 }
 
 function InfoBox({ children }) {
   return (
-    <div className="flex items-start gap-2.5 p-3 rounded-lg bg-[#F7F8F7] border border-[#E8EAE8]">
-      <Info size={13} className="text-[#9EA89E] mt-0.5 flex-shrink-0" />
-      <p className="text-[12px] text-[#9EA89E] leading-relaxed">{children}</p>
+    <div className="flex items-start gap-2.5 p-3 rounded-lg bg-surface border border-border">
+      <Info size={13} className="text-text-dim mt-0.5 flex-shrink-0" />
+      <p className="text-xs text-text-dim leading-relaxed">{children}</p>
     </div>
   )
 }
 
 function ConfirmModal({ title, children, onClose }) {
-  useEffect(() => {
-    const onKey = (e) => e.key === 'Escape' && onClose()
-    document.addEventListener('keydown', onKey)
-    return () => document.removeEventListener('keydown', onKey)
-  }, [onClose])
+  const dialogRef = usePortalDialog(true, onClose)
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-      <div className="relative bg-white w-full max-w-sm rounded-2xl border border-[#E8EAE8] shadow-2xl">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[#EEF0EE]">
-          <h3 className="text-[14px] font-semibold text-[#141A14]">{title}</h3>
-          <button onClick={onClose} className="text-[#9EA89E] hover:text-[#4A544A] transition-colors p-1 rounded-lg hover:bg-[#F2F4F2]">
+      <div ref={dialogRef} tabIndex={-1} role="dialog" aria-modal="true" aria-label={title} className="relative bg-layout-card w-full max-w-sm rounded-2xl border border-border shadow-2xl">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+          <h3 className="text-[14px] font-semibold text-text-main">{title}</h3>
+          <button aria-label="Close confirmation" onClick={onClose} className="text-text-dim hover:text-text-sub transition-colors p-1 rounded-lg hover:bg-surface">
             <X size={14} />
           </button>
         </div>
@@ -251,9 +244,9 @@ function passwordStrength(pw) {
 
 //  Sections 
 
-function ProfileSection({ user, tenant, onClose }) {
+function ProfileSection({ user, onClose }) {
   const { colors } = useTenantBranding()
-  const { accent, accentSoft, accentDark } = colors
+  const { accent } = colors
   const [displayName, setDisplayName] = useState('')
   const [avatarPreview, setAvatarPreview] = useState(null)
   const { startWalkthrough } = useWalkthrough()
@@ -314,7 +307,7 @@ function ProfileSection({ user, tenant, onClose }) {
           <button
             type="button"
             onClick={() => avatarRef.current?.click()}
-            className="w-14 h-14 rounded-full border-2 border-dashed overflow-hidden flex items-center justify-center bg-[#F2F4F2] transition-colors"
+            className="w-14 h-14 rounded-full border-2 border-dashed overflow-hidden flex items-center justify-center bg-surface transition-colors"
             style={{
               borderColor: hoveredAvatar ? accent : `${accent}40`,
             }}
@@ -323,7 +316,7 @@ function ProfileSection({ user, tenant, onClose }) {
           >
             {avatarPreview
               ? <img src={avatarPreview} alt="avatar" className="w-full h-full object-cover" />
-              : <span className="text-base font-semibold" style={{ color: accent }}>{initials}</span>
+              : <span className="text-base font-semibold" style={{ color: 'var(--primary-text)' }}>{initials}</span>
             }
             <div className="absolute inset-0 rounded-full bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
               <Camera size={16} className="text-white" />
@@ -332,8 +325,8 @@ function ProfileSection({ user, tenant, onClose }) {
           <input ref={avatarRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleAvatarSelect} />
         </div>
         <div>
-          <p className="text-[14px] font-medium text-[#141A14]">{user?.display_name || displayName}</p>
-          <p className="text-[12px] text-[#9EA89E] mt-0.5">{user?.email}</p>
+          <p className="text-[14px] font-medium text-text-main">{user?.display_name || displayName}</p>
+          <p className="text-xs text-text-dim mt-0.5">{user?.email}</p>
         </div>
       </div>
 
@@ -341,18 +334,18 @@ function ProfileSection({ user, tenant, onClose }) {
         <FormRow label="Display name" hint="How your name appears on messages.">
           <div className="relative">
             <Input value={displayName} onChange={setDisplayName} maxLength={60} />
-            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] text-[#C5CAC5]">{displayName.length}/60</span>
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-text-dim">{displayName.length}/60</span>
           </div>
         </FormRow>
         <FormRow label="Email address">
           <Input value={user?.email || ''} readOnly />
-          {/* <p className="text-[11px] text-[#9EA89E] mt-1.5">
-            Contact <span className="font-medium" style={{ color: accent }}>{tenant?.name || 'your provider'}</span> to change your email.
+          {/* <p className="text-xs text-text-dim mt-1.5">
+            Contact <span className="font-medium" style={{ color: 'var(--primary-text)' }}>{tenant?.name || 'your provider'}</span> to change your email.
           </p> */}
         </FormRow>
       </div>
 
-      <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#F0F2F0]">
+      <div className="flex items-center justify-end gap-3 pt-4 border-t border-border">
         <Toast type={profileStatus?.type} message={profileStatus?.message} />
         <Btn onClick={handleSaveProfile} loading={profileLoading}>Save profile</Btn>
       </div>
@@ -361,10 +354,10 @@ function ProfileSection({ user, tenant, onClose }) {
       <div className="mt-8">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <p className="text-[13px] font-semibold text-[#141A14]">Change password</p>
-            <p className="text-[11px] text-[#9EA89E] mt-0.5">Use a strong, unique password.</p>
+            <p className="text-sm font-semibold text-text-main">Change password</p>
+            <p className="text-xs text-text-dim mt-0.5">Use a strong, unique password.</p>
           </div>
-          <a href="/forgot-password" className="text-[12px] hover:underline" style={{ color: accent }}>Forgot password?</a>
+          <a href="/forgot-password" className="text-xs hover:underline" style={{ color: 'var(--primary-text)' }}>Forgot password?</a>
         </div>
 
         <div className="space-y-3.5">
@@ -374,7 +367,7 @@ function ProfileSection({ user, tenant, onClose }) {
               <PasswordInput label="New password" value={newPw} onChange={setNewPw} placeholder="••••••••" />
               {newPw && (
                 <div className="mt-2">
-                  <div className="h-1 rounded-full bg-[#EEF0EE] overflow-hidden">
+                  <div className="h-1 rounded-full bg-border overflow-hidden">
                     <div
                       className="h-full rounded-full transition-all"
                       style={{
@@ -383,32 +376,32 @@ function ProfileSection({ user, tenant, onClose }) {
                       }}
                     />
                   </div>
-                  <p className="text-[11px] mt-1 font-medium" style={{ color: strength.score >= 4 ? accent : '#9EA89E' }}>{strength.label}</p>
+                  <p className="text-xs mt-1 font-medium" style={{ color: strength.score >= 4 ? 'var(--primary-text)' : 'var(--text-dim)' }}>{strength.label}</p>
                 </div>
               )}
             </div>
             <div>
               <PasswordInput label="Confirm new password" value={confirmPw} onChange={setConfirmPw} placeholder="••••••••" />
               {confirmPw && (
-                <p className="text-[11px] mt-1.5 font-medium" style={{ color: passwordsMatch ? accent : '#ef4444' }}>
+                <p className="text-xs mt-1.5 font-medium" style={{ color: passwordsMatch ? 'var(--primary-text)' : 'var(--danger-text)' }}>
                   {passwordsMatch ? '✓ Match' : '✗ No match'}
                 </p>
               )}
             </div>
           </div>
-          <p className="text-[11px] text-[#9EA89E]">At least 8 characters with letters and numbers.</p>
+          <p className="text-xs text-text-dim">At least 8 characters with letters and numbers.</p>
         </div>
 
-        <div className="flex items-center justify-end gap-3 pt-4 mt-4 border-t border-[#F0F2F0]">
+        <div className="flex items-center justify-end gap-3 pt-4 mt-4 border-t border-border">
           <Toast type={pwStatus?.type} message={pwStatus?.message} />
           <Btn onClick={handleChangePassword} loading={pwLoading} disabled={!passwordsMatch || !currentPw}>Update password</Btn>
         </div>
       </div>
 
       {/* Replay Walkthrough */}
-      <div className="mt-8 border-t border-[#F0F2F0] pt-6">
-        <p className="text-[13px] font-semibold text-[#141A14] mb-1">Onboarding walkthrough</p>
-        <p className="text-[11px] text-[#9EA89E] mb-3">Re-take the interactive tour to get familiar with your portal.</p>
+      <div className="mt-8 border-t border-border pt-6">
+        <p className="text-sm font-semibold text-text-main mb-1">Onboarding walkthrough</p>
+        <p className="text-xs text-text-dim mb-3">Re-take the interactive tour to get familiar with your portal.</p>
         <Btn variant="ghost" size="sm" onClick={() => { startWalkthrough('client'); onClose(); }}>
           <RotateCcw size={14} className="mr-1" /> Replay Walkthrough
         </Btn>
@@ -453,13 +446,13 @@ function NotificationsSection({ tenant }) {
       </InfoBox>
 
       <div className="mt-5">
-        <p className="text-[11px] font-semibold text-[#9EA89E] uppercase tracking-wider mb-3.5">Email me when…</p>
+        <p className="text-xs font-semibold text-text-dim uppercase tracking-wider mb-3.5">Email me when…</p>
         <div className="space-y-4">
           {notifItems.map(({ key, label, desc }) => (
             <div key={key} className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-[13px] text-[#141A14]">{label}</p>
-                <p className="text-[11px] text-[#9EA89E] mt-0.5">{desc}</p>
+                <p className="text-sm text-text-main">{label}</p>
+                <p className="text-xs text-text-dim mt-0.5">{desc}</p>
               </div>
               <Toggle
                 checked={notifPrefs?.email?.[key] ?? false}
@@ -473,12 +466,12 @@ function NotificationsSection({ tenant }) {
 
       <div className="mt-6">
         <InfoBox>
-          Emails are sent from {providerName} via Groven. You can unsubscribe at any time from within any email.
+          Emails are sent from {providerName}. You can unsubscribe at any time from within any email.
         </InfoBox>
       </div>
 
-      {error && <p className="text-[12px] text-red-600 mt-3">{error}</p>}
-      <p className="text-[11px] text-[#9EA89E] mt-4">Changes are saved automatically.</p>
+      {error && <p className="text-xs text-status-danger-text mt-3">{error}</p>}
+      <p className="text-xs text-text-dim mt-4">Changes are saved automatically.</p>
     </div>
   )
 }
@@ -513,17 +506,17 @@ function DangerZoneSection({ tenant }) {
     <>
       <div>
         <div className="flex items-center gap-2 mb-1">
-          <AlertTriangle size={14} className="text-red-600" />
+          <AlertTriangle size={14} className="text-status-danger-text" />
           <h3 className="text-[15px] font-semibold text-red-800">Danger zone</h3>
         </div>
-        <p className="text-[12px] text-red-500 mb-5">This action is permanent and cannot be reversed.</p>
+        <p className="text-xs text-status-danger-text mb-5">This action is permanent and cannot be reversed.</p>
 
         <div className="rounded-xl border border-red-200 overflow-hidden">
-          <div className="px-4 py-3.5 flex items-start justify-between gap-4 bg-white">
+          <div className="px-4 py-3.5 flex items-start justify-between gap-4 bg-layout-card">
             <div>
-              <p className="text-[13px] font-medium text-[#141A14]">Leave workspace</p>
-              <p className="text-[12px] text-[#9EA89E] mt-0.5 max-w-xs">
-                Removes your access to {providerName}. Your Groven account stays active and you can still access any other workspaces you're a part of.
+              <p className="text-sm font-medium text-text-main">Leave workspace</p>
+              <p className="text-xs text-text-dim mt-0.5 max-w-xs">
+                Removes your access to {providerName}. Your account stays active and you can still access any other workspaces you're a part of.
               </p>
             </div>
             <Btn variant="danger-ghost" size="sm" onClick={handleOpenModal} className="flex-shrink-0 mt-0.5">
@@ -536,9 +529,9 @@ function DangerZoneSection({ tenant }) {
       {showModal && (
         <ConfirmModal title="Leave workspace" onClose={() => setShowModal(false)}>
           <div className="space-y-4">
-            <div className="flex items-start gap-2.5 p-3 rounded-xl bg-red-50 border border-red-200">
-              <AlertTriangle size={13} className="text-red-600 mt-0.5 flex-shrink-0" />
-              <p className="text-[12px] text-red-800 leading-relaxed">
+            <div className="flex items-start gap-2.5 p-3 rounded-xl bg-status-danger-bg border border-red-200">
+              <AlertTriangle size={13} className="text-status-danger-text mt-0.5 flex-shrink-0" />
+              <p className="text-xs text-red-800 leading-relaxed">
                 You'll lose access to {providerName} and all requests, deliveries, and messages there. This cannot be undone.
               </p>
             </div>
@@ -566,9 +559,10 @@ function DangerZoneSection({ tenant }) {
 function ClientSettingsModalInner({ onClose }) {
   const { user, tenant } = useAuth()
   const { colors } = useTenantBranding()
-  const { accent, accentSoft } = colors
+  const { accentSoft } = colors
   const [activeSection, setActiveSection] = useState('profile')
   const contentRef = useRef(null)
+  const dialogRef = usePortalDialog(true, onClose)
 
   useEffect(() => {
     if (contentRef.current) contentRef.current.scrollTop = 0
@@ -592,16 +586,21 @@ function ClientSettingsModalInner({ onClose }) {
 
       {/* Modal shell */}
       <div
-        className="relative flex bg-white w-full h-[100dvh] sm:w-[700px] sm:h-[580px] sm:rounded-2xl shadow-2xl overflow-hidden"
+        ref={dialogRef}
+        tabIndex={-1}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Account settings"
+        className="relative flex bg-layout-card w-full h-[100dvh] sm:w-[700px] sm:h-[580px] sm:rounded-2xl shadow-2xl overflow-hidden"
         style={{
           animation: 'modalIn 0.18s cubic-bezier(0.16,1,0.3,1)',
         }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* ── Sidebar nav ── */}
-        <aside className="hidden sm:flex flex-col w-[190px] flex-shrink-0 border-r border-[#F0F2F0] bg-[#FAFBFA] overflow-y-auto">
-          <div className="px-4 pt-5 pb-3 border-b border-[#F0F2F0]">
-            <p className="text-[13px] font-semibold text-[#141A14]">Account</p>
+        <aside className="hidden sm:flex flex-col w-[190px] flex-shrink-0 border-r border-border bg-layout-page overflow-y-auto">
+          <div className="px-4 pt-5 pb-3 border-b border-border">
+            <p className="text-sm font-semibold text-text-main">Account</p>
           </div>
           <nav className="flex-1 px-2 py-3 space-y-0.5">
             {NAV.map(({ id, label, icon: Icon }) => (
@@ -609,18 +608,18 @@ function ClientSettingsModalInner({ onClose }) {
                 key={id}
                 type="button"
                 onClick={() => setActiveSection(id)}
-                className={`w-full text-left flex items-center gap-2.5 text-[13px] px-2.5 py-2 rounded-lg transition-colors ${
+                className={`w-full text-left flex items-center gap-2.5 text-sm px-2.5 py-2 rounded-lg transition-colors ${
                   activeSection === id
                     ? id === 'danger-zone'
-                      ? 'bg-red-50 text-red-600 font-medium'
+                      ? 'bg-status-danger-bg text-status-danger-text font-medium'
                       : 'font-medium'
                     : id === 'danger-zone'
-                      ? 'text-red-500 hover:bg-red-50/60'
-                      : 'text-[#4A544A] hover:bg-[#F2F4F2] hover:text-[#141A14]'
+                      ? 'text-status-danger-text hover:bg-status-danger-bg/60'
+                      : 'text-text-sub hover:bg-surface hover:text-text-main'
                 }`}
                 style={
                   activeSection === id && id !== 'danger-zone'
-                    ? { backgroundColor: accentSoft, color: accent }
+                    ? { backgroundColor: accentSoft, color: 'var(--primary-text)' }
                     : {}
                 }
               >
@@ -634,37 +633,38 @@ function ClientSettingsModalInner({ onClose }) {
         {/* ── Content ── */}
         <div className="flex flex-col flex-1 min-w-0">
           {/* Header bar */}
-          <div className="flex items-center justify-between px-5 py-3.5 border-b border-[#F0F2F0] flex-shrink-0">
-            <p className="text-[14px] font-semibold text-[#141A14]">
+          <div className="flex items-center justify-between px-5 py-3.5 border-b border-border flex-shrink-0">
+            <p className="text-[14px] font-semibold text-text-main">
               Account settings
             </p>
             <button
               onClick={onClose}
-              className="ml-auto flex items-center justify-center w-7 h-7 rounded-lg text-[#9EA89E] hover:text-[#4A544A] hover:bg-[#F2F4F2] transition-colors"
+              aria-label="Close account settings"
+              className="ml-auto flex items-center justify-center w-10 h-10 rounded-lg text-text-dim hover:text-text-sub hover:bg-surface transition-colors"
             >
               <X size={15} />
             </button>
           </div>
 
           {/* Mobile sub-navigation tabs (scrollable) */}
-          <div className="sm:hidden flex items-center gap-1 overflow-x-auto no-scrollbar px-4 py-2 border-b border-[#F0F2F0] bg-[#FAFBFA] flex-shrink-0">
+          <div className="sm:hidden flex items-center gap-1 overflow-x-auto no-scrollbar px-4 py-2 border-b border-border bg-layout-page flex-shrink-0">
             {NAV.map(({ id, label, icon: Icon }) => (
               <button
                 key={id}
                 type="button"
                 onClick={() => setActiveSection(id)}
-                className={`shrink-0 flex items-center gap-1.5 text-[12px] px-3 py-1.5 rounded-lg transition-colors ${
+                className={`shrink-0 flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg transition-colors ${
                   activeSection === id
                     ? id === 'danger-zone'
-                      ? 'bg-red-50 text-red-600 font-semibold'
+                      ? 'bg-status-danger-bg text-status-danger-text font-semibold'
                       : 'font-semibold'
                     : id === 'danger-zone'
-                      ? 'text-red-500 hover:bg-red-50/60'
-                      : 'text-[#4A544A] hover:bg-[#F2F4F2] hover:text-[#141A14]'
+                      ? 'text-status-danger-text hover:bg-status-danger-bg/60'
+                      : 'text-text-sub hover:bg-surface hover:text-text-main'
                 }`}
                 style={
                   activeSection === id && id !== 'danger-zone'
-                    ? { backgroundColor: accentSoft, color: accent }
+                    ? { backgroundColor: accentSoft, color: 'var(--primary-text)' }
                     : {}
                 }
               >

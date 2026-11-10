@@ -4,13 +4,13 @@ import { useBadges } from '../../hooks/useBadges'
 import dashboardApi from '../../api/dashboard.api'
 
 const ACTIVITY_CONFIG = {
-  request_created:      { dot: 'bg-[#0f6e56]' },
+  request_created:      { dot: 'bg-primary' },
   status_change:        { dot: 'bg-[#6366f1]' },
   message_sent:         { dot: 'bg-[#f59e0b]' },
-  delivery_created:     { dot: 'bg-[#0f6e56]' },
+  delivery_created:     { dot: 'bg-primary' },
   note_added:           { dot: 'bg-[#9ea89e]' },
   file_uploaded:        { dot: 'bg-[#9ea89e]' },
-  ai_summary_generated: { dot: 'bg-[#0f6e56]' },
+  ai_summary_generated: { dot: 'bg-primary' },
 }
 
 function relativeTime(iso) {
@@ -26,7 +26,7 @@ function relativeTime(iso) {
 }
 
 function Skeleton({ className }) {
-  return <div className={`rounded-xl bg-[#f1f3f1] animate-pulse ${className}`} />
+  return <div className={`rounded-xl bg-surface animate-pulse ${className}`} />
 }
 
 export default function LiveFeed() {
@@ -54,15 +54,15 @@ export default function LiveFeed() {
   }, [registerActivityListener, handleActivity])
 
   return (
-    <div className="rounded-2xl border border-[#e8eae8] bg-white overflow-hidden">
-      <div className="flex items-center justify-between px-5 py-4 border-b border-[#e8eae8]">
+    <div className="rounded-2xl border border-border bg-layout-card overflow-hidden">
+      <div className="flex items-center justify-between px-5 py-4 border-b border-border">
         <div className="flex items-center gap-2">
-          <span className="text-[14px] font-semibold text-[#141a14]">Live feed</span>
-          <span className="h-2 w-2 rounded-full bg-[#1d9e75] animate-pulse" />
+          <span className="text-[14px] font-semibold text-text-main">Live feed</span>
+          <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
         </div>
         <button
           onClick={() => navigate('/activity')}
-          className="text-[12px] text-[#0f6e56] hover:underline"
+          className="text-[12px] text-primary-ink hover:underline"
         >
           See all →
         </button>
@@ -74,7 +74,7 @@ export default function LiveFeed() {
         </div>
       ) : activities.length === 0 ? (
         <div className="px-4 py-8 text-center">
-          <p className="text-[13px] text-[#9ea89e]">No activity yet.</p>
+          <p className="text-[13px] text-text-dim">No activity yet.</p>
         </div>
       ) : (
         <div className="px-4 pb-2 divide-y divide-[#f1f3f1]">
@@ -84,19 +84,19 @@ export default function LiveFeed() {
               <div key={a.id || i} className="flex gap-3 py-3">
                 <div className={`mt-1.5 h-2 w-2 rounded-full shrink-0 ${cfg.dot}`} />
                 <div className="flex-1 min-w-0">
-                  <p className="text-[13px] text-[#141a14] leading-snug">
+                  <p className="text-[13px] text-text-main leading-snug">
                     {a.description}
                   </p>
                   {a.request_title && (
                     <button
                       onClick={() => navigate(`/requests/${a.request_id}`)}
-                      className="text-[11px] text-[#0f6e56] hover:underline truncate max-w-[200px] block mt-0.5"
+                      className="text-[11px] text-primary-ink hover:underline truncate max-w-[200px] block mt-0.5"
                     >
                       {a.request_title}
                     </button>
                   )}
                 </div>
-                <span className="text-[11px] text-[#9ea89e] shrink-0 mt-0.5">
+                <span className="text-[11px] text-text-dim shrink-0 mt-0.5">
                   {relativeTime(a.created_at)}
                 </span>
               </div>
@@ -105,10 +105,10 @@ export default function LiveFeed() {
         </div>
       )}
 
-      <div className="px-4 pb-4 pt-1 border-t border-[#f1f3f1]">
+      <div className="px-4 pb-4 pt-1 border-t border-border">
         <button
           onClick={() => navigate('/activity')}
-          className="w-full text-center text-[12px] text-[#0f6e56] hover:underline py-1"
+          className="w-full text-center text-[12px] text-primary-ink hover:underline py-1"
         >
           View full activity log →
         </button>

@@ -6,7 +6,7 @@ import {
   CheckCircle2, Circle, Clock, Send, Paperclip,
   MoreHorizontal, Copy, ExternalLink, Download, Pencil, Check,
   GripVertical, ArrowRight, RotateCcw, Video,
-  Sparkles, RefreshCw,
+  Sparkles, RefreshCw, MessageSquare,
 } from 'lucide-react'
 import ProviderLayout from '../../components/layout/ProviderLayout'
 import requestsApi from '../../api/requests.api'
@@ -26,11 +26,11 @@ import { useWalkthrough } from '../../context/WalkthroughContext'
 // ── Status config ─────────────────────────────────────────────
 const STATUS_ORDER = ['received', 'in_review', 'in_progress', 'delivered', 'closed']
 const DEFAULT_STATUS_CONFIG = {
-  received:    { label: 'Received',    pill: 'bg-[#e6f5f0] text-[#085041]',   dot: 'bg-[#1d9e75]' },
-  in_review:   { label: 'In Review',   pill: 'bg-[#fef3e2] text-[#92500a]',   dot: 'bg-[#f59e0b]' },
-  in_progress: { label: 'In Progress', pill: 'bg-[#eef2ff] text-[#3730a3]',   dot: 'bg-[#6366f1]' },
-  delivered:   { label: 'Delivered',   pill: 'bg-[#e6f5f0] text-[#0f6e56]',   dot: 'bg-[#0f6e56]' },
-  closed:      { label: 'Closed',      pill: 'bg-[#f3f4f3] text-[#4a544a]',   dot: 'bg-[#9ea89e]' },
+  received:    { label: 'Received',    pill: 'bg-primary-light text-primary-ink',   dot: 'bg-[#1d9e75]' },
+  in_review:   { label: 'In Review',   pill: 'bg-status-review-bg text-status-review-text',   dot: 'bg-[#f59e0b]' },
+  in_progress: { label: 'In Progress', pill: 'bg-status-progress-bg text-status-progress-text',   dot: 'bg-[#6366f1]' },
+  delivered:   { label: 'Delivered',   pill: 'bg-primary-light text-primary-ink',   dot: 'bg-primary' },
+  closed:      { label: 'Closed',      pill: 'bg-surface text-text-sub',   dot: 'bg-text-dim' },
 }
 
 function buildStatusConfig(customLabels) {
@@ -56,7 +56,7 @@ const VALID_TRANSITIONS = {
 // ── Helpers ───────────────────────────────────────────────────
 function Avatar({ name = '', size = 'md' }) {
   const c = getAvatarColor(name)
-  const sz = size === 'sm' ? 'h-6 w-6 text-[10px]' : 'h-8 w-8 text-[12px]'
+  const sz = size === 'sm' ? 'h-6 w-6 text-[11px]' : 'h-8 w-8 text-[12px]'
   return (
     <div className={`rounded-full flex items-center justify-center font-semibold shrink-0 ${sz} ${c.bg} ${c.text}`}>
       {getInitials(name)}
@@ -74,12 +74,12 @@ function StatusPill({ status, statusConfig }) {
   )
 }
 
-// AI CATEGORY 
+// AI CATEGORY
 const CATEGORY_STYLES = {
-  design:   { label: 'Design',   bg: 'bg-violet-50', text: 'text-violet-600', dot: 'bg-violet-500' },
-  dev:      { label: 'Dev',      bg: 'bg-cyan-50',   text: 'text-cyan-600',   dot: 'bg-cyan-500' },
-  content:  { label: 'Content',  bg: 'bg-orange-50', text: 'text-orange-600', dot: 'bg-orange-500' },
-  feedback: { label: 'Feedback', bg: 'bg-rose-50',   text: 'text-rose-600',   dot: 'bg-rose-500' },
+  design:   { label: 'Design',   bg: 'bg-status-progress-bg', text: 'text-status-progress-text', dot: 'bg-status-progress-text' },
+  dev:      { label: 'Dev',      bg: 'bg-status-progress-bg',   text: 'text-status-progress-text',   dot: 'bg-status-progress-text' },
+  content:  { label: 'Content',  bg: 'bg-status-review-bg', text: 'text-status-review-text', dot: 'bg-status-review-text' },
+  feedback: { label: 'Feedback', bg: 'bg-status-danger-bg',   text: 'text-status-danger-text',   dot: 'bg-red-600' },
 }
 
 function CategoryChip({ category }) {
@@ -93,7 +93,7 @@ function CategoryChip({ category }) {
   )
 }
 
-//  AI SUMMARY CARD 
+//  AI SUMMARY CARD
 function AISummaryCard({ request, requestId, onRegenerate, isPro }) {
   const [regenerating, setRegenerating] = useState(false)
   const isReady = Boolean(request.ai_summary)
@@ -109,20 +109,17 @@ function AISummaryCard({ request, requestId, onRegenerate, isPro }) {
   }
 
   return (
-    <div className="relative rounded-2xl bg-gradient-to-br from-violet-200/60 via-emerald-200/50 to-cyan-200/60 p-[1px]">
-      <div className="relative rounded-2xl bg-white p-5 overflow-hidden">
-        <div className="pointer-events-none absolute -top-10 -right-10 h-32 w-32 rounded-full bg-gradient-to-br from-violet-400/10 to-emerald-400/10 blur-2xl" />
-
-        <div className="relative z-10 flex items-center justify-between gap-3 mb-3 flex-wrap">
+    <div className="rounded-2xl border border-border bg-layout-card p-5">
+        <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
           <div className="flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500 to-emerald-500 shadow-[0_0_12px_rgba(99,102,241,0.35)]">
-              <Sparkles size={13} className="text-white" />
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-surface">
+              <Sparkles size={13} className="text-text-sub" />
             </div>
-            <p className="text-[13px] font-semibold text-[#141a14]">AI Summary</p>
+            <p className="text-[13px] font-semibold text-text-main">AI Summary</p>
             {!isReady && (
-              <span className="flex items-center gap-1 text-[11px] text-[#9ea89e]">
+              <span className="flex items-center gap-1 text-[11px] text-text-dim">
                 <Loader2 size={11} className="animate-spin" />
-                Thinking...
+                Summary pending
               </span>
             )}
           </div>
@@ -134,7 +131,7 @@ function AISummaryCard({ request, requestId, onRegenerate, isPro }) {
                 onClick={handleRegenerate}
                 disabled={regenerating}
                 title="Regenerate summary"
-                className="h-7 w-7 flex items-center justify-center rounded-lg text-[#9ea89e] hover:text-[#0f6e56] hover:bg-[#f0faf6] transition-colors disabled:opacity-50"
+                className="h-7 w-7 flex items-center justify-center rounded-lg text-text-dim hover:text-primary-ink hover:bg-primary-light transition-colors disabled:opacity-50"
               >
                 <RefreshCw size={13} className={regenerating ? 'animate-spin' : ''} />
               </button>
@@ -143,21 +140,20 @@ function AISummaryCard({ request, requestId, onRegenerate, isPro }) {
         </div>
 
         {isReady ? (
-          <p className="relative z-10 text-[13px] text-[#4a544a] leading-relaxed">
+          <p className="text-[13px] text-text-sub leading-relaxed">
             {request.ai_summary}
           </p>
         ) : (
-          <div className="relative z-10 space-y-2">
+          <div className="space-y-2">
             {['92%', '78%', '60%'].map((w) => (
               <div
                 key={w}
                 style={{ width: w }}
-                className="h-3 rounded-full bg-gradient-to-r from-[#eef0ee] via-[#f7f8f7] to-[#eef0ee] bg-[length:200%_100%] animate-shimmer"
+                className="h-3 rounded-full bg-border animate-pulse"
               />
             ))}
           </div>
         )}
-      </div>
     </div>
   )
 }
@@ -166,8 +162,8 @@ function FileIcon({ ext }) {
   const isPDF = ext === 'pdf'
   const isImg = ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)
   return (
-    <div className={`h-9 w-9 rounded-lg flex items-center justify-center text-[10px] font-bold shrink-0
-      ${isPDF ? 'bg-red-50 text-red-500' : isImg ? 'bg-blue-50 text-blue-500' : 'bg-[#f0f2f0] text-[#9ea89e]'}
+    <div className={`h-9 w-9 rounded-lg flex items-center justify-center text-[11px] font-bold shrink-0
+      ${isPDF ? 'bg-status-danger-bg text-status-danger-text' : isImg ? 'bg-status-progress-bg text-status-progress-text' : 'bg-surface text-text-dim'}
     `}>
       {ext?.toUpperCase() || 'FILE'}
     </div>
@@ -206,14 +202,14 @@ function DueDateEditor({ dueDate, requestId, onUpdate }) {
   if (editing) {
     return (
       <div className="flex items-center gap-1.5">
-        <div className="flex items-center gap-1.5 rounded-lg border border-[#0f6e56] bg-white px-2.5 py-1 focus-within:ring-2 focus-within:ring-[#0f6e56]/20">
-          <Calendar size={12} className="text-[#0f6e56] shrink-0" />
+        <div className="flex items-center gap-1.5 rounded-lg border border-primary bg-layout-card px-2.5 py-1 focus-within:ring-2 focus-within:ring-primary/20">
+          <Calendar size={12} className="text-primary-ink shrink-0" />
           <input
             ref={inputRef}
             type="date"
             value={value}
             onChange={e => setValue(e.target.value)}
-            className="text-[12px] text-[#141a14] outline-none bg-transparent"
+            className="text-[12px] text-text-main outline-none bg-transparent"
             onKeyDown={e => {
               if (e.key === 'Enter') handleSave()
               if (e.key === 'Escape') handleCancel()
@@ -223,13 +219,13 @@ function DueDateEditor({ dueDate, requestId, onUpdate }) {
         <button
           onClick={handleSave}
           disabled={saving}
-          className="h-6 w-6 flex items-center justify-center rounded-md bg-[#0f6e56] text-white hover:bg-[#085041] transition-colors disabled:opacity-60"
+          className="h-6 w-6 flex items-center justify-center rounded-md bg-primary text-on-primary hover:bg-primary-dark transition-colors disabled:opacity-60"
         >
           {saving ? <Loader2 size={10} className="animate-spin" /> : <Check size={11} />}
         </button>
         <button
           onClick={handleCancel}
-          className="h-6 w-6 flex items-center justify-center rounded-md border border-[#e8eae8] text-[#9ea89e] hover:text-[#141a14] transition-colors"
+          className="h-6 w-6 flex items-center justify-center rounded-md border border-border text-text-dim hover:text-text-main transition-colors"
         >
           <X size={11} />
         </button>
@@ -240,16 +236,16 @@ function DueDateEditor({ dueDate, requestId, onUpdate }) {
   return (
     <div className="flex items-center gap-1.5 group">
       {dueDate ? (
-        <div className="flex items-center gap-1.5 text-[#92500a] font-medium bg-[#fff7ed] px-2 py-0.5 rounded-md w-max">
-          <Calendar size={12} className="text-[#f59e0b]" />
+        <div className="flex items-center gap-1.5 text-status-review-text font-medium bg-status-review-bg px-2 py-0.5 rounded-md w-max">
+          <Calendar size={12} className="text-status-review-text" />
           <span className="text-[12px]">Due {formatDate(dueDate)}</span>
         </div>
       ) : (
-        <span className="text-[#9ea89e] italic text-[12px]">No date set</span>
+        <span className="text-text-dim italic text-[12px]">No date set</span>
       )}
       <button
         onClick={() => setEditing(true)}
-        className="h-5 w-5 flex items-center justify-center rounded-md text-[#9ea89e] hover:text-[#0f6e56] hover:bg-[#f0faf6] transition-all opacity-0 group-hover:opacity-100"
+        className="h-5 w-5 flex items-center justify-center rounded-md text-text-dim hover:text-primary-ink hover:bg-primary-light transition-all opacity-0 group-hover:opacity-100"
         title="Edit due date"
       >
         <Pencil size={10} />
@@ -301,7 +297,7 @@ function DeliverModal({ request, onClose, onSuccess, isPro }) {
 
     for (const f of incomingEntries) {
       const ext = f.name.split('.').pop().toLowerCase();
-      
+
       // 1. Allowed file types
       if (!ALLOWED_EXTENSIONS.includes(ext)) {
         setValidationErrors(prev => ({ ...prev, files: `File type .${ext} is not allowed. Only images, PDFs, and videos are accepted.` }));
@@ -457,9 +453,9 @@ function DeliverModal({ request, onClose, onSuccess, isPro }) {
 
       if (mode !== 'link') {
         fileIds = await uploadAll()
-        
+
         // Double check if any files failed upload and block submit if necessary
-        const currentFiles = files; 
+        const currentFiles = files;
         if (currentFiles.some(f => f.status === 'error')) {
           setValidationErrors(prev => ({...prev, files: 'Please remove or retry failed file uploads before sending.'}));
           setSubmitting(false);
@@ -492,9 +488,9 @@ function DeliverModal({ request, onClose, onSuccess, isPro }) {
         className="
           w-full max-w-[1050px]
           overflow-hidden
-          border border-[#e8eae8]
-          bg-white
-          shadow-[0px_24px_60px_rgba(10,46,36,0.16)]
+          border border-border
+          bg-layout-card
+          shadow-2xl
           rounded-xl sm:rounded-[24px] lg:rounded-[28px]
           max-h-[98vh] md:max-h-[90vh]
         "
@@ -502,65 +498,64 @@ function DeliverModal({ request, onClose, onSuccess, isPro }) {
         <div className="flex flex-col lg:grid lg:grid-cols-[320px_1fr] max-h-[98vh] md:max-h-[90vh]">
 
           {/* LEFT PANEL */}
-          <div className="relative overflow-hidden border-b border-[#eef0ee] bg-[#f7f8f7] p-4 sm:p-5 lg:border-b-0 lg:border-r lg:p-6 flex flex-col justify-between">
+          <div className="relative overflow-hidden border-b border-border bg-surface p-4 sm:p-5 lg:border-b-0 lg:border-r lg:p-6 flex flex-col justify-between">
 
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(15,110,86,0.08),transparent_45%)]" />
 
             <div className="relative z-10 flex h-full flex-col justify-between gap-4">
 
               <div className="flex items-start justify-between">
                 <div>
 
-                  <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-[#dbe7e1] bg-white px-2.5 py-0.5 text-[10px] font-medium text-[#0f6e56]">
-                    <div className="h-1.5 w-1.5 rounded-full bg-[#0f6e56]" />
+                  <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-border bg-layout-card px-2.5 py-0.5 text-[11px] font-medium text-primary-ink">
+                    <div className="h-1.5 w-1.5 rounded-full bg-primary" />
                     DELIVERY PORTAL
                   </div>
 
-                  <h2 className="text-[24px] sm:text-[26px] font-semibold leading-tight text-[#0a2e24]">
+                  <h2 className="text-[24px] sm:text-[26px] font-semibold leading-tight text-text-main">
                     Deliver your work
                   </h2>
 
-                  <p className="mt-1.5 max-w-[260px] text-[13px] leading-5 text-[#6b756d]">
+                  <p className="mt-1.5 max-w-[260px] text-[13px] leading-5 text-text-sub">
                     Share files, links, and updates with your client in one clean delivery.
                   </p>
                 </div>
 
                 <button
                   onClick={onClose}
-                  className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/80 backdrop-blur hover:bg-white transition-colors"
+                  className="flex h-8 w-8 items-center justify-center rounded-lg bg-layout-card/80 backdrop-blur hover:bg-layout-card transition-colors"
                 >
-                  <X size={14} className="text-[#7c867d]" />
+                  <X size={14} className="text-text-sub" />
                 </button>
               </div>
 
               {/* Preview Card */}
-              <div className="mt-2 lg:mt-4 rounded-xl border border-[#e3e7e3] bg-white p-4 shadow-sm">
+              <div className="mt-2 lg:mt-4 rounded-xl border border-border bg-layout-card p-4 shadow-sm">
 
                 <div className="flex items-start gap-3">
 
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#e6f5f0]">
-                    <Send size={16} className="text-[#0f6e56]" />
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary-light">
+                    <Send size={16} className="text-primary-ink" />
                   </div>
 
                   <div>
-                    <p className="text-[13px] font-medium text-[#141a14]">
+                    <p className="text-[13px] font-medium text-text-main">
                       Delivering to {clientName}
                     </p>
 
-                    <p className="mt-0.5 text-[11px] leading-4 text-[#7c867d]">
+                    <p className="mt-0.5 text-[11px] leading-4 text-text-sub">
                       Your client will instantly receive access to this delivery.
                     </p>
                   </div>
                 </div>
 
-                <div className="my-3 h-px bg-[#eef0ee]" />
+                <div className="my-3 h-px bg-border" />
 
-                <div className="rounded-lg bg-[#f7f8f7] px-3 py-2">
-                  <p className="text-[10px] uppercase tracking-wide text-[#9ea89e]">
+                <div className="rounded-lg bg-surface px-3 py-2">
+                  <p className="text-[11px] uppercase tracking-wide text-text-dim">
                     Delivery Type
                   </p>
 
-                  <p className="mt-0.5 text-[12px] font-medium text-[#0f6e56] capitalize">
+                  <p className="mt-0.5 text-[12px] font-medium text-primary-ink capitalize">
                     {mode === 'both'
                       ? 'Files + Links'
                       : mode}
@@ -571,13 +566,13 @@ function DeliverModal({ request, onClose, onSuccess, isPro }) {
                   <div className="mt-3 flex flex-wrap gap-1.5">
 
                     {files.length > 0 && (
-                      <span className="rounded-full bg-[#e6f5f0] px-2.5 py-0.5 text-[10px] font-medium text-[#085041]">
+                      <span className="rounded-full bg-primary-light px-2.5 py-0.5 text-[11px] font-medium text-primary-ink">
                         {files.length} File{files.length > 1 ? 's' : ''}
                       </span>
                     )}
 
                     {links.filter(l => l.url).length > 0 && (
-                      <span className="rounded-full bg-[#EEF2FF] px-2.5 py-0.5 text-[10px] font-medium text-[#3730A3]">
+                      <span className="rounded-full bg-status-progress-bg px-2.5 py-0.5 text-[11px] font-medium text-status-progress-text">
                         {links.filter(l => l.url).length} Link{links.filter(l => l.url).length > 1 ? 's' : ''}
                       </span>
                     )}
@@ -587,20 +582,20 @@ function DeliverModal({ request, onClose, onSuccess, isPro }) {
               </div>
 
               <div className="mt-auto hidden sm:block">
-                <div className="rounded-xl border border-[#bfdbfe] bg-[#f0f9ff] p-3">
+                <div className="rounded-xl border border-status-progress-text/20 bg-status-progress-bg p-3">
 
                   <div className="flex items-start gap-2.5">
                     <AlertCircle
                       size={14}
-                      className="mt-0.5 shrink-0 text-[#2563eb]"
+                      className="mt-0.5 shrink-0 text-status-progress-text"
                     />
 
                     <div>
-                      <p className="text-[12px] font-medium text-[#1e3a8a]">
+                      <p className="text-[12px] font-medium text-status-progress-text">
                         Status changes to Delivered
                       </p>
 
-                      <p className="mt-0.5 text-[11px] leading-4 text-[#3b82f6]">
+                      <p className="mt-0.5 text-[11px] leading-4 text-status-progress-text">
                         Clients can review and request revisions before approval.
                       </p>
                     </div>
@@ -622,11 +617,11 @@ function DeliverModal({ request, onClose, onSuccess, isPro }) {
 
                 <div className="mb-2 flex items-center justify-between">
                   <div>
-                    <h3 className="text-[14px] font-semibold text-[#141a14]">
+                    <h3 className="text-[14px] font-semibold text-text-main">
                       What are you delivering?
                     </h3>
 
-                    <p className="mt-0.5 text-[12px] text-[#9ea89e]">
+                    <p className="mt-0.5 text-[12px] text-text-dim">
                       Choose how you want to send the delivery.
                     </p>
                   </div>
@@ -648,8 +643,8 @@ function DeliverModal({ request, onClose, onSuccess, isPro }) {
                       className={`
                         group relative overflow-hidden rounded-xl border-2 p-3 sm:p-4 transition-all
                         ${mode === key
-                          ? 'border-[#0f6e56] bg-[#f0faf6]'
-                          : 'border-[#e8eae8] hover:border-[#0f6e56]/30 hover:bg-[#fafcfb]'
+                          ? 'border-primary bg-primary-light'
+                          : 'border-border hover:border-primary/30 hover:bg-surface'
                         }
                       `}
                     >
@@ -659,8 +654,8 @@ function DeliverModal({ request, onClose, onSuccess, isPro }) {
                         <div className={`
                           flex h-10 w-10 items-center justify-center rounded-xl transition-all
                           ${mode === key
-                            ? 'bg-[#0f6e56] text-white'
-                            : 'bg-[#f7f8f7] text-[#4a544a] group-hover:bg-[#e6f5f0] group-hover:text-[#0f6e56]'
+                            ? 'bg-primary text-on-primary'
+                            : 'bg-surface text-text-sub group-hover:bg-primary-light group-hover:text-primary-ink'
                           }
                         `}>
                           <Icon size={18} />
@@ -669,8 +664,8 @@ function DeliverModal({ request, onClose, onSuccess, isPro }) {
                         <p className={`
                           mt-2 text-[13px] font-semibold transition-colors
                           ${mode === key
-                            ? 'text-[#0f6e56]'
-                            : 'text-[#141a14]'
+                            ? 'text-primary-ink'
+                            : 'text-text-main'
                           }
                         `}>
                           {label}
@@ -689,15 +684,15 @@ function DeliverModal({ request, onClose, onSuccess, isPro }) {
 
                   <div className="mb-2 flex justify-between items-end">
                     <div>
-                      <h3 className="text-[14px] font-semibold text-[#141a14]">
+                      <h3 className="text-[14px] font-semibold text-text-main">
                         Upload files
                       </h3>
 
-                      <p className="mt-0.5 text-[12px] text-[#9ea89e]">
+                      <p className="mt-0.5 text-[12px] text-text-dim">
                         Drag and drop your delivery files here. Max 50MB per file.
                       </p>
                     </div>
-                    <span className="text-[11px] text-[#7c867d]">
+                    <span className="text-[11px] text-text-sub">
                       {files.length}/{MAX_FILE_COUNT} files
                     </span>
                   </div>
@@ -717,21 +712,21 @@ function DeliverModal({ request, onClose, onSuccess, isPro }) {
                     className={`
                       relative overflow-hidden rounded-xl border-2 border-dashed p-6 text-center transition-all cursor-pointer
                       ${dragOver
-                        ? 'border-[#0f6e56] bg-[#f0faf6]'
-                        : 'border-[#dbe7e1] bg-[#fafcfb] hover:border-[#0f6e56]/40 hover:bg-[#f7fbf9]'
+                        ? 'border-primary bg-primary-light'
+                        : 'border-border bg-surface hover:border-primary/40 hover:bg-primary-light'
                       }
                     `}
                   >
 
-                    <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-[#e6f5f0]">
-                      <Upload size={22} className="text-[#0f6e56]" />
+                    <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-primary-light">
+                      <Upload size={22} className="text-primary-ink" />
                     </div>
 
-                    <h4 className="mt-3 text-[14px] font-semibold text-[#141a14]">
+                    <h4 className="mt-3 text-[14px] font-semibold text-text-main">
                       Drop files here
                     </h4>
 
-                    <p className="mt-1 text-[12px] text-[#7c867d]">
+                    <p className="mt-1 text-[12px] text-text-sub">
                       or click to browse from your device
                     </p>
 
@@ -746,7 +741,7 @@ function DeliverModal({ request, onClose, onSuccess, isPro }) {
 
                   {/* INLINE ERROR FOR FILES */}
                   {validationErrors.files && (
-                    <div className="mt-2 flex items-center gap-1.5 text-[12px] text-red-600 font-medium">
+                    <div className="mt-2 flex items-center gap-1.5 text-[12px] text-status-danger-text font-medium">
                       <AlertCircle size={14} className="shrink-0" />
                       <span>{validationErrors.files}</span>
                     </div>
@@ -758,28 +753,28 @@ function DeliverModal({ request, onClose, onSuccess, isPro }) {
                       {files.map((f, i) => (
                         <div
                           key={i}
-                          className={`flex items-center gap-3 rounded-xl border bg-white px-3 py-2 transition-colors ${
-                            f.status === 'error' ? 'border-red-200 bg-red-50/30' : 'border-[#e8eae8]'
+                          className={`flex items-center gap-3 rounded-xl border bg-layout-card px-3 py-2 transition-colors ${
+                            f.status === 'error' ? 'border-red-200 bg-status-danger-bg/30' : 'border-border'
                           }`}
                         >
 
-                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#f7f8f7]">
+                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-surface">
                             <FileIcon ext={f.file.name.split('.').pop()} />
                           </div>
 
                           <div className="min-w-0 flex-1">
 
-                            <p className="truncate text-[13px] font-medium text-[#141a14]">
+                            <p className="truncate text-[13px] font-medium text-text-main">
                               {f.file.name}
                             </p>
 
-                            <p className="mt-0.5 text-[11px] text-[#9ea89e]">
+                            <p className="mt-0.5 text-[11px] text-text-dim">
                               {(f.file.size / 1024 / 1024).toFixed(1)} MB
                             </p>
                           </div>
 
                           {f.status === 'done' && (
-                            <div className="flex items-center gap-1 rounded-full bg-[#e6f5f0] px-2.5 py-0.5 text-[11px] font-medium text-[#0f6e56]">
+                            <div className="flex items-center gap-1 rounded-full bg-primary-light px-2.5 py-0.5 text-[11px] font-medium text-primary-ink">
                               <CheckCircle2 size={12} />
                               Uploaded
                             </div>
@@ -788,12 +783,12 @@ function DeliverModal({ request, onClose, onSuccess, isPro }) {
                           {f.status === 'uploading' && (
                             <Loader2
                               size={14}
-                              className="animate-spin text-[#0f6e56]"
+                              className="animate-spin text-primary-ink"
                             />
                           )}
 
                           {f.status === 'error' && (
-                            <div className="text-[11px] font-medium text-red-600 bg-red-100 px-2 py-0.5 rounded-md">
+                            <div className="text-[11px] font-medium text-status-danger-text bg-status-danger-bg px-2 py-0.5 rounded-md">
                               Failed
                             </div>
                           )}
@@ -804,9 +799,9 @@ function DeliverModal({ request, onClose, onSuccess, isPro }) {
                                 setFiles(files.filter((_, j) => j !== i));
                                 setValidationErrors(prev => ({ ...prev, files: '' }));
                               }}
-                              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg hover:bg-[#f7f8f7]"
+                              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg hover:bg-surface"
                             >
-                              <X size={14} className="text-[#9ea89e]" />
+                              <X size={14} className="text-text-dim" />
                             </button>
                           )}
                         </div>
@@ -824,15 +819,15 @@ function DeliverModal({ request, onClose, onSuccess, isPro }) {
 
                   <div className="mb-2 flex justify-between items-end">
                     <div>
-                      <h3 className="text-[14px] font-semibold text-[#141a14]">
+                      <h3 className="text-[14px] font-semibold text-text-main">
                         Delivery links
                       </h3>
 
-                      <p className="mt-0.5 text-[12px] text-[#9ea89e]">
+                      <p className="mt-0.5 text-[12px] text-text-dim">
                         Share Figma, Drive, or staging URLs. Must begin with http:// or https://
                       </p>
                     </div>
-                    <span className="text-[11px] text-[#7c867d]">
+                    <span className="text-[11px] text-text-sub">
                       {links.length}/{MAX_LINK_COUNT} links
                     </span>
                   </div>
@@ -844,12 +839,12 @@ function DeliverModal({ request, onClose, onSuccess, isPro }) {
                       return (
                         <div key={i}>
 
-                          <div className={`flex items-center gap-3 rounded-xl border bg-white px-3 py-2 transition-all focus-within:border-[#0f6e56] focus-within:ring-4 focus-within:ring-[#0f6e56]/10 ${
-                            isEntryInvalid ? 'border-amber-300 bg-amber-50/10' : 'border-[#e8eae8]'
+                          <div className={`flex items-center gap-3 rounded-xl border bg-layout-card px-3 py-2 transition-all focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10 ${
+                            isEntryInvalid ? 'border-amber-300 bg-status-review-bg/10' : 'border-border'
                           }`}>
 
-                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#f7f8f7]">
-                              <Link2 size={14} className="text-[#0f6e56]" />
+                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-surface">
+                              <Link2 size={14} className="text-primary-ink" />
                             </div>
 
                             <input
@@ -865,7 +860,7 @@ function DeliverModal({ request, onClose, onSuccess, isPro }) {
                                 )
                               }}
                               placeholder="https://figma.com/file/..."
-                              className="flex-1 bg-transparent text-[13px] outline-none placeholder:text-[#9ea89e]"
+                              className="flex-1 bg-transparent text-[13px] outline-none placeholder:text-text-dim"
                             />
 
                             {link.url && (
@@ -874,15 +869,15 @@ function DeliverModal({ request, onClose, onSuccess, isPro }) {
                                   setLinks(links.filter((_, j) => j !== i));
                                   setValidationErrors(prev => ({ ...prev, links: '' }));
                                 }}
-                                className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-[#f7f8f7]"
+                                className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-surface"
                               >
-                                <X size={13} className="text-[#9ea89e]" />
+                                <X size={13} className="text-text-dim" />
                               </button>
                             )}
                           </div>
-                          
+
                           {isEntryInvalid && (
-                            <p className="text-[11px] text-amber-600 mt-1 ml-1">
+                            <p className="text-[11px] text-status-review-text mt-1 ml-1">
                               URL scheme mismatch. Missing "https://" or "http://" prefix.
                             </p>
                           )}
@@ -895,7 +890,7 @@ function DeliverModal({ request, onClose, onSuccess, isPro }) {
 
                   {/* INLINE ERROR FOR LINKS */}
                   {validationErrors.links && (
-                    <div className="mt-2 flex items-center gap-1.5 text-[12px] text-red-600 font-medium">
+                    <div className="mt-2 flex items-center gap-1.5 text-[12px] text-status-danger-text font-medium">
                       <AlertCircle size={14} className="shrink-0" />
                       <span>{validationErrors.links}</span>
                     </div>
@@ -910,7 +905,7 @@ function DeliverModal({ request, onClose, onSuccess, isPro }) {
                       setLinks([...links, { url: '', label: '' }]);
                     }}
                     disabled={links.length >= MAX_LINK_COUNT}
-                    className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-[#dbe7e1] bg-[#f7fbf9] px-3 py-2 text-[12px] font-medium text-[#0f6e56] hover:bg-[#eef7f3] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-border bg-primary-light px-3 py-2 text-[12px] font-medium text-primary-ink hover:bg-primary-light transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Plus size={13} />
                     Add another link
@@ -924,11 +919,11 @@ function DeliverModal({ request, onClose, onSuccess, isPro }) {
 
                 <div className="mb-2 flex justify-between items-end">
                   <div>
-                    <h3 className="text-[14px] font-semibold text-[#141a14]">
+                    <h3 className="text-[14px] font-semibold text-text-main">
                       Message to {clientName}
                     </h3>
 
-                    <p className="mt-0.5 text-[12px] text-[#9ea89e]">
+                    <p className="mt-0.5 text-[12px] text-text-dim">
                       Add context or explain what was delivered.
                     </p>
                   </div>
@@ -937,13 +932,13 @@ function DeliverModal({ request, onClose, onSuccess, isPro }) {
                       <button
                         onClick={handleSuggestMessage}
                         disabled={suggestingMessage}
-                        className="flex items-center gap-1.5 text-[11px] font-medium text-violet-600 hover:text-violet-700 transition-colors disabled:opacity-50"
+                        className="flex items-center gap-1.5 text-[11px] font-medium text-status-progress-text hover:text-status-progress-text transition-colors disabled:opacity-50"
                       >
                         <Sparkles size={12} className={suggestingMessage ? 'animate-pulse' : ''} />
                         {suggestingMessage ? 'Drafting…' : 'Suggest message'}
                       </button>
                     )}
-                    <span className={`text-[11px] ${message.length > MAX_MESSAGE_LENGTH ? 'text-red-600 font-bold' : 'text-[#7c867d]'}`}>
+                    <span className={`text-[11px] ${message.length > MAX_MESSAGE_LENGTH ? 'text-status-danger-text font-bold' : 'text-text-sub'}`}>
                       {message.length}/{MAX_MESSAGE_LENGTH}
                     </span>
                   </div>
@@ -959,22 +954,22 @@ function DeliverModal({ request, onClose, onSuccess, isPro }) {
                   placeholder="Hey! I've attached the final delivery files and latest revisions..."
                   className={`
                     w-full resize-none rounded-[16px]
-                    border bg-white
+                    border bg-layout-card
                     px-4 py-3
                     text-[13px]
                     outline-none
                     transition-all
-                    placeholder:text-[#9ea89e]
-                    focus:border-[#0f6e56]
+                    placeholder:text-text-dim
+                    focus:border-primary
                     focus:ring-4
-                    focus:ring-[#0f6e56]/10
-                    ${validationErrors.message ? 'border-red-300 focus:border-red-500 focus:ring-red-500/10' : 'border-[#e8eae8]'}
+                    focus:ring-primary/10
+                    ${validationErrors.message ? 'border-red-300 focus:border-red-500 focus:ring-red-500/10' : 'border-border'}
                   `}
                 />
 
                 {/* INLINE ERROR FOR MESSAGE */}
                 {validationErrors.message && (
-                  <div className="mt-1 flex items-center gap-1.5 text-[12px] text-red-600 font-medium">
+                  <div className="mt-1 flex items-center gap-1.5 text-[12px] text-status-danger-text font-medium">
                     <AlertCircle size={14} className="shrink-0" />
                     <span>{validationErrors.message}</span>
                   </div>
@@ -983,11 +978,11 @@ function DeliverModal({ request, onClose, onSuccess, isPro }) {
               </div>
 
               {/* ACTIONS */}
-              <div className="flex flex-col-reverse gap-2 border-t border-[#eef0ee] pt-4 sm:flex-row sm:items-center sm:justify-end">
+              <div className="flex flex-col-reverse gap-2 border-t border-border pt-4 sm:flex-row sm:items-center sm:justify-end">
 
                 <button
                   onClick={onClose}
-                  className="h-10 rounded-xl px-4 text-[13px] font-medium text-[#6b756d] hover:bg-[#f7f8f7] transition-colors"
+                  className="h-10 rounded-xl px-4 text-[13px] font-medium text-text-sub hover:bg-surface transition-colors"
                 >
                   Cancel
                 </button>
@@ -997,9 +992,9 @@ function DeliverModal({ request, onClose, onSuccess, isPro }) {
                   disabled={submitting || isCurrentlyUploading}
                   className="
                     flex h-10 items-center justify-center gap-2
-                    rounded-xl bg-[#0f6e56] px-5
-                    text-[13px] font-medium text-white
-                    transition-all hover:bg-[#085041]
+                    rounded-xl bg-primary px-5
+                    text-[13px] font-medium text-on-primary
+                    transition-all hover:bg-primary-dark
                     disabled:cursor-not-allowed disabled:opacity-60
                   "
                 >
@@ -1032,13 +1027,13 @@ function DeliverModal({ request, onClose, onSuccess, isPro }) {
 
 // ── ACTIVITY LOG MODAL ────────────────────────────────────────
 const EVENT_META = {
-  status_change:       { icon: CheckCircle2, color: 'text-[#0f6e56]',  bg: 'bg-[#e6f5f0]',  label: 'Status changed'   },
-  message_sent:        { icon: Send,         color: 'text-[#3730a3]',  bg: 'bg-[#eef2ff]',  label: 'Message sent'     },
-  file_uploaded:       { icon: Upload,       color: 'text-[#92500a]',  bg: 'bg-[#fef3e2]',  label: 'File uploaded'    },
-  note_added:          { icon: Lock,         color: 'text-[#4a544a]',  bg: 'bg-[#f3f4f3]',  label: 'Note added'       },
-  request_created:     { icon: Plus,         color: 'text-[#0f6e56]',  bg: 'bg-[#e6f5f0]',  label: 'Request created'  },
-  delivery_created:    { icon: Download,     color: 'text-[#0f6e56]',  bg: 'bg-[#e6f5f0]',  label: 'Delivery created' },
-  ai_summary_generated:{ icon: FileText,     color: 'text-[#6366f1]',  bg: 'bg-[#eef2ff]',  label: 'AI summary'       },
+  status_change:       { icon: CheckCircle2, color: 'text-primary-ink',  bg: 'bg-primary-light',  label: 'Status changed'   },
+  message_sent:        { icon: Send,         color: 'text-status-progress-text',  bg: 'bg-status-progress-bg',  label: 'Message sent'     },
+  file_uploaded:       { icon: Upload,       color: 'text-status-review-text',  bg: 'bg-status-review-bg',  label: 'File uploaded'    },
+  note_added:          { icon: Lock,         color: 'text-text-sub',  bg: 'bg-surface',  label: 'Note added'       },
+  request_created:     { icon: Plus,         color: 'text-primary-ink',  bg: 'bg-primary-light',  label: 'Request created'  },
+  delivery_created:    { icon: Download,     color: 'text-primary-ink',  bg: 'bg-primary-light',  label: 'Delivery created' },
+  ai_summary_generated:{ icon: FileText,     color: 'text-status-progress-text',  bg: 'bg-status-progress-bg',  label: 'AI summary'       },
 }
 
 function ActivityLogModal({ requestId, statusConfig, onClose }) {
@@ -1054,15 +1049,15 @@ function ActivityLogModal({ requestId, statusConfig, onClose }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-      <div className="w-full max-w-lg rounded-2xl bg-white shadow-2xl overflow-hidden flex flex-col max-h-[80vh]">
+      <div className="w-full max-w-lg rounded-2xl bg-layout-card shadow-2xl overflow-hidden flex flex-col max-h-[80vh]">
 
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#e8eae8] shrink-0">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border shrink-0">
           <div>
-            <h2 className="text-[16px] font-semibold text-[#141a14]">Activity log</h2>
-            <p className="text-[12px] text-[#9ea89e] mt-0.5">{activities.length} entries · full history</p>
+            <h2 className="text-[16px] font-semibold text-text-main">Activity log</h2>
+            <p className="text-[12px] text-text-dim mt-0.5">{activities.length} entries · full history</p>
           </div>
-          <button onClick={onClose} className="h-8 w-8 flex items-center justify-center rounded-lg text-[#9ea89e] hover:text-[#141a14] hover:bg-[#f7f8f7] transition-all">
+          <button onClick={onClose} className="h-8 w-8 flex items-center justify-center rounded-lg text-text-dim hover:text-text-main hover:bg-surface transition-all">
             <X size={16} />
           </button>
         </div>
@@ -1071,18 +1066,18 @@ function ActivityLogModal({ requestId, statusConfig, onClose }) {
         <div className="overflow-y-auto flex-1 px-6 py-4">
           {loading ? (
             <div className="flex items-center justify-center py-12">
-              <Loader2 size={20} className="animate-spin text-[#0f6e56]" />
+              <Loader2 size={20} className="animate-spin text-primary-ink" />
             </div>
           ) : activities.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">
-              <Clock size={28} className="text-[#9ea89e] mb-2" />
-              <p className="text-[14px] font-medium text-[#141a14]">No activity yet</p>
-              <p className="text-[12px] text-[#9ea89e] mt-1">Events will appear here as the request progresses.</p>
+              <Clock size={28} className="text-text-dim mb-2" />
+              <p className="text-[14px] font-medium text-text-main">No activity yet</p>
+              <p className="text-[12px] text-text-dim mt-1">Events will appear here as the request progresses.</p>
             </div>
           ) : (
             <div className="relative">
               {/* Timeline line */}
-              <div className="absolute left-[15px] top-2 bottom-2 w-px bg-[#e8eae8]" />
+              <div className="absolute left-[15px] top-2 bottom-2 w-px bg-border" />
               <div className="space-y-1">
                 {[...activities].reverse().map((act, i) => {
                   const meta = EVENT_META[act.event_type] || EVENT_META.note_added
@@ -1091,27 +1086,27 @@ function ActivityLogModal({ requestId, statusConfig, onClose }) {
                   return (
                     <div key={act.id} className="flex gap-4 relative group">
                       {/* Icon dot */}
-                      <div className={`h-[30px] w-[30px] rounded-full flex items-center justify-center shrink-0 z-10 border-2 border-white ${meta.bg}`}>
+                      <div className={`h-[30px] w-[30px] rounded-full flex items-center justify-center shrink-0 z-10 border-2 border-layout-card ${meta.bg}`}>
                         <Icon size={13} className={meta.color} />
                       </div>
                       {/* Content */}
                       <div className="flex-1 min-w-0 py-1 pb-4">
                         <div className="flex items-start justify-between gap-2">
                           <div className="min-w-0">
-                            <p className="text-[13px] font-medium text-[#141a14] leading-snug">
+                            <p className="text-[13px] font-medium text-text-main leading-snug">
                               {act.description || meta.label}
                             </p>
                             {isStatusChange && act.metadata && (
                               <div className="mt-1 space-y-1.5">
                                 <div className="flex items-center gap-1.5">
                                   <StatusPill status={act.metadata.from} statusConfig={statusConfig} />
-                                  <ChevronRight size={11} className="text-[#9ea89e] shrink-0" />
+                                  <ChevronRight size={11} className="text-text-dim shrink-0" />
                                   <StatusPill status={act.metadata.to} statusConfig={statusConfig} />
                                 </div>
                                 {act.metadata.action === 'rework' && act.metadata.rework_message && (
-                                  <div className="flex items-start gap-2 rounded-lg bg-[#fff8e6] border border-[#f59e0b]/20 px-3 py-2">
-                                    <RotateCcw size={11} className="text-[#92500a] shrink-0 mt-0.5" />
-                                    <p className="text-[12px] text-[#92500a] leading-relaxed">
+                                  <div className="flex items-start gap-2 rounded-lg bg-status-review-bg border border-status-review-text/20 px-3 py-2">
+                                    <RotateCcw size={11} className="text-status-review-text shrink-0 mt-0.5" />
+                                    <p className="text-[12px] text-status-review-text leading-relaxed">
                                       {act.metadata.rework_message}
                                     </p>
                                   </div>
@@ -1119,12 +1114,12 @@ function ActivityLogModal({ requestId, statusConfig, onClose }) {
                               </div>
                             )}
                             {act.actor_name && (
-                              <p className="text-[11px] text-[#9ea89e] mt-1">
+                              <p className="text-[11px] text-text-dim mt-1">
                                 {act.actor_source === 'ai' ? '🤖 Groven AI' : `by ${act.actor_name}`}
                               </p>
                             )}
                           </div>
-                          <span className="text-[11px] text-[#9ea89e] shrink-0 whitespace-nowrap pt-0.5">
+                          <span className="text-[11px] text-text-dim shrink-0 whitespace-nowrap pt-0.5">
                             {timeAgo(act.created_at)}
                           </span>
                         </div>
@@ -1142,7 +1137,7 @@ function ActivityLogModal({ requestId, statusConfig, onClose }) {
 }
 
 
-//  MAIN PAGE 
+//  MAIN PAGE
 export default function RequestDetailPage() {
   const { requestId } = useParams()
   const navigate = useNavigate()
@@ -1159,13 +1154,13 @@ export default function RequestDetailPage() {
   const [urgentLoading, setUrgentLoading] = useState(false)
   const [showActivityLog, setShowActivityLog] = useState(false)
   const [mobileTab, setMobileTab] = useState('details')
-  const [isMobile, setIsMobile] = useState(
-    typeof window !== 'undefined' ? window.innerWidth < 1024 : false
+  const [isCompact, setIsCompact] = useState(
+    typeof window !== 'undefined' ? window.innerWidth < 1280 : false
   )
 
   useEffect(() => {
     const handleResize = () => {
-      setIsMobile(window.innerWidth < 1024)
+      setIsCompact(window.innerWidth < 1280)
     }
     window.addEventListener('resize', handleResize)
     return () => window.removeEventListener('resize', handleResize)
@@ -1235,7 +1230,7 @@ export default function RequestDetailPage() {
           )
         }
         if (msg.type === 'files_delivered') {
-          setTimeout(() => fetchAll(), 1500)  
+          setTimeout(() => fetchAll(), 1500)
         } else {
           fetchAll()
         }
@@ -1319,18 +1314,18 @@ export default function RequestDetailPage() {
 
   if (loading) return (
     <ProviderLayout fullBleed>
-      <div className="flex items-center justify-center h-full bg-[#fafafa]">
-        <Loader2 size={24} className="animate-spin text-[#0f6e56]" />
+      <div className="flex items-center justify-center h-full bg-surface">
+        <Loader2 size={24} className="animate-spin text-primary-ink" />
       </div>
     </ProviderLayout>
   )
 
   if (!req) return (
     <ProviderLayout fullBleed>
-      <div className="flex flex-col items-center justify-center h-full text-center bg-[#fafafa]">
-        <AlertCircle size={32} className="text-[#9ea89e] mb-3" />
-        <p className="text-[15px] font-medium text-[#141a14]">Request not found</p>
-        <button onClick={() => navigate('/requests')} className="mt-4 text-[13px] text-[#0f6e56] hover:underline">
+      <div className="flex flex-col items-center justify-center h-full text-center bg-surface">
+        <AlertCircle size={32} className="text-text-dim mb-3" />
+        <p className="text-[15px] font-medium text-text-main">Request not found</p>
+        <button onClick={() => navigate('/requests')} className="mt-4 text-[13px] text-primary-ink hover:underline">
           Back to requests
         </button>
       </div>
@@ -1361,25 +1356,25 @@ export default function RequestDetailPage() {
           2. Optional urgent banner (shrink-0)
           3. Content split (flex-1, min-h-0)
       */}
-      <div className="flex flex-col h-[calc(100dvh-60px)] lg:h-[100dvh] overflow-hidden bg-[#fafafa]">
+      <div className="flex h-full min-h-0 flex-col overflow-hidden bg-layout-page">
 
         {/* ── 1. FIXED TOP CONTROL BAR (DESKTOP) ── */}
-        <div className="hidden lg:flex sticky top-0 border-b border-[#e8eae8] bg-white px-6 py-2.5 items-center justify-between shrink-0 h-14 z-30 shadow-[0_1px_0_0_#e8eae8]">
+        <div className="hidden xl:flex sticky top-0 flex-wrap gap-y-3 border-b border-border bg-layout-card px-6 py-4 items-center justify-between shrink-0 min-h-16 z-30 ">
           {/* Breadcrumb */}
-          <div className="flex items-center gap-2 text-[13px] text-[#9ea89e] min-w-0">
-            <button onClick={() => navigate('/requests')} className="hover:text-[#141a14] transition-colors whitespace-nowrap">Requests</button>
-            <ChevronRight size={13} className="text-[#d1d5d1] shrink-0" />
-            <span className="text-[#9ea89e] truncate">{clientName}</span>
-            <ChevronRight size={13} className="text-[#d1d5d1] shrink-0" />
-            <span className="text-[#141a14] font-medium truncate">{req.title}</span>
-            <span className="text-[#9ea89e] text-[11px] ml-1 bg-[#f3f4f3] px-1.5 py-0.5 rounded shrink-0 font-mono">
+          <div className="flex items-center gap-2 text-[13px] text-text-dim min-w-0">
+            <button onClick={() => navigate('/requests')} className="hover:text-text-main transition-colors whitespace-nowrap">Requests</button>
+            <ChevronRight size={13} className="text-text-dim shrink-0" />
+            <span className="text-text-dim truncate">{clientName}</span>
+            <ChevronRight size={13} className="text-text-dim shrink-0" />
+            <span className="text-text-main font-medium truncate">{req.title}</span>
+            <span className="text-text-dim text-[11px] ml-1 bg-surface px-1.5 py-0.5 rounded shrink-0 font-mono">
               #REQ-{req.id.slice(0, 4).toUpperCase()}
             </span>
           </div>
 
           {/* Inline status pipeline */}
-          <div className="flex items-center gap-2 shrink-0 ml-4" data-tour={!isMobile ? "provider-request-status" : undefined}>
-            <div className="flex items-center bg-[#f7f8f7] p-0.5 rounded-lg border border-[#e8eae8]">
+          <div className="flex flex-wrap items-center gap-2 shrink-0" data-tour={!isCompact ? "provider-request-status" : undefined}>
+            <div className="flex items-center bg-surface p-0.5 rounded-lg border border-border">
               {STATUS_ORDER.filter(s => s !== 'closed').map((s, i) => {
                 const scfg = statusConfig[s]
                 const isCurrent = req.status === s
@@ -1392,12 +1387,12 @@ export default function RequestDetailPage() {
                     onClick={() => canClick && s !== req.status && handleStatusChange(s)}
                     className={`px-3 py-1 rounded-md text-[12px] font-medium transition-all duration-150
                       ${isCurrent
-                        ? 'bg-white text-[#141a14] shadow-xs font-semibold'
+                        ? 'bg-layout-card text-text-main shadow-xs font-semibold'
                         : isDone
-                          ? 'text-[#9ea89e] line-through opacity-70'
+                          ? 'text-text-dim line-through opacity-70'
                           : canClick
-                            ? 'text-[#4a544a] hover:text-[#141a14]'
-                            : 'text-[#d1d5d1] cursor-not-allowed'
+                            ? 'text-text-sub hover:text-text-main'
+                            : 'text-text-dim cursor-not-allowed'
                       }
                     `}
                   >
@@ -1407,13 +1402,13 @@ export default function RequestDetailPage() {
               })}
             </div>
 
-            <div className="w-px h-5 bg-[#e8eae8] mx-1" />
+            <div className="w-px h-5 bg-border mx-1" />
 
             {['in_progress', 'delivered'].includes(req.status) && (
               <button
                 data-tour="provider-request-deliver"
                 onClick={() => setShowDeliver(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0f6e56] text-white text-[12px] font-semibold hover:bg-[#085041] transition-colors shadow-xs"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-on-primary text-[12px] font-semibold hover:bg-primary-dark transition-colors shadow-xs"
               >
                 Deliver files
               </button>
@@ -1423,7 +1418,7 @@ export default function RequestDetailPage() {
               <button
                 onClick={() => handleStatusChange('closed')}
                 disabled={statusLoading}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-[#e8eae8] text-[#4a544a] text-[12px] font-semibold hover:border-[#141a14] hover:text-[#141a14] transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-layout-card border border-border text-text-sub text-[12px] font-semibold hover:border-text-main hover:text-text-main transition-colors"
               >
                 {statusLoading ? <Loader2 size={12} className="animate-spin" /> : <Lock size={12} />}
                 Close request
@@ -1433,29 +1428,31 @@ export default function RequestDetailPage() {
         </div>
 
         {/* ── 1. FIXED TOP CONTROL BAR (MOBILE) ── */}
-        <div className="flex lg:hidden sticky top-0 border-b border-[#e8eae8] bg-white px-4 py-2 items-center justify-between shrink-0 h-14 z-30 shadow-[0_1px_0_0_#e8eae8]">
-          <div className="flex items-center gap-2.5 min-w-0">
+        <div className="flex xl:hidden sticky top-0 gap-2 border-b border-border bg-layout-card px-3 py-3 items-center justify-between shrink-0 min-h-16 z-30 ">
+          <div className="flex flex-1 items-center gap-2 min-w-0">
             <button
               onClick={() => navigate('/requests')}
-              className="h-9 w-9 flex items-center justify-center rounded-xl border border-[#e8eae8] text-[#4a544a] active:bg-[#f7f8f7] shrink-0"
+              aria-label="Back to requests"
+              className="h-9 w-9 flex items-center justify-center rounded-xl border border-border text-text-sub active:bg-surface shrink-0"
             >
               <ChevronRight size={18} className="rotate-180" />
             </button>
             <div className="min-w-0">
-              <p className="text-[13px] font-semibold text-[#141a14] truncate leading-tight">{req.title}</p>
-              <p className="text-[11px] text-[#9ea89e] mt-0.5 truncate">
+              <p className="text-[13px] font-semibold text-text-main truncate leading-tight">{req.title}</p>
+              <p className="text-[11px] text-text-dim mt-0.5 truncate">
                 {clientName} · <span className="font-mono">#REQ-{req.id.slice(0, 4).toUpperCase()}</span>
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0 ml-2" data-tour={isMobile ? "provider-request-status" : undefined}>
+          <div className="flex items-center gap-2 shrink-0 ml-2" data-tour={isCompact ? "provider-request-status" : undefined}>
             <select
+              aria-label="Request status"
               value={req.status}
               disabled={statusLoading}
               onChange={(e) => handleStatusChange(e.target.value)}
-              className={`h-8 px-2.5 rounded-lg border text-[12px] font-semibold bg-white outline-none appearance-none pr-7 transition-all
-                ${req.status === 'closed' ? 'border-[#e8eae8] text-[#6b776c]' : 'border-[#0f6e56] text-[#0f6e56] bg-[#f0faf6]'}
+              className={`h-8 px-2.5 rounded-lg border text-[12px] font-semibold bg-layout-card outline-none appearance-none pr-7 transition-all
+                ${req.status === 'closed' ? 'border-border text-text-sub' : 'border-primary text-primary-ink bg-primary-light'}
               `}
               style={{
                 backgroundImage: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%230f6e56' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>")`,
@@ -1479,7 +1476,7 @@ export default function RequestDetailPage() {
             {['in_progress', 'delivered'].includes(req.status) && (
               <button
                 onClick={() => setShowDeliver(true)}
-                className="h-8 px-3 rounded-lg bg-[#0f6e56] text-white text-[12px] font-bold hover:bg-[#085041] transition-all shadow-xs"
+                className="h-8 px-3 rounded-lg bg-primary text-on-primary text-[12px] font-bold hover:bg-primary-dark transition-all shadow-xs"
               >
                 Deliver
               </button>
@@ -1489,32 +1486,32 @@ export default function RequestDetailPage() {
 
         {/* ── 2. OPTIONAL URGENT BANNER ── */}
         {req.is_urgent && (
-          <div className="bg-[#fff1f2] border-b border-[#fecdd3] px-4 lg:px-6 py-2 flex items-center gap-2 shrink-0">
-            <AlertCircle size={14} className="text-[#e11d48] shrink-0" />
-            <span className="text-[12px] font-medium text-[#9f1239]">
-              High Priority Track Active: Ensure critical attention constraints are managed immediately.
+          <div className="bg-status-danger-bg border-b border-status-danger-text/20 px-4 lg:px-6 py-2 flex items-center gap-2 shrink-0">
+            <AlertCircle size={14} className="text-status-danger-text shrink-0" />
+            <span className="text-[12px] font-medium text-status-danger-text">
+              This request is marked urgent. Prioritize the next update.
             </span>
           </div>
         )}
 
         {/* Mobile View Switcher Tabs */}
-        <div className="flex lg:hidden bg-white border-b border-[#e8eae8] p-1 shrink-0">
+        <div className="flex xl:hidden gap-1 bg-layout-card border-b border-border p-2 shrink-0" aria-label="Request views">
           <button
-            onClick={() => setMobileTab('details')}
-            className={`flex-1 py-2 text-center text-[12px] font-semibold rounded-lg transition-all
-              ${mobileTab === 'details' ? 'bg-[#f7f8f7] text-[#0f6e56]' : 'text-[#6b776c]'}
+            onClick={() => setMobileTab('details')} aria-pressed={mobileTab === 'details'}
+            className={`flex flex-1 min-h-11 items-center justify-center gap-2 text-center text-sm font-semibold rounded-xl transition-colors
+              ${mobileTab === 'details' ? 'bg-surface text-primary-ink' : 'text-text-sub'}
             `}
           >
-            Details
+            <FileText size={16} aria-hidden="true" /> Details
           </button>
           <button
-            onClick={() => setMobileTab('chat')}
-            data-tour={isMobile ? "provider-request-chat" : undefined}
-            className={`flex-1 py-2 text-center text-[12px] font-semibold rounded-lg transition-all
-              ${mobileTab === 'chat' ? 'bg-[#f7f8f7] text-[#0f6e56]' : 'text-[#6b776c]'}
+            onClick={() => setMobileTab('chat')} aria-pressed={mobileTab === 'chat'}
+            data-tour={isCompact ? "provider-request-chat" : undefined}
+            className={`flex flex-1 min-h-11 items-center justify-center gap-2 text-center text-sm font-semibold rounded-xl transition-colors
+              ${mobileTab === 'chat' ? 'bg-surface text-primary-ink' : 'text-text-sub'}
             `}
           >
-            Chat
+            <MessageSquare size={16} aria-hidden="true" /> Conversation
           </button>
         </div>
 
@@ -1522,19 +1519,18 @@ export default function RequestDetailPage() {
         <div className="flex flex-1 min-h-0 overflow-hidden h-full">
 
           {/* LEFT — scrollable detail panel */}
-          <div className={`flex-1 overflow-y-auto overflow-x-hidden p-4 lg:p-6 space-y-4 min-w-0 h-full no-scrollbar ${mobileTab === 'details' ? 'block' : 'hidden lg:block'}`}>
+          <div className={`flex-1 overflow-y-auto overflow-x-hidden p-4 lg:p-6 space-y-4 min-w-0 h-full no-scrollbar ${mobileTab === 'details' ? 'block' : 'hidden xl:block'}`}>
 
             {/* Header card */}
-            <div className={`rounded-xl border bg-white p-4 transition-all duration-200
-              ${req.is_urgent ? 'border-[#fecdd3] bg-gradient-to-r from-[#fff1f2]/30 to-white shadow-xs' : 'border-[#e8eae8]'}
+            <div className={`rounded-xl border bg-layout-card p-4 transition-all duration-200
+              ${req.is_urgent ? 'border-status-danger-text/30' : 'border-border'}
             `}>
               <div className="flex items-start justify-between gap-4">
                 <div className="space-y-1.5 min-w-0 flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
                     <StatusPill status={req.status} statusConfig={statusConfig} />
-                    <span className="text-[12px] text-[#9ea89e]">Submitted {formatDate(req.created_at)}</span>
+                    <span className="text-[12px] text-text-dim">Submitted {formatDate(req.created_at)}</span>
                   </div>
-                  <h1 className="text-[20px] font-semibold text-[#141a14] leading-snug truncate">{req.title}</h1>
                 </div>
                 <button
                   data-tour="provider-request-urgent"
@@ -1542,8 +1538,8 @@ export default function RequestDetailPage() {
                   disabled={urgentLoading}
                   className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[12px] font-semibold border transition-all shrink-0
                     ${req.is_urgent
-                      ? 'bg-[#e11d48] border-[#e11d48] text-white shadow-xs hover:bg-[#be123c]'
-                      : 'bg-white border-[#e8eae8] text-[#9ea89e] hover:border-[#4a544a] hover:text-[#141a14]'
+                      ? 'bg-[#e11d48] border-[#e11d48] text-on-primary shadow-xs hover:bg-[#be123c]'
+                      : 'bg-layout-card border-border text-text-dim hover:border-text-sub hover:text-text-main'
                     }
                   `}
                 >
@@ -1552,26 +1548,28 @@ export default function RequestDetailPage() {
                 </button>
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 border-t border-[#e8eae8] mt-4 pt-3 text-[13px]">
+              <h1 className="mt-3 break-words text-[20px] font-semibold leading-snug text-text-main [overflow-wrap:anywhere]">{req.title}</h1>
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 border-t border-border mt-4 pt-3 text-[13px]">
                 <div>
-                  <span className="text-[#9ea89e] block text-[11px] font-medium uppercase tracking-wider mb-1">Requester</span>
+                  <span className="text-text-dim block text-[11px] font-medium uppercase tracking-wider mb-1">Requester</span>
                   <div className="flex items-center gap-1.5">
                     <div className={`h-5 w-5 rounded-full overflow-hidden flex items-center justify-center text-[9px] font-bold ${getAvatarColor(clientName).bg} ${getAvatarColor(clientName).text}`}>
                       {req.client_avatar_url ? (
                         <img src={req.client_avatar_url} alt={clientName} className="w-full h-full object-cover" />
                       ) : getInitials(clientName)}
                     </div>
-                    <span className="font-medium text-[#4a544a] truncate">{clientName}</span>
+                    <span className="font-medium text-text-sub truncate">{clientName}</span>
                   </div>
                 </div>
                 <div data-tour="provider-request-due-date">
-                  <span className="text-[#9ea89e] block text-[11px] font-medium uppercase tracking-wider mb-1">Due Date</span>
+                  <span className="text-text-dim block text-[11px] font-medium uppercase tracking-wider mb-1">Due Date</span>
                   <DueDateEditor dueDate={req.due_date} requestId={requestId} onUpdate={handleDueDateUpdate} />
                 </div>
                 <div className="col-span-2 sm:col-span-1">
-                  <span className="text-[#9ea89e] block text-[11px] font-medium uppercase tracking-wider mb-1">Inclusions</span>
-                  <span className="text-[#4a544a] font-medium">
-                    {req.files?.length || 0} manifest attachment{req.files?.length !== 1 ? 's' : ''}
+                  <span className="text-text-dim block text-[11px] font-medium uppercase tracking-wider mb-1">Attachments</span>
+                  <span className="text-text-sub font-medium">
+                    {req.files?.length || 0} file{req.files?.length !== 1 ? 's' : ''}
                   </span>
                 </div>
               </div>
@@ -1587,17 +1585,17 @@ export default function RequestDetailPage() {
             )}
 
             {/* Details + history */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-              <div data-tour="provider-request-details" className="lg:col-span-2 rounded-xl border border-[#e8eae8] bg-white p-5 space-y-4">
+            <div className="grid grid-cols-1 2xl:grid-cols-3 gap-4">
+              <div data-tour="provider-request-details" className="2xl:col-span-2 rounded-xl border border-border bg-layout-card p-5 space-y-4">
                 <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-wide text-[#9ea89e] mb-2">Request Details</p>
-                  <p className="text-[14px] text-[#4a544a] leading-relaxed whitespace-pre-wrap bg-[#f7f8f7]/40 p-4 rounded-xl border border-[#e8eae8]/50">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-text-dim mb-2">Request Details</p>
+                  <p className="text-[14px] text-text-sub leading-relaxed whitespace-pre-wrap bg-surface/40 p-4 rounded-xl border border-border/50">
                     {req.description}
                   </p>
                 </div>
                 {req.files && req.files.length > 0 && (
                   <div className="pt-2">
-                    <p className="text-[11px] font-semibold uppercase tracking-wide text-[#9ea89e] mb-2">Attached by Client</p>
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-text-dim mb-2">Attached by Client</p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       {req.files.map(f => (
                         <a
@@ -1605,12 +1603,12 @@ export default function RequestDetailPage() {
                           href={f.download_url}
                           target="_blank"
                           rel="noreferrer"
-                          className="flex items-center gap-3 rounded-xl border border-[#e8eae8] px-3 py-2 bg-white hover:border-[#0f6e56]/30 transition-colors group"
+                          className="flex items-center gap-3 rounded-xl border border-border px-3 py-2 bg-layout-card hover:border-primary/30 transition-colors group"
                         >
                           <FileIcon ext={f.file_extension} />
                           <div className="flex-1 min-w-0">
-                            <p className="text-[13px] font-medium text-[#141a14] truncate">{f.file_name}</p>
-                            <p className="text-[11px] text-[#9ea89e]">{(f.file_size_bytes / 1024).toFixed(0)} KB</p>
+                            <p className="text-[13px] font-medium text-text-main truncate">{f.file_name}</p>
+                            <p className="text-[11px] text-text-dim">{(f.file_size_bytes / 1024).toFixed(0)} KB</p>
                           </div>
                           <button
                             onClick={async (e) => {
@@ -1629,7 +1627,7 @@ export default function RequestDetailPage() {
                                 window.open(f.download_url, '_blank')
                               }
                             }}
-                            className="text-[#9ea89e] hover:text-[#0f6e56] p-1 rounded-md hover:bg-[#f7f8f7] transition-all"
+                            className="text-text-dim hover:text-primary-ink p-1 rounded-md hover:bg-surface transition-all"
                           >
                             <Download size={15} />
                           </button>
@@ -1641,13 +1639,13 @@ export default function RequestDetailPage() {
               </div>
 
               {/* Status history */}
-              <div className="rounded-xl border border-[#e8eae8] bg-white p-5 flex flex-col justify-between">
+              <div className="rounded-xl border border-border bg-layout-card p-5 flex flex-col justify-between">
                 <div>
                   <div className="flex items-center justify-between mb-4">
-                    <p className="text-[14px] font-semibold text-[#141a14]">Status history</p>
-                    <span className="text-[11px] bg-[#f3f4f3] text-[#4a544a] px-2 py-0.5 rounded-full font-medium">{activities.length} entries</span>
+                    <p className="text-[14px] font-semibold text-text-main">Progress</p>
+                    <span className="text-[11px] bg-surface text-text-sub px-2 py-0.5 rounded-full font-medium">{activities.length} entries</span>
                   </div>
-                  <div className="space-y-0 relative before:absolute before:top-2 before:bottom-2 before:left-[9px] before:w-0.5 before:bg-[#e8eae8]">
+                  <div className="space-y-0 relative before:absolute before:top-2 before:bottom-2 before:left-[9px] before:w-0.5 before:bg-border">
                     {STATUS_ORDER.map((s, i) => {
                       const scfg = statusConfig[s]
                       const currentIdx = STATUS_ORDER.indexOf(req.status)
@@ -1663,28 +1661,28 @@ export default function RequestDetailPage() {
                       return (
                         <div key={s} className="flex gap-3 relative pb-4 last:pb-0">
                           <div className={`h-5 w-5 rounded-full flex items-center justify-center border-2 z-10 transition-all shrink-0
-                            ${isCurrent ? 'border-[#0f6e56] bg-[#0f6e56]' : isDone ? 'border-[#0f6e56] bg-[#0f6e56]' : 'border-[#e8eae8] bg-white'}
+                            ${isCurrent ? 'border-primary bg-primary' : isDone ? 'border-primary bg-primary' : 'border-border bg-layout-card'}
                           `}>
-                            {(isDone || isCurrent) && <CheckCircle2 size={10} className="text-white" />}
+                            {(isDone || isCurrent) && <CheckCircle2 size={10} className="text-on-primary" />}
                           </div>
                           <div className="min-w-0 leading-tight pt-0.5">
                             <div className="flex items-center gap-2">
-                              <p className={`text-[13px] font-medium ${i > currentIdx ? 'text-[#9ea89e]' : 'text-[#141a14]'}`}>
+                              <p className={`text-[13px] font-medium ${i > currentIdx ? 'text-text-dim' : 'text-text-main'}`}>
                                 {scfg.label}
                               </p>
                               {isCurrent && (
-                                <span className="rounded-full bg-[#e6f5f0] px-1.5 py-0.1 text-[10px] font-semibold text-[#085041]">Active</span>
+                                <span className="rounded-full bg-primary-light px-1.5 py-0.1 text-[11px] font-semibold text-primary-ink">Active</span>
                               )}
                             </div>
                             {act && (
                               <div className="mt-1 space-y-1">
-                                <p className="text-[11px] text-[#9ea89e] truncate">
+                                <p className="text-[11px] text-text-dim truncate">
                                   by {act.actor_name} · {timeAgo(act.created_at)}
                                 </p>
                                 {act.metadata?.action === 'rework' && act.metadata?.rework_message && (
-                                  <div className="flex items-start gap-1.5 rounded-md bg-[#fff8e6] border border-[#f59e0b]/20 px-2 py-1.5">
-                                    <RotateCcw size={10} className="text-[#92500a] shrink-0 mt-0.5" />
-                                    <p className="text-[11px] text-[#92500a] leading-relaxed line-clamp-2">
+                                  <div className="flex items-start gap-1.5 rounded-md bg-status-review-bg border border-status-review-text/20 px-2 py-1.5">
+                                    <RotateCcw size={10} className="text-status-review-text shrink-0 mt-0.5" />
+                                    <p className="text-[11px] text-status-review-text leading-relaxed line-clamp-2">
                                       {act.metadata.rework_message}
                                     </p>
                                   </div>
@@ -1692,7 +1690,7 @@ export default function RequestDetailPage() {
                               </div>
                             )}
                             {s === 'received' && !act && (
-                              <p className="text-[11px] text-[#9ea89e] mt-1">Inception point</p>
+                              <p className="text-[11px] text-text-dim mt-1">Request submitted</p>
                             )}
                           </div>
                         </div>
@@ -1702,7 +1700,7 @@ export default function RequestDetailPage() {
                 </div>
                 <button
                   onClick={() => setShowActivityLog(true)}
-                  className="mt-4 pt-3 border-t border-[#e8eae8]/60 text-[12px] text-[#0f6e56] font-medium hover:underline text-left block w-full"
+                  className="mt-4 pt-3 border-t border-border/60 text-[12px] text-primary-ink font-medium hover:underline text-left block w-full"
                 >
                   Expose detailed execution logs
                 </button>
@@ -1710,51 +1708,51 @@ export default function RequestDetailPage() {
             </div>
 
             {/* Internal notes */}
-            <div data-tour="provider-request-internal-notes" className="rounded-xl border border-[#e8eae8] bg-white p-5">
-              <div className="flex items-center gap-2 mb-3 pb-2 border-b border-[#e8eae8]/60">
-                <Lock size={14} className="text-[#9ea89e]" />
-                <p className="text-[14px] font-semibold text-[#141a14]">Internal notes</p>
-                <span className="ml-auto text-[11px] bg-[#fef3e2] text-[#92500a] px-2 py-0.5 rounded-md font-medium">Private Notes</span>
+            <div data-tour="provider-request-internal-notes" className="rounded-xl border border-border bg-layout-card p-5">
+              <div className="flex items-center gap-2 mb-3 pb-2 border-b border-border/60">
+                <Lock size={14} className="text-text-dim" />
+                <p className="text-[14px] font-semibold text-text-main">Internal notes</p>
+                <span className="ml-auto text-[11px] bg-status-review-bg text-status-review-text px-2 py-0.5 rounded-md font-medium">Private Notes</span>
               </div>
               {notes.length > 0 && (
                 <div className="space-y-3 mb-4 max-h-[250px] overflow-y-auto pr-1 no-scrollbar">
                   {notes.map(note => (
                     <div
                       key={note.id}
-                      className={note.is_ai_generated ? "rounded-xl p-[1px] bg-gradient-to-br from-violet-200/70 via-emerald-200/60 to-cyan-200/70" : ""}
+                      className="rounded-xl"
                     >
-                      <div className={`rounded-xl p-3 ${note.is_ai_generated ? 'bg-[#fbfdfc]' : 'bg-[#f7f8f7] border border-[#e8eae8]/40'}`}>
+                      <div className="rounded-xl border border-border/40 bg-surface p-3">
                         <div className="flex items-center gap-2 mb-1.5">
                           {note.is_ai_generated ? (
-                            <span className="flex items-center gap-1 text-[11px] font-semibold text-[#0f6e56]">
+                            <span className="flex items-center gap-1 text-[11px] font-semibold text-primary-ink">
                               <Sparkles size={11} />
-                              Groven AI · Triage note
+                              AI triage note
                             </span>
                           ) : (
-                            <span className="text-[11px] font-semibold text-[#141a14]">{note.author_name}</span>
+                            <span className="text-[11px] font-semibold text-text-main">{note.author_name}</span>
                           )}
-                          <span className="text-[11px] text-[#9ea89e]">{timeAgo(note.created_at)}</span>
+                          <span className="text-[11px] text-text-dim">{timeAgo(note.created_at)}</span>
                         </div>
-                        <p className="text-[13px] text-[#4a544a] leading-relaxed whitespace-pre-wrap font-sans">{note.content}</p>
+                        <p className="text-[13px] text-text-sub leading-relaxed whitespace-pre-wrap font-sans">{note.content}</p>
                       </div>
                     </div>
                   ))}
                 </div>
               )}
-              <div className="rounded-xl border border-[#e8eae8] bg-[#f7f8f7] p-1.5 focus-within:bg-white focus-within:border-[#0f6e56] focus-within:ring-4 focus-within:ring-[#0f6e56]/5 transition-all">
+              <div className="rounded-xl border border-border bg-surface p-1.5 focus-within:bg-layout-card focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/5 transition-all">
                 <textarea
                   value={noteContent}
                   onChange={e => setNoteContent(e.target.value.slice(0, 500))}
                   placeholder="Record task context details..."
                   rows={2}
-                  className="w-full bg-transparent px-2 py-1.5 text-[13px] text-[#141a14] outline-none placeholder:text-[#9ea89e] resize-none"
+                  className="w-full bg-transparent px-2 py-1.5 text-[13px] text-text-main outline-none placeholder:text-text-dim resize-none"
                 />
-                <div className="flex items-center justify-between mt-1 pt-2 border-t border-[#e8eae8]/40 px-2">
-                  <span className="text-[11px] text-[#9ea89e] font-mono">{noteContent.length} / 500</span>
+                <div className="flex items-center justify-between mt-1 pt-2 border-t border-border/40 px-2">
+                  <span className="text-[11px] text-text-dim font-mono">{noteContent.length} / 500</span>
                   <button
                     onClick={handleAddNote}
                     disabled={addingNote || !noteContent.trim()}
-                    className="flex items-center gap-1.5 rounded-lg bg-[#0f6e56] px-3 py-1.5 text-[12px] font-semibold text-white hover:bg-[#085041] transition-colors disabled:opacity-50"
+                    className="flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-[12px] font-semibold text-on-primary hover:bg-primary-dark transition-colors disabled:opacity-50"
                   >
                     {addingNote && <Loader2 size={12} className="animate-spin" />}
                     Save note
@@ -1769,29 +1767,29 @@ export default function RequestDetailPage() {
           {/* ── DRAG HANDLE ── */}
           <div
             onMouseDown={onMouseDown}
-            className="hidden lg:flex w-[5px] shrink-0 relative cursor-col-resize group items-center justify-center bg-transparent hover:bg-[#0f6e56]/10 transition-colors z-10"
+            className="hidden xl:flex w-[5px] shrink-0 relative cursor-col-resize group items-center justify-center bg-transparent hover:bg-primary/10 transition-colors z-10"
             title="Drag to resize"
           >
             {/* Visible divider line */}
-            <div className="absolute inset-y-0 left-[2px] w-px bg-[#e8eae8] group-hover:bg-[#0f6e56]/30 transition-colors" />
+            <div className="absolute inset-y-0 left-[2px] w-px bg-border group-hover:bg-primary/30 transition-colors" />
             {/* Grip dots */}
             <div className="relative z-10 flex flex-col gap-[3px] opacity-0 group-hover:opacity-100 transition-opacity">
               {[...Array(5)].map((_, i) => (
-                <div key={i} className="w-[3px] h-[3px] rounded-full bg-[#0f6e56]/50" />
+                <div key={i} className="w-[3px] h-[3px] rounded-full bg-primary/50" />
               ))}
             </div>
           </div>
 
           {/* ── RIGHT CHAT PANEL — fixed width, flex column ── */}
           <div
-            data-tour={!isMobile ? "provider-request-chat" : undefined}
-            className={`shrink-0 bg-white flex flex-col overflow-hidden h-full border-l border-[#e8eae8] w-full lg:w-auto ${mobileTab === 'chat' ? 'flex' : 'hidden lg:flex'}`}
-            style={{ width: isMobile ? '100%' : chatWidth }}
+            data-tour={!isCompact ? "provider-request-chat" : undefined}
+            className={`shrink-0 bg-layout-card flex flex-col overflow-hidden h-full border-l border-border w-full xl:w-auto ${mobileTab === 'chat' ? 'flex' : 'hidden xl:flex'}`}
+            style={{ width: isCompact ? '100%' : chatWidth }}
           >
             {/* Chat header — fixed */}
-            <div className="sticky top-0 z-20 flex items-center justify-between px-5 py-4 border-b border-[#e8eae8] shrink-0 bg-white">
+            <div className="sticky top-0 z-20 flex items-center justify-between px-5 py-4 border-b border-border shrink-0 bg-layout-card">
               <div className="min-w-0">
-                <p className="text-[14px] font-semibold text-[#141a14] truncate">
+                <p className="text-[14px] font-semibold text-text-main truncate">
                   Conversation with {clientName}
                 </p>
                 <div className="flex items-center gap-1.5 mt-0.5">
@@ -1802,8 +1800,8 @@ export default function RequestDetailPage() {
               {req.status !== 'closed' && (
                 <button
                   onClick={startCall}
-                  className="h-8 w-8 flex items-center justify-center rounded-xl text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 transition-all"
-                  title="Start video call"
+                  className="h-8 w-8 flex items-center justify-center rounded-xl text-text-dim hover:text-primary-ink hover:bg-primary-light transition-all"
+                  title="Start video call" aria-label="Start video call"
                 >
                   <Video size={16} />
                 </button>

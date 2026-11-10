@@ -5,6 +5,7 @@ import TenantRoute from './routes/TenantRoute'
 import TenantGuard from './routes/TenantGuard'
 import ErrorBoundary from './ErrorBoundary'
 import { useAuth } from './context/AuthContext'
+import { getSubdomain } from './utils/domain'
 import { TenantBrandingProvider } from './context/TenantBrandingContext'
 
 import { Suspense, lazy } from 'react'
@@ -61,13 +62,20 @@ function RoleDashboard() {
   return <Navigate to="/login" replace />
 }
 
+function HomeRoute() {
+  const { user, isAuth, loading } = useAuth()
+  if (!getSubdomain()) return <LandingPage />
+  if (loading) return <div role="status" aria-label="Loading workspace" className="min-h-dvh bg-layout-page" />
+  return <Navigate to={isAuth ? (user?.role === 'provider' ? '/dashboard' : '/portal') : '/client-login'} replace />
+}
+
 export default function App() {
   return (
     <ErrorBoundary>
       <BrowserRouter>
         <Suspense fallback={
-          <div className="flex items-center justify-center min-h-screen bg-[#F7F8F7]">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#0F6E56]"></div>
+          <div role="status" aria-label="Loading workspace" className="flex items-center justify-center min-h-screen bg-layout-page">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           </div>
         }>
         {/* Groven Admin */}
@@ -97,7 +105,7 @@ export default function App() {
                 <Routes>
 
                   {/* Public */}
-                  <Route path="/" element={<LandingPage />} />
+                  <Route path="/" element={<HomeRoute />} />
 
                   {/* ── Upgrade (Public) ── */}
                       <Route

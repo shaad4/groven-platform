@@ -1,401 +1,73 @@
 import { useState, useRef, useEffect } from 'react'
 import { NavLink } from 'react-router-dom'
+import { LayoutDashboard, FolderOpen, Settings, LogOut, ChevronDown, PanelLeftClose, UserRound } from 'lucide-react'
 import ClientNotificationBell from '../notifications/ClientNotificationBell'
-import {
-  LayoutDashboard,
-  FolderOpen,
-  Settings,
-  LogOut,
-  ChevronDown,
-  PanelLeftClose,
-} from 'lucide-react'
-
 import { useAuth } from '../../context/AuthContext'
 import { useTenantBranding } from '../../context/TenantBrandingContext'
 import ClientPortalSwitcher from './ClientPortalSwitcher'
 import ClientSettingsModal from '../modals/ClientSettingsModal'
+import PortalBrand from '../client/PortalBrand'
+import ThemeToggle from '../ui/ThemeToggle'
 
-// ─── Client nav items ─────────────────────────────────────────
-const NAV_ITEMS = [
-  {
-    to: '/portal',
-    icon: LayoutDashboard,
-    label: 'Home',
-  },
-  {
-    to: '/my-requests',
-    icon: FolderOpen,
-    label: 'Requests',
-    badgeKey: 'requests',
-  },
-]
+const NAV_ITEMS = [{ to: '/portal', icon: LayoutDashboard, label: 'Overview' }, { to: '/my-requests', icon: FolderOpen, label: 'Requests', badgeKey: 'requests' }]
+
+function UserPopup({ user, isMobile = false, onSettings, onLogout, onAppearanceChange }) {
+  return <div className="w-72 rounded-2xl border border-border bg-layout-card p-2 shadow-xl">
+    <div className="border-b border-border px-3 py-3"><p className="truncate text-sm font-semibold">{user?.display_name || 'Client'}</p><p className="mt-1 truncate text-xs text-text-sub">{user?.email}</p></div>
+    <div className="border-b border-border py-2"><ClientPortalSwitcher isMobile={isMobile} /></div>
+    <button onClick={onSettings} className="mt-1 flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-sm text-text-sub hover:bg-surface"><Settings size={16} />Account settings</button>
+    <div className="border-y border-border px-1 py-3"><p className="mb-2 px-2 text-xs font-medium text-text-sub">Appearance</p><div onClick={onAppearanceChange}><ThemeToggle className="w-full justify-between" /></div></div>
+    <button onClick={onLogout} className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-sm text-status-danger-text hover:bg-status-danger-bg"><LogOut size={16} />Sign out</button>
+  </div>
+}
 
 export default function ClientSidebar({ badges = {} }) {
   const { user, tenant, logout } = useAuth()
-  const { colors } = useTenantBranding()
-  const { accent, accentDark, accentSoft, bg1 } = colors
-
-  const [isCollapsed, setIsCollapsed] = useState(() => {
-    const saved = localStorage.getItem('provider-sidebar-collapsed')
-    return saved === 'true'
-  })
-
+  const { tenantInfo } = useTenantBranding()
+  const [isCollapsed, setIsCollapsed] = useState(() => { try { return localStorage.getItem('client-sidebar-collapsed') === 'true' } catch { return false } })
   const [isPopupOpen, setIsPopupOpen] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
   const popupRef = useRef(null)
   const mobileRef = useRef(null)
-
-  const initials = user?.display_name
-    ? user.display_name
-        .split(' ')
-        .map((w) => w[0])
-        .join('')
-        .slice(0, 2)
-        .toUpperCase()
-    : '??'
-
-  // Provider branding
-  const providerName = tenant?.name || 'Portal'
-  const providerInitials = providerName
-    .split(' ')
-    .map((w) => w[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase()
-
-  const providerLogoUrl = tenant?.logo_url || null
+  const desktopAccountRef = useRef(null)
+  const mobileAccountRef = useRef(null)
+  const initials = (user?.display_name || 'Client').split(' ').map(word => word[0]).join('').slice(0, 2).toUpperCase()
 
   useEffect(() => {
-    function handleClickOutside(e) {
-      const inDesktop = popupRef.current && popupRef.current.contains(e.target)
-      const inMobile = mobileRef.current && mobileRef.current.contains(e.target)
-
-      if (!inDesktop && !inMobile) {
-        setIsPopupOpen(false)
-      }
-    }
-
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
+    const dismiss = event => { if (!popupRef.current?.contains(event.target) && !mobileRef.current?.contains(event.target)) setIsPopupOpen(false) }
+    const escape = event => { if (event.key === 'Escape') setIsPopupOpen(false) }
+    document.addEventListener('mousedown', dismiss); document.addEventListener('keydown', escape)
+    return () => { document.removeEventListener('mousedown', dismiss); document.removeEventListener('keydown', escape) }
   }, [])
+  useEffect(() => { try { localStorage.setItem('client-sidebar-collapsed', String(isCollapsed)) } catch { /* optional preference */ } }, [isCollapsed])
 
-  useEffect(() => {
-    localStorage.setItem('provider-sidebar-collapsed', isCollapsed)
-  }, [isCollapsed])
 
-  // ───────────────── User Popup ─────────────────
-  const UserPopup = ({ isMobile = false, className = '' }) => (
-    <div
-      className={`
-        z-50 w-[240px] rounded-xl border border-border/50
-        bg-white shadow-soft
-        ${className}
-      `}
-    >
-      {/* User */}
-      <div className="px-4 py-3 bg-surface/50 border-b border-border/50 rounded-t-xl">
-        <p className="truncate text-sm font-semibold text-text-main">
-          {user?.display_name}
-        </p>
-        <p className="truncate text-xs text-text-sub mt-0.5">
-          {user?.email}
-        </p>
-      </div>
 
-      {/* Portal switcher */}
-      <div className="p-2 border-b border-border/50">
-        <ClientPortalSwitcher isMobile={isMobile} />
-      </div>
-
-      {/* Actions */}
-      <div className="p-1">
-        <button
-          onClick={() => {
-            setIsPopupOpen(false)
-            setShowSettings(true)
-          }}
-          className="
-            flex items-center gap-2.5
-
-            w-full text-left
-
-            px-3 py-2
-
-            rounded-lg
-
-            text-sm text-text-sub
-
-            hover:bg-surface
-            hover:text-text-main
-
-            transition-colors
-          "
-        >
-          <Settings size={15} />
-
-          <span>Settings</span>
+  return <>
+    <aside className={`sticky top-0 hidden h-dvh shrink-0 flex-col border-r border-border bg-layout-card transition-[width] duration-200 lg:flex ${isCollapsed ? 'w-[88px]' : 'w-[248px]'}`}>
+      <div className={`flex h-24 items-center ${isCollapsed ? 'justify-center px-3' : 'px-5'}`}><PortalBrand tenant={tenant} compact={isCollapsed} /></div>
+      <div className="px-3"><button onClick={() => setIsCollapsed(value => !value)} aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'} title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'} className={`flex min-h-10 items-center gap-3 rounded-xl px-3 text-text-dim hover:bg-surface ${isCollapsed ? 'mx-auto' : 'w-full'}`}><PanelLeftClose size={17} className={isCollapsed ? 'rotate-180' : ''} />{!isCollapsed && <span className="text-xs">Collapse navigation</span>}</button></div>
+      <nav aria-label="Client workspace" className="flex-1 space-y-1 px-3 pt-6">
+        {!isCollapsed && <p className="mb-3 px-3 text-xs font-medium text-text-dim">Workspace</p>}
+        {NAV_ITEMS.map(({ to, icon: Icon, label, badgeKey }) => <NavLink key={to} to={to} end={to === '/portal'} title={isCollapsed ? label : undefined} className={({ isActive }) => `flex min-h-12 items-center gap-3 rounded-xl px-3 text-sm font-medium transition-colors ${isCollapsed ? 'justify-center' : ''} ${isActive ? 'bg-primary-light text-primary-ink' : 'text-text-sub hover:bg-surface hover:text-text-main'}`}><Icon size={19} />{!isCollapsed && <><span className="flex-1">{label}</span>{badges[badgeKey] > 0 && <span className="rounded-md bg-primary px-1.5 py-0.5 text-xs text-white">{badges[badgeKey]}</span>}</>}</NavLink>)}
+        <div className="pt-2"><ClientNotificationBell collapsed={isCollapsed} /></div>
+      </nav>
+      {!isCollapsed && tenantInfo?.tagline && <p className="px-6 pb-6 text-xs leading-5 text-text-dim">{tenantInfo.tagline}</p>}
+      <div className="relative border-t border-border p-3" ref={popupRef}>
+        <button ref={desktopAccountRef} onClick={() => setIsPopupOpen(value => !value)} aria-label="Open account menu" aria-expanded={isPopupOpen} className={`flex min-h-12 w-full items-center gap-3 rounded-xl p-2 hover:bg-surface ${isCollapsed ? 'justify-center' : ''}`}>
+          {user?.avatar_url ? <img src={user.avatar_url} alt="" className="h-9 w-9 shrink-0 rounded-full object-cover" /> : <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-surface text-xs font-semibold text-text-sub">{initials}</span>}
+          {!isCollapsed && <><span className="min-w-0 flex-1 text-left"><span className="block truncate text-sm font-semibold">{user?.display_name || 'Client'}</span><span className="mt-0.5 block text-xs text-text-dim">Your account</span></span><ChevronDown size={15} className="text-text-dim" /></>}
         </button>
-
-        <div className="mx-2 my-1 h-px bg-border/50" />
-
-        <button
-          onClick={() => {
-            setIsPopupOpen(false)
-            logout()
-          }}
-          className="flex items-center gap-2.5 w-full text-left px-3 py-2 rounded-lg text-sm text-red-600 hover:bg-red-50 transition-colors"
-        >
-          <LogOut size={15} />
-          <span className="font-medium">Sign out</span>
-        </button>
+        {isPopupOpen && <div className={`absolute bottom-[80px] z-[60] ${isCollapsed ? 'left-4' : 'left-3'}`}><UserPopup user={user} onAppearanceChange={() => { setIsPopupOpen(false); desktopAccountRef.current?.focus() }} onSettings={() => { setIsPopupOpen(false); setShowSettings(true) }} onLogout={() => { setIsPopupOpen(false); logout() }} /></div>}
       </div>
-    </div>
-  )
-
-  return (
-    <>
-      {/* ═══════════════ DESKTOP SIDEBAR ═══════════════════════ */}
-      <aside
-        className={`hidden lg:flex flex-col h-screen sticky top-0 shrink-0 select-none transition-all duration-300 ease-in-out border-r ${isCollapsed ? 'w-[72px]' : 'w-[260px]'}`}
-        style={{ background: bg1, borderColor: `${accent}22` }}
-      >
-        {/* ───────────────── Header ───────────────── */}
-        <div
-          className={`
-            flex items-center pt-6 pb-4 border-b border-white/10
-            ${isCollapsed ? 'justify-center px-0' : 'justify-between px-4'}
-          `}
-        >
-          {/* Provider branding */}
-          {!isCollapsed && (
-            <div className="flex items-center gap-3 min-w-0 flex-1">
-              {providerLogoUrl ? (
-                <img
-                  src={providerLogoUrl}
-                  alt={providerName}
-                  className="h-9 w-9 rounded-lg object-cover shadow-sm shrink-0"
-                />
-              ) : (
-                <div className="h-9 w-9 rounded-lg bg-white/10 flex items-center justify-center text-xs font-bold text-white shrink-0">
-                  {providerInitials}
-                </div>
-              )}
-
-              <div className="min-w-0">
-                <p className="truncate text-sm font-semibold text-white leading-tight">
-                  {providerName}
-                </p>
-                <p className="text-xs text-white/60 mt-0.5">Client Portal</p>
-              </div>
-            </div>
-          )}
-
-          {/* Collapse button */}
-          <button
-            onClick={() => setIsCollapsed(!isCollapsed)}
-            title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-            className="p-1.5 rounded-md text-white/50 hover:text-white hover:bg-white/10 transition-colors"
-          >
-            <PanelLeftClose
-              size={16}
-              className={`transition-transform duration-300 ${isCollapsed ? 'rotate-180' : ''}`}
-            />
-          </button>
-        </div>
-
-        {/* ───────────────── Navigation ───────────────── */}
-        <nav className="px-3 pt-6 flex-1 flex flex-col gap-1.5">
-          <div className="mb-4 px-1">
-            <ClientNotificationBell collapsed={isCollapsed} />
-          </div>
-
-          {NAV_ITEMS.map(({ to, icon: Icon, label, badgeKey }) => (
-            <NavLink
-              key={to}
-              to={to}
-              end={to === '/portal'}
-              title={isCollapsed ? label : undefined}
-              className={({ isActive }) =>
-                `relative flex items-center rounded-lg text-sm transition-all duration-200 ${isCollapsed ? 'justify-center py-3 px-0 mx-auto w-10' : 'gap-3 px-3 py-2.5'}`
-              }
-              style={({ isActive }) =>
-                isActive
-                  ? { background: accent, color: '#fff', fontWeight: 500 }
-                  : { color: 'rgba(255,255,255,0.7)' }
-              }
-            >
-              <Icon size={18} className="shrink-0" />
-
-              {!isCollapsed && <span className="flex-1">{label}</span>}
-
-              {!isCollapsed && badgeKey && badges[badgeKey] > 0 && (
-                <span className="text-[10px] font-bold bg-white text-sidebar px-2 py-0.5 rounded-full min-w-[20px] text-center">
-                  {badges[badgeKey]}
-                </span>
-              )}
-            </NavLink>
-          ))}
-        </nav>
-
-        {/* ───────────────── Footer ───────────────── */}
-        <div className="p-3 relative border-t border-white/10" ref={popupRef}>
-          {/* User row */}
-          {!isCollapsed && (
-            <div
-              onClick={() => setIsPopupOpen(!isPopupOpen)}
-              className={`
-                flex items-center justify-between gap-3 rounded-xl cursor-pointer transition-colors p-2.5
-                ${isPopupOpen ? 'bg-white/10' : 'hover:bg-white/5'}
-              `}
-            >
-              <div className="flex items-center gap-3 min-w-0">
-                <div
-                  className="
-                    h-8 w-8
-                    shrink-0
-                    rounded-full
-                    overflow-hidden
-                    bg-white
-                  "
-                >
-                  {user?.avatar_url ? (
-                    <img
-                      src={user.avatar_url}
-                      alt={user.display_name}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div
-                      className="
-                        w-full h-full
-                        flex items-center justify-center
-                        text-xs
-                        font-bold
-                        text-sidebar
-                      "
-                    >
-                      {initials}
-                    </div>
-                  )}
-
-                </div>
-
-                <div className="min-w-0">
-                  <p className="truncate text-sm text-white font-medium leading-tight">
-                    {user?.display_name || 'Client'}
-                  </p>
-                  <p className="text-xs text-white/60 mt-0.5 truncate">
-                    {user?.email || ''}
-                  </p>
-                </div>
-              </div>
-
-              <ChevronDown
-                size={14}
-                className={`text-white/50 shrink-0 transition-transform duration-200 ${isPopupOpen ? 'rotate-180' : ''}`}
-              />
-            </div>
-          )}
-
-          {/* Desktop popup */}
-          {isPopupOpen && !isCollapsed && (
-            <UserPopup className="absolute left-3 bottom-[76px]" />
-          )}
-        </div>
-      </aside>
-
-      {/* ═══════════════ MOBILE BOTTOM NAV ═════════════════════ */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-white/80 backdrop-blur-md border-t border-border pb-[env(safe-area-inset-bottom)] supports-[backdrop-filter]:bg-white/60">
-        <div className="flex items-center justify-around px-2 py-2" ref={mobileRef}>
-          
-          {/* Standard Nav Items */}
-          {NAV_ITEMS.map(({ to, icon: Icon, label, badgeKey }) => (
-            <NavLink
-              key={to}
-              to={to}
-              end={to === '/portal'}
-              className="relative flex flex-col items-center justify-center gap-1 min-w-[72px] rounded-xl px-2 py-2 transition-all duration-200"
-              style={({ isActive }) =>
-                isActive ? { color: accent } : { color: '#9EA89E' }
-              }
-            >
-              {({ isActive }) => (
-                <>
-                  <div className="relative">
-                    <Icon size={22} strokeWidth={isActive ? 2.5 : 2} />
-
-                    {badgeKey && badges[badgeKey] > 0 && (
-                      <span
-                        className="absolute -top-1.5 -right-2 h-4 min-w-[16px] px-1 flex items-center justify-center rounded-full shadow-sm text-white text-[9px] font-bold"
-                        style={{ background: accent }}
-                      >
-                        {badges[badgeKey] > 9 ? '9+' : badges[badgeKey]}
-                      </span>
-                    )}
-                  </div>
-                  <span className="text-[10px] font-medium tracking-wide">{label}</span>
-                </>
-              )}
-            </NavLink>
-          ))}
-
-          {/* Notification Nav Item (Handled internally by component) */}
-          <ClientNotificationBell isMobileNav={true} />
-
-          {/* Profile Nav Item */}
-          <div
-            className="relative flex flex-col items-center justify-center gap-1 min-w-[72px] rounded-xl px-2 py-2 transition-all duration-200 cursor-pointer"
-            style={{ color: isPopupOpen ? accent : '#9EA89E' }}
-            onClick={(e) => {
-              e.stopPropagation()
-              setIsPopupOpen(!isPopupOpen)
-            }}
-          >
-            <div
-              className={`h-[22px] w-[22px] rounded-full overflow-hidden shadow-sm transition-transform duration-200 ${isPopupOpen ? 'scale-110' : ''}`}
-              style={{ background: accent, boxShadow: isPopupOpen ? `0 0 0 2px ${accentSoft}` : undefined }}
-            >
-              {user?.avatar_url ? (
-                <img
-                  src={user.avatar_url}
-                  alt={user.display_name}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div
-                  className="
-                    w-full h-full
-                    flex items-center justify-center
-                    text-[9px]
-                    font-bold
-                    text-white
-                  "
-                >
-                  {initials}
-                </div>
-              )}
-
-            </div>
-            <span className="text-[10px] font-medium tracking-wide">Profile</span>
-
-            {/* Mobile popup */}
-            {isPopupOpen && (
-              <div className="absolute bottom-[60px] right-2" onClick={e => e.stopPropagation()}>
-                <UserPopup isMobile={true} className="shadow-2xl border-border/50 animate-in slide-in-from-bottom-4 duration-200" />
-              </div>
-            )}
-          </div>
-
-        </div>
+    </aside>
+    <nav aria-label="Mobile client workspace" className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-layout-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden">
+      <div className="flex h-20 items-center justify-around px-2" ref={mobileRef}>
+        {NAV_ITEMS.map(({ to, icon: Icon, label, badgeKey }) => <NavLink key={to} to={to} end={to === '/portal'} className={({ isActive }) => `flex min-h-14 min-w-16 flex-col items-center justify-center gap-1.5 rounded-xl px-2 ${isActive ? 'text-primary-ink' : 'text-text-sub'}`}><span className="relative"><Icon size={21} />{badges[badgeKey] > 0 && <span className="absolute -right-2 -top-2 rounded-full bg-primary px-1 text-xs text-white">{badges[badgeKey]}</span>}</span><span className="text-xs font-medium">{label}</span></NavLink>)}
+        <ClientNotificationBell isMobileNav />
+        <div className="relative"><button ref={mobileAccountRef} onClick={() => setIsPopupOpen(value => !value)} aria-expanded={isPopupOpen} className={`flex min-h-14 min-w-16 flex-col items-center justify-center gap-1.5 rounded-xl px-2 ${isPopupOpen ? 'text-primary-ink' : 'text-text-sub'}`}><UserRound size={21} /><span className="text-xs font-medium">Account</span></button>{isPopupOpen && <div className="absolute bottom-[72px] right-0"><UserPopup user={user} isMobile onAppearanceChange={() => { setIsPopupOpen(false); mobileAccountRef.current?.focus() }} onSettings={() => { setIsPopupOpen(false); setShowSettings(true) }} onLogout={() => { setIsPopupOpen(false); logout() }} /></div>}</div>
       </div>
-      {showSettings && (
-        <ClientSettingsModal
-          open={showSettings}
-          onClose={() =>
-            setShowSettings(false)
-          }
-        />
-      )}
-    </>
-  )
+    </nav>
+    {showSettings && <ClientSettingsModal open onClose={() => setShowSettings(false)} />}
+  </>
 }

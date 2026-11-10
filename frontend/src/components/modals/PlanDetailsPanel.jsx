@@ -68,11 +68,11 @@ export default function PlanDetailsPanel({ open, onClose, plans, onChanged }) {
           {plans.map((plan) => {
             const values = form[plan.id] || {}
             return (
-              <div key={plan.id} className="rounded-xl border border-[#E5E8E5] p-4">
+              <div key={plan.id} className="rounded-xl border border-border p-4">
                 <div className="mb-4 flex items-center justify-between">
-                  <h3 className="text-[14px] font-semibold capitalize text-[#10241C]">{plan.name}</h3>
+                  <h3 className="text-[14px] font-semibold capitalize text-text-main">{plan.name}</h3>
                   {plan.has_stripe_price && (
-                    <span className="flex items-center gap-1 text-[11px] text-[#9BA39B]">
+                    <span className="flex items-center gap-1 text-[11px] text-text-dim">
                       <CreditCard size={12} /> Synced with Stripe
                     </span>
                   )}
@@ -80,36 +80,36 @@ export default function PlanDetailsPanel({ open, onClose, plans, onChanged }) {
 
                 <div className="grid grid-cols-2 gap-3">
                   <div className="col-span-2">
-                    <label className="mb-1 block text-[12px] text-[#5B655C]">Price / month ($)</label>
+                    <label className="mb-1 block text-[12px] text-text-sub">Price / month ($)</label>
                     <input
                       type="number"
                       min={0}
                       step="0.01"
                       value={values.price_monthly ?? ''}
                       onChange={(e) => update(plan.id, 'price_monthly', e.target.value)}
-                      className="h-9 w-full rounded-lg border border-[#D8DCD8] px-3 text-[13px] outline-none focus:border-[#1D9E75] focus:ring-2 focus:ring-[#1D9E75]/15"
+                      className="h-9 w-full rounded-lg border border-border px-3 text-[13px] outline-none focus:border-primary focus:ring-2 focus:ring-[#1D9E75]/15"
                     />
                   </div>
                   <div>
-                    <label className="mb-1 block text-[12px] text-[#5B655C]">Client limit</label>
+                    <label className="mb-1 block text-[12px] text-text-sub">Client limit</label>
                     <input
                       type="number"
                       value={values.client_limit ?? ''}
                       onChange={(e) => update(plan.id, 'client_limit', e.target.value)}
-                      className="h-9 w-full rounded-lg border border-[#D8DCD8] px-3 text-[13px] outline-none focus:border-[#1D9E75] focus:ring-2 focus:ring-[#1D9E75]/15"
+                      className="h-9 w-full rounded-lg border border-border px-3 text-[13px] outline-none focus:border-primary focus:ring-2 focus:ring-[#1D9E75]/15"
                     />
                   </div>
                   <div>
-                    <label className="mb-1 block text-[12px] text-[#5B655C]">Request limit</label>
+                    <label className="mb-1 block text-[12px] text-text-sub">Request limit</label>
                     <input
                       type="number"
                       value={values.request_limit ?? ''}
                       onChange={(e) => update(plan.id, 'request_limit', e.target.value)}
-                      className="h-9 w-full rounded-lg border border-[#D8DCD8] px-3 text-[13px] outline-none focus:border-[#1D9E75] focus:ring-2 focus:ring-[#1D9E75]/15"
+                      className="h-9 w-full rounded-lg border border-border px-3 text-[13px] outline-none focus:border-primary focus:ring-2 focus:ring-[#1D9E75]/15"
                     />
                   </div>
                 </div>
-                <p className="mt-1.5 text-[11px] text-[#9BA39B]">Use -1 for unlimited.</p>
+                <p className="mt-1.5 text-[11px] text-text-dim">Use -1 for unlimited.</p>
 
                 <div className="mt-3 flex items-center gap-3">
                   <AdminButton
@@ -121,10 +121,10 @@ export default function PlanDetailsPanel({ open, onClose, plans, onChanged }) {
                   >
                     Save
                   </AdminButton>
-                  {savedId === plan.id && <span className="text-[12px] text-[#1D9E75]">Saved</span>}
+                  {savedId === plan.id && <span className="text-[12px] text-primary-ink">Saved</span>}
                 </div>
                 {errors[plan.id] && (
-                  <p className="mt-2 text-[12px] text-[#C73A30]">{errors[plan.id]}</p>
+                  <p className="mt-2 text-[12px] text-status-danger-text">{errors[plan.id]}</p>
                 )}
               </div>
             )

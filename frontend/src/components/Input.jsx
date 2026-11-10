@@ -1,27 +1,36 @@
-import { forwardRef } from 'react'
+import { forwardRef, useId } from 'react'
 import { clsx } from 'clsx'
 
-const Input = forwardRef(({ label, error, ...props }, ref) => (
+const Input = forwardRef(({ label, error, hint, id, icon: Icon, className, ...props }, ref) => {
+  const generatedId = useId()
+  const inputId = id || generatedId
+  const descriptionId = `${inputId}-description`
+  return (
   <div>
     {label && (
-      <label className="block text-sm font-medium text-text-sub mb-1.5">
+      <label htmlFor={inputId} className="mb-2 flex items-center gap-2 text-sm font-medium text-text-sub">
+        {Icon && <Icon size={15} aria-hidden="true" />}
         {label}
       </label>
     )}
     <input
-      ref={ref}
-      className={clsx(
-        'w-full px-3 py-2.5 rounded-lg border bg-white text-sm text-text-main',
-        'placeholder:text-text-dim focus:outline-none focus:ring-2 transition-all',
-        error
-          ? 'border-red-400 focus:ring-red-200'
-          : 'border-border focus:ring-primary/30 focus:border-primary'
-      )}
       {...props}
+      ref={ref}
+      id={inputId}
+      aria-invalid={error ? true : undefined}
+      aria-describedby={[props['aria-describedby'], (error || hint) && descriptionId].filter(Boolean).join(' ') || undefined}
+      className={clsx(
+        'field-control',
+        error
+          ? 'border-status-danger-text focus:ring-status-danger-text/20'
+          : 'border-border focus:ring-primary/30 focus:border-primary',
+        className
+      )}
     />
-    {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
+    {(error || hint) && <p id={descriptionId} role={error ? 'alert' : undefined} className={`mt-1.5 text-xs ${error ? 'text-status-danger-text' : 'text-text-dim'}`}>{error || hint}</p>}
   </div>
-))
+  )
+})
 
 Input.displayName = 'Input'
 export default Input

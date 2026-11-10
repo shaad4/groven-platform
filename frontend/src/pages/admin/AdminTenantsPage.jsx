@@ -117,10 +117,10 @@ export default function AdminTenantsPage() {
     <AdminLayout>
       <div className="flex items-start justify-between px-4 sm:px-8 pt-6 sm:pt-8 pb-4 sm:pb-6">
         <div>
-          <h1 className="text-[22px] sm:text-[24px] font-semibold text-[#10241C]">Tenants</h1>
-          <p className="mt-1 text-[13px] sm:text-[14px] text-[#7C867D]">All provider workspaces.</p>
+          <h1 className="text-[22px] sm:text-[24px] font-semibold text-text-main">Tenants</h1>
+          <p className="mt-1 text-[13px] sm:text-[14px] text-text-sub">All provider workspaces.</p>
         </div>
-        <span className="rounded-lg border border-[#D8DCD8] bg-white px-3 py-1.5 sm:px-3.5 sm:py-2 text-[12px] sm:text-[13px] font-medium text-[#5B655C]">
+        <span className="rounded-lg border border-border bg-layout-card px-3 py-1.5 sm:px-3.5 sm:py-2 text-[12px] sm:text-[13px] font-medium text-text-sub">
           {total} tenants
         </span>
       </div>
@@ -129,19 +129,19 @@ export default function AdminTenantsPage() {
         {/* Filters */}
         <div className="mb-4 flex flex-wrap items-center gap-3">
           <div className="relative min-w-[200px] sm:min-w-[260px] flex-1">
-            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9BA39B]" />
+            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-dim" />
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search by name or slug..."
-              className="h-10 w-full rounded-lg border border-[#D8DCD8] bg-white pl-9 pr-3 text-[13px] outline-none focus:border-[#1D9E75] focus:ring-2 focus:ring-[#1D9E75]/15"
+              className="h-10 w-full rounded-lg border border-border bg-layout-card pl-9 pr-3 text-[13px] outline-none focus:border-primary focus:ring-2 focus:ring-[#1D9E75]/15"
             />
           </div>
 
           <select
             value={planFilter}
             onChange={(e) => setPlanFilter(e.target.value)}
-            className="h-10 rounded-lg border border-[#D8DCD8] bg-white px-3 text-[13px] text-[#5B655C] outline-none focus:border-[#1D9E75] flex-shrink-0"
+            className="h-10 rounded-lg border border-border bg-layout-card px-3 text-[13px] text-text-sub outline-none focus:border-primary flex-shrink-0"
           >
             <option value="">All plans</option>
             <option value="free">Free</option>
@@ -151,7 +151,7 @@ export default function AdminTenantsPage() {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="h-10 rounded-lg border border-[#D8DCD8] bg-white px-3 text-[13px] text-[#5B655C] outline-none focus:border-[#1D9E75] flex-shrink-0"
+            className="h-10 rounded-lg border border-border bg-layout-card px-3 text-[13px] text-text-sub outline-none focus:border-primary flex-shrink-0"
           >
             <option value="">All statuses</option>
             <option value="active">Active</option>
@@ -161,7 +161,7 @@ export default function AdminTenantsPage() {
           {(search || planFilter || statusFilter) && (
             <button
               onClick={() => { setSearch(''); setPlanFilter(''); setStatusFilter('') }}
-              className="text-[13px] font-medium text-[#0F6E56] hover:underline"
+              className="text-[13px] font-medium text-primary-ink hover:underline"
             >
               Clear filters
             </button>
@@ -169,10 +169,10 @@ export default function AdminTenantsPage() {
         </div>
 
         {/* Table */}
-        <div className="overflow-hidden rounded-xl border border-[#E5E8E5] bg-white">
+        <div className="overflow-hidden rounded-xl border border-border bg-layout-card">
           <table className="w-full text-left">
             <thead>
-              <tr className="border-b border-[#EEF1EE] text-[11px] uppercase tracking-wide text-[#9BA39B]">
+              <tr className="border-b border-border text-[11px] uppercase tracking-wide text-text-dim">
                 <th className="px-4 sm:px-5 py-3 font-medium">Tenant</th>
                 <th className="px-4 sm:px-5 py-3 font-medium">Plan</th>
                 <th className="px-5 py-3 font-medium hidden md:table-cell">Clients</th>
@@ -184,35 +184,35 @@ export default function AdminTenantsPage() {
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={7} className="px-5 py-10 text-center text-[13px] text-[#9BA39B]">Loading…</td></tr>
+                <tr><td colSpan={7} className="px-5 py-10 text-center text-[13px] text-text-dim">Loading…</td></tr>
               ) : visibleTenants.length === 0 ? (
-                <tr><td colSpan={7} className="px-5 py-10 text-center text-[13px] text-[#9BA39B]">No tenants match your filters.</td></tr>
+                <tr><td colSpan={7} className="px-5 py-10 text-center text-[13px] text-text-dim">No tenants match your filters.</td></tr>
               ) : (
                 visibleTenants.map((t) => (
                   <tr
                     key={t.id}
                     onClick={() => openDetail(t)}
-                    className="cursor-pointer border-b border-[#F3F5F3] last:border-0 hover:bg-[#FAFBFA]"
+                    className="cursor-pointer border-b border-border last:border-0 hover:bg-surface"
                   >
                     <td className="px-4 sm:px-5 py-3.5">
                       <div className="flex items-center gap-3">
                         <TenantLogo tenant={t} />
-                        <span className="text-[13px] font-medium text-[#10241C] truncate max-w-[120px] sm:max-w-none">{t.name}</span>
+                        <span className="text-[13px] font-medium text-text-main truncate max-w-[120px] sm:max-w-none">{t.name}</span>
                       </div>
                     </td>
                     <td className="px-4 sm:px-5 py-3.5"><PlanBadge plan={t.plan} /></td>
-                    <td className="px-5 py-3.5 text-[13px] text-[#2A332E] hidden md:table-cell">
+                    <td className="px-5 py-3.5 text-[13px] text-text-main hidden md:table-cell">
                       {t.client_count}/{t.client_limit === -1 ? '∞' : t.client_limit}
                     </td>
-                    <td className="px-5 py-3.5 text-[13px] text-[#2A332E] hidden md:table-cell">
+                    <td className="px-5 py-3.5 text-[13px] text-text-main hidden md:table-cell">
                       {t.request_count}/{t.request_limit == null || t.request_limit === -1 ? '∞' : t.request_limit}
                     </td>
-                    <td className="px-5 py-3.5 text-[13px] text-[#7C867D] hidden lg:table-cell">{joinedLabel(t.created_at)}</td>
+                    <td className="px-5 py-3.5 text-[13px] text-text-sub hidden lg:table-cell">{joinedLabel(t.created_at)}</td>
                     <td className="px-4 sm:px-5 py-3.5"><StatusPill status={t.is_suspended ? 'Suspended' : 'Active'} /></td>
                     <td className="px-5 py-3.5 hidden sm:table-cell">
                       <button
                         onClick={(e) => { e.stopPropagation(); openDetail(t) }}
-                        className="rounded-lg border border-[#D8DCD8] bg-white px-3 py-1.5 text-[12px] font-medium text-[#5B655C] hover:bg-[#F3F5F3]"
+                        className="rounded-lg border border-border bg-layout-card px-3 py-1.5 text-[12px] font-medium text-text-sub hover:bg-surface"
                       >
                         View Details
                       </button>
@@ -225,29 +225,29 @@ export default function AdminTenantsPage() {
         </div>
         {numPages > 1 && (
           <div className="mt-4 flex items-center justify-between">
-            <p className="text-[13px] text-[#7C867D]">
+            <p className="text-[13px] text-text-sub">
               Page {page} of {numPages} · {total} tenants
             </p>
             <div className="flex items-center gap-1.5">
               <button
                 onClick={() => { pageRef.current = Math.max(1, page - 1); setPage(pageRef.current); load() }}
                 disabled={page === 1}
-                className="h-8 rounded-lg border border-[#D8DCD8] bg-white px-3 text-[13px] text-[#5B655C] hover:bg-[#F3F5F3] disabled:opacity-40 disabled:cursor-not-allowed"
+                className="h-8 rounded-lg border border-border bg-layout-card px-3 text-[13px] text-text-sub hover:bg-surface disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 Previous
               </button>
 
               {pageNumbers.map((item) =>
                 String(item).startsWith('ellipsis') ? (
-                  <span key={item} className="px-1 text-[13px] text-[#9BA39B]">…</span>
+                  <span key={item} className="px-1 text-[13px] text-text-dim">…</span>
                 ) : (
                   <button
                     key={item}
                     onClick={() => { pageRef.current = item; setPage(item); load() }}
                     className={`h-8 w-8 rounded-lg border text-[13px] font-medium transition-colors ${
                       page === item
-                        ? 'border-[#1D9E75] bg-[#1D9E75] text-white'
-                        : 'border-[#D8DCD8] bg-white text-[#5B655C] hover:bg-[#F3F5F3]'
+                        ? 'border-primary bg-primary text-white'
+                        : 'border-border bg-layout-card text-text-sub hover:bg-surface'
                     }`}
                   >
                     {item}
@@ -258,7 +258,7 @@ export default function AdminTenantsPage() {
               <button
                 onClick={() => { pageRef.current = Math.min(numPages, page + 1); setPage(pageRef.current); load() }}
                 disabled={page === numPages}
-                className="h-8 rounded-lg border border-[#D8DCD8] bg-white px-3 text-[13px] text-[#5B655C] hover:bg-[#F3F5F3] disabled:opacity-40 disabled:cursor-not-allowed"
+                className="h-8 rounded-lg border border-border bg-layout-card px-3 text-[13px] text-text-sub hover:bg-surface disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 Next
               </button>

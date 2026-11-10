@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { useSelector, useDispatch } from 'react-redux'
-import { X, Check, Loader2, Sparkles } from 'lucide-react'
+import { X, Check, Loader2 } from 'lucide-react'
 import { getPlanPricing } from '../../api/plans.api'
 
 import {
@@ -36,23 +36,19 @@ function PlanCard({ name, price, features, highlighted, cta, onCta, loading }) {
     <div
       className={`flex-1 rounded-2xl border p-5 flex flex-col ${
         highlighted
-          ? 'border-[#0F6E56] bg-[#F0FAF5] shadow-sm'
-          : 'border-[#E8EAE8] bg-white'
+          ? 'border-border bg-layout-card shadow-sm'
+          : 'border-border bg-layout-card'
       }`}
     >
       <div className="flex items-center justify-between mb-1">
-        <p className="text-[13px] font-semibold text-[#141A14]">{name}</p>
-        {highlighted && (
-          <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#0F6E56] bg-white px-2 py-0.5 rounded-full border border-[#B3DDD1]">
-            <Sparkles size={10} /> Recommended
-          </span>
-        )}
+        <p className="text-[13px] font-semibold text-text-main">{name}</p>
+
       </div>
-      <p className="text-[22px] font-semibold text-[#141A14] mb-3">{price}</p>
+      <p className="text-[22px] font-semibold text-text-main mb-3">{price}</p>
       <ul className="space-y-2 mb-5 flex-1">
         {features.map((f) => (
-          <li key={f} className="flex items-start gap-2 text-[12px] text-[#4A544A]">
-            <Check size={13} className="text-[#0F6E56] mt-0.5 flex-shrink-0" />
+          <li key={f} className="flex items-start gap-2 text-[12px] text-text-sub">
+            <Check size={13} className="text-primary-ink mt-0.5 flex-shrink-0" />
             {f}
           </li>
         ))}
@@ -64,8 +60,8 @@ function PlanCard({ name, price, features, highlighted, cta, onCta, loading }) {
           disabled={loading}
           className={`w-full h-9 rounded-lg text-[13px] font-medium transition-colors flex items-center justify-center gap-1.5 disabled:opacity-60 ${
             highlighted
-              ? 'bg-[#0F6E56] text-white hover:bg-[#0A5A44]'
-              : 'bg-transparent text-[#4A544A] border border-[#E0E4E0] hover:bg-[#F2F4F2]'
+              ? 'bg-primary text-white hover:bg-primary-dark'
+              : 'bg-transparent text-text-sub border border-border hover:bg-surface'
           }`}
         >
           {loading ? <Loader2 size={14} className="animate-spin" /> : cta}
@@ -105,22 +101,22 @@ function UpgradeModalInner({ reason, message, onClose }) {
       <div className="absolute inset-0 bg-black/50 backdrop-blur-[2px]" onClick={onClose} />
 
       <div
-        className="relative bg-white w-full max-w-lg rounded-2xl border border-[#E8EAE8] shadow-2xl overflow-hidden"
+        className="relative bg-layout-card w-full max-w-lg rounded-2xl border border-border shadow-2xl overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start justify-between px-6 pt-5 pb-1">
           <div>
-            <p className="text-[11px] font-medium text-[#0F6E56] uppercase tracking-wide mb-1">
+            <p className="text-[11px] font-medium text-primary-ink uppercase tracking-wide mb-1">
               {copy.eyebrow}
             </p>
-            <h2 className="text-[17px] font-semibold text-[#141A14]">{copy.headline}</h2>
+            <h2 className="text-[17px] font-semibold text-text-main">{copy.headline}</h2>
             {message && (
-              <p className="text-[12px] text-[#9EA89E] mt-1 max-w-sm">{message}</p>
+              <p className="text-[12px] text-text-dim mt-1 max-w-sm">{message}</p>
             )}
           </div>
           <button
             onClick={onClose}
-            className="flex items-center justify-center w-7 h-7 rounded-lg text-[#9EA89E] hover:text-[#4A544A] hover:bg-[#F2F4F2] transition-colors flex-shrink-0"
+            className="flex items-center justify-center w-7 h-7 rounded-lg text-text-dim hover:text-text-sub hover:bg-surface transition-colors flex-shrink-0"
           >
             <X size={15} />
           </button>

@@ -64,7 +64,7 @@ export default function TenantDetailPanel({ open, onClose, tenant, onChanged }) 
           <div className="flex items-center gap-2">
             <PlanBadge plan={tenant.plan} />
             {tenant.is_suspended && (
-              <span className="rounded-md bg-[#FDF1EF] px-2 py-0.5 text-[11px] font-medium text-[#C73A30]">
+              <span className="rounded-md bg-status-danger-bg px-2 py-0.5 text-[11px] font-medium text-status-danger-text">
                 Suspended
               </span>
             )}
@@ -72,33 +72,33 @@ export default function TenantDetailPanel({ open, onClose, tenant, onChanged }) 
 
           <div className="mt-5 space-y-2.5 text-[13px]">
             {tenant.provider_email && (
-              <div className="flex items-center gap-2.5 text-[#5B655C]">
-                <Mail size={14} className="text-[#9BA39B]" />
+              <div className="flex items-center gap-2.5 text-text-sub">
+                <Mail size={14} className="text-text-dim" />
                 {tenant.provider_email}
               </div>
             )}
-            <div className="flex items-center gap-2.5 text-[#5B655C]">
-              <Calendar size={14} className="text-[#9BA39B]" />
+            <div className="flex items-center gap-2.5 text-text-sub">
+              <Calendar size={14} className="text-text-dim" />
               Member since {joinedLabel(tenant.created_at)}
             </div>
           </div>
 
           {tenant.clients?.length > 0 && (
             <div className="mt-6">
-              <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-[#9BA39B]">
+              <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-text-dim">
                 Clients on this workspace
               </p>
-              <div className="space-y-1 rounded-lg border border-[#EEF1EE]">
+              <div className="space-y-1 rounded-lg border border-border">
                 {tenant.clients.map((c, i) => (
                   <div
                     key={c.id}
                     className={`flex items-center justify-between px-3 py-2.5 ${
-                      i !== tenant.clients.length - 1 ? 'border-b border-[#EEF1EE]' : ''
+                      i !== tenant.clients.length - 1 ? 'border-b border-border' : ''
                     }`}
                   >
-                    <span className="text-[13px] text-[#2A332E]">{c.name || c.email || 'Unnamed client'}</span>
+                    <span className="text-[13px] text-text-main">{c.name || c.email || 'Unnamed client'}</span>
                     {c.email && c.name && (
-                      <span className="text-[12px] text-[#9BA39B]">{c.email}</span>
+                      <span className="text-[12px] text-text-dim">{c.email}</span>
                     )}
                   </div>
                 ))}
@@ -107,15 +107,15 @@ export default function TenantDetailPanel({ open, onClose, tenant, onChanged }) 
           )}
 
           <div className="mt-6 space-y-4">
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-[#9BA39B]">Usage</p>
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-text-dim">Usage</p>
             <UsageBar used={tenant.client_count} limit={tenant.client_limit} label="Clients" />
             <UsageBar used={tenant.request_count} limit={tenant.request_limit} label="Requests" />
           </div>
 
           {/* Limit override — free plan only */}
           {!isPro && (
-            <div className="mt-6 border-t border-[#EEF1EE] pt-5">
-              <p className="mb-3 text-[11px] font-semibold uppercase tracking-wide text-[#9BA39B]">
+            <div className="mt-6 border-t border-border pt-5">
+              <p className="mb-3 text-[11px] font-semibold uppercase tracking-wide text-text-dim">
                 Limit override
               </p>
               <div className="flex items-center gap-2.5">
@@ -125,26 +125,26 @@ export default function TenantDetailPanel({ open, onClose, tenant, onChanged }) 
                   value={limitInput}
                   onChange={(e) => { setLimitInput(e.target.value); setLimitSaved(false) }}
                   placeholder={String(tenant.client_limit)}
-                  className="h-9 w-24 rounded-lg border border-[#D8DCD8] px-3 text-[13px] outline-none focus:border-[#1D9E75] focus:ring-2 focus:ring-[#1D9E75]/15"
+                  className="h-9 w-24 rounded-lg border border-border px-3 text-[13px] outline-none focus:border-primary focus:ring-2 focus:ring-[#1D9E75]/15"
                 />
                 <AdminButton size="sm" variant="secondary" icon={Save} onClick={handleSaveLimit} loading={savingLimit}>
                   Save
                 </AdminButton>
-                {limitSaved && <span className="text-[12px] text-[#1D9E75]">Saved</span>}
+                {limitSaved && <span className="text-[12px] text-primary-ink">Saved</span>}
               </div>
-              <p className="mt-1.5 text-[12px] text-[#9BA39B]">
+              <p className="mt-1.5 text-[12px] text-text-dim">
                 Custom client limit for this free tenant. Leave blank to clear the override.
               </p>
             </div>
           )}
 
           {actionError && (
-            <p className="mt-4 text-[12px] text-[#C73A30]">{actionError}</p>
+            <p className="mt-4 text-[12px] text-status-danger-text">{actionError}</p>
           )}
 
           {/* Plan / suspension actions */}
-          <div className="mt-6 space-y-2 border-t border-[#EEF1EE] pt-5">
-            <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-[#9BA39B]">Actions</p>
+          <div className="mt-6 space-y-2 border-t border-border pt-5">
+            <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-text-dim">Actions</p>
 
             {!isPro ? (
               <ActionRow
@@ -216,20 +216,20 @@ function ActionRow({ icon: Icon, title, description, onClick, loading, danger })
       disabled={loading}
       className={`flex w-full items-center gap-3 rounded-xl border px-4 py-3 text-left transition-colors disabled:opacity-60 ${
         danger
-          ? 'border-[#F3D2CE] hover:bg-[#FDF1EF]'
-          : 'border-[#EEF1EE] hover:bg-[#FAFBFA]'
+          ? 'border-status-danger-text/20 hover:bg-status-danger-bg'
+          : 'border-border hover:bg-surface'
       }`}
     >
       <div
         className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
-          danger ? 'bg-[#FDF1EF] text-[#C73A30]' : 'bg-[#EEF1EE] text-[#5B655C]'
+          danger ? 'bg-status-danger-bg text-status-danger-text' : 'bg-surface text-text-sub'
         }`}
       >
         <Icon size={15} />
       </div>
       <div className="min-w-0 flex-1">
-        <p className={`text-[13px] font-medium ${danger ? 'text-[#C73A30]' : 'text-[#10241C]'}`}>{title}</p>
-        <p className="text-[12px] text-[#9BA39B]">{description}</p>
+        <p className={`text-[13px] font-medium ${danger ? 'text-status-danger-text' : 'text-text-main'}`}>{title}</p>
+        <p className="text-[12px] text-text-dim">{description}</p>
       </div>
     </button>
   )

@@ -99,7 +99,7 @@ export default function AdminPlansPage() {
     return (
       <AdminLayout>
         <div className="flex h-full items-center justify-center">
-          <div className="h-7 w-7 rounded-full border-2 border-[#D8DCD8] border-t-[#1D9E75] animate-spin" />
+          <div className="h-7 w-7 rounded-full border-2 border-border border-t-[#1D9E75] animate-spin" />
         </div>
       </AdminLayout>
     )
@@ -109,17 +109,17 @@ export default function AdminPlansPage() {
     <AdminLayout>
       <div className="flex items-start justify-between px-4 sm:px-8 pt-6 sm:pt-8 pb-4 sm:pb-6">
         <div>
-          <h1 className="text-[22px] sm:text-[24px] font-semibold text-[#10241C]">Plans</h1>
-          <p className="mt-1 text-[13px] sm:text-[14px] text-[#7C867D]">Manage plans and usage limits.</p>
+          <h1 className="text-[22px] sm:text-[24px] font-semibold text-text-main">Plans</h1>
+          <p className="mt-1 text-[13px] sm:text-[14px] text-text-sub">Manage plans and usage limits.</p>
         </div>
         <div className="flex items-center gap-2 sm:gap-3">
           <button
             onClick={() => setDetailsOpen(true)}
-            className="flex items-center gap-1.5 rounded-lg border border-[#D8DCD8] bg-white px-2.5 py-1.5 sm:px-3.5 sm:py-2 text-[12px] sm:text-[13px] font-medium text-[#5B655C] hover:bg-[#FAFBFA]"
+            className="flex items-center gap-1.5 rounded-lg border border-border bg-layout-card px-2.5 py-1.5 sm:px-3.5 sm:py-2 text-[12px] sm:text-[13px] font-medium text-text-sub hover:bg-surface"
           >
             <Settings size={13} /> <span className="hidden sm:inline">Manage plans</span>
           </button>
-          <span className="rounded-lg border border-[#D8DCD8] bg-white px-2.5 py-1.5 sm:px-3.5 sm:py-2 text-[12px] sm:text-[13px] font-medium text-[#5B655C] whitespace-nowrap">
+          <span className="rounded-lg border border-border bg-layout-card px-2.5 py-1.5 sm:px-3.5 sm:py-2 text-[12px] sm:text-[13px] font-medium text-text-sub whitespace-nowrap">
             {data?.rows?.length ?? 0} tenants
           </span>
         </div>
@@ -128,27 +128,27 @@ export default function AdminPlansPage() {
       <div className="px-4 sm:px-8 pb-10">
         {/* Summary */}
         <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-2 lg:grid-cols-4 sm:gap-4"> 
-          <div className="rounded-xl border border-[#E5E8E5] bg-white p-3 sm:p-5">
-            <span className="text-[11px] sm:text-[13px] text-[#7C867D]">Free plan</span>
-            <p className="mt-1 sm:mt-2 text-xl sm:text-[28px] font-semibold text-[#10241C]">{data?.free_count ?? 0}</p>
-            <p className="mt-0.5 sm:mt-1 text-[10px] sm:text-[12px] text-[#9BA39B] truncate">tenants on free</p>
+          <div className="rounded-xl border border-border bg-layout-card p-3 sm:p-5">
+            <span className="text-[11px] sm:text-[13px] text-text-sub">Free plan</span>
+            <p className="mt-1 sm:mt-2 text-xl sm:text-[28px] font-semibold text-text-main">{data?.free_count ?? 0}</p>
+            <p className="mt-0.5 sm:mt-1 text-[11px] sm:text-[12px] text-text-dim truncate">tenants on free</p>
           </div>
-          <div className="rounded-xl border border-[#E5E8E5] bg-white p-3 sm:p-5">
-            <span className="text-[11px] sm:text-[13px] text-[#7C867D]">Pro plan</span>
-            <p className="mt-1 sm:mt-2 text-xl sm:text-[28px] font-semibold text-[#0F6E56]">{data?.pro_count ?? 0}</p>
-            <p className="mt-0.5 sm:mt-1 text-[10px] sm:text-[12px] text-[#9BA39B] truncate">tenants on pro</p>
+          <div className="rounded-xl border border-border bg-layout-card p-3 sm:p-5">
+            <span className="text-[11px] sm:text-[13px] text-text-sub">Pro plan</span>
+            <p className="mt-1 sm:mt-2 text-xl sm:text-[28px] font-semibold text-primary-ink">{data?.pro_count ?? 0}</p>
+            <p className="mt-0.5 sm:mt-1 text-[11px] sm:text-[12px] text-text-dim truncate">tenants on pro</p>
           </div>
-          <div className="rounded-xl border border-[#E2483D]/40 bg-[#FDF1EF] p-3 sm:p-5">
-            <span className="text-[11px] sm:text-[13px] text-[#C73A30]">At plan limit</span>
-            <p className="mt-1 sm:mt-2 text-xl sm:text-[28px] font-semibold text-[#C73A30]">{data?.at_limit_count ?? 0}</p>
-            <p className="mt-0.5 sm:mt-1 text-[10px] sm:text-[12px] font-medium text-[#C73A30] truncate">Need attention</p>
+          <div className="rounded-xl border border-status-danger-text/40 bg-status-danger-bg p-3 sm:p-5">
+            <span className="text-[11px] sm:text-[13px] text-status-danger-text">At plan limit</span>
+            <p className="mt-1 sm:mt-2 text-xl sm:text-[28px] font-semibold text-status-danger-text">{data?.at_limit_count ?? 0}</p>
+            <p className="mt-0.5 sm:mt-1 text-[11px] sm:text-[12px] font-medium text-status-danger-text truncate">Need attention</p>
           </div>
-          <div className="rounded-xl border border-[#E5E8E5] bg-white p-3 sm:p-5">
-            <span className="text-[11px] sm:text-[13px] text-[#7C867D]">Total revenue</span>
-            <p className="mt-1 sm:mt-2 text-xl sm:text-[28px] font-semibold text-[#10241C] truncate">
+          <div className="rounded-xl border border-border bg-layout-card p-3 sm:p-5">
+            <span className="text-[11px] sm:text-[13px] text-text-sub">Total revenue</span>
+            <p className="mt-1 sm:mt-2 text-xl sm:text-[28px] font-semibold text-text-main truncate">
               {Number(data?.total_revenue ?? 0).toLocaleString('en-US', { style: 'currency', currency: 'USD' })}
             </p>
-            <p className="mt-0.5 sm:mt-1 text-[10px] sm:text-[12px] text-[#9BA39B] truncate">lifetime, Stripe payments</p>
+            <p className="mt-0.5 sm:mt-1 text-[11px] sm:text-[12px] text-text-dim truncate">lifetime, Stripe payments</p>
           </div>
         </div>
 
@@ -157,7 +157,7 @@ export default function AdminPlansPage() {
           <select
             value={planFilter}
             onChange={(e) => setPlanFilter(e.target.value)}
-            className="h-10 rounded-lg border border-[#D8DCD8] bg-white px-3 text-[13px] text-[#5B655C] outline-none focus:border-[#1D9E75] flex-shrink-0"
+            className="h-10 rounded-lg border border-border bg-layout-card px-3 text-[13px] text-text-sub outline-none focus:border-primary flex-shrink-0"
           >
             <option value="">All plans</option>
             <option value="free">Free</option>
@@ -167,28 +167,28 @@ export default function AdminPlansPage() {
           <select
             value={usageFilter}
             onChange={(e) => setUsageFilter(e.target.value)}
-            className="h-10 rounded-lg border border-[#D8DCD8] bg-white px-3 text-[13px] text-[#5B655C] outline-none focus:border-[#1D9E75] flex-shrink-0"
+            className="h-10 rounded-lg border border-border bg-layout-card px-3 text-[13px] text-text-sub outline-none focus:border-primary flex-shrink-0"
           >
             <option value="">All usage</option>
             <option value="at_limit">At limit</option>
           </select>
 
           <div className="relative min-w-[200px] sm:min-w-[260px] flex-1">
-            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9BA39B]" />
+            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-dim" />
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search by tenant name..."
-              className="h-10 w-full rounded-lg border border-[#D8DCD8] bg-white pl-9 pr-3 text-[13px] outline-none focus:border-[#1D9E75] focus:ring-2 focus:ring-[#1D9E75]/15"
+              className="h-10 w-full rounded-lg border border-border bg-layout-card pl-9 pr-3 text-[13px] outline-none focus:border-primary focus:ring-2 focus:ring-[#1D9E75]/15"
             />
           </div>
         </div>
 
         {/* Table */}
-        <div className="overflow-hidden rounded-xl border border-[#E5E8E5] bg-white">
+        <div className="overflow-hidden rounded-xl border border-border bg-layout-card">
           <table className="w-full text-left">
             <thead>
-              <tr className="border-b border-[#EEF1EE] text-[11px] uppercase tracking-wide text-[#9BA39B]">
+              <tr className="border-b border-border text-[11px] uppercase tracking-wide text-text-dim">
                 <th className="px-4 sm:px-5 py-3 font-medium">Tenant</th>
                 <th className="px-4 sm:px-5 py-3 font-medium">Plan</th>
                 <th className="px-5 py-3 font-medium hidden sm:table-cell">Clients</th>
@@ -197,20 +197,20 @@ export default function AdminPlansPage() {
             </thead>
             <tbody>
               {rows.length === 0 ? (
-                <tr><td colSpan={4} className="px-5 py-10 text-center text-[13px] text-[#9BA39B]">No tenants match your filters.</td></tr>
+                <tr><td colSpan={4} className="px-5 py-10 text-center text-[13px] text-text-dim">No tenants match your filters.</td></tr>
               ) : (
                 pagedRows.map((r) => (
                   <tr
                     key={r.tenant_id}
                     onClick={() => { setActiveTenant(r); setPanelOpen(true) }}
-                    className={`cursor-pointer border-b border-[#F3F5F3] last:border-0 hover:bg-[#FAFBFA] ${
+                    className={`cursor-pointer border-b border-border last:border-0 hover:bg-surface ${
                       isAtLimit(r) ? 'border-l-2 border-l-[#E2483D]' : ''
                     }`}
                   >
                     <td className="px-4 sm:px-5 py-3.5">
                       <div className="flex items-center gap-3">
                         <PlanTenantLogo row={r} />
-                        <p className="text-[13px] font-medium text-[#10241C] truncate max-w-[120px] sm:max-w-none">{r.tenant_name}</p>
+                        <p className="text-[13px] font-medium text-text-main truncate max-w-[120px] sm:max-w-none">{r.tenant_name}</p>
                       </div>
                     </td>
                     <td className="px-4 sm:px-5 py-3.5"><PlanBadge plan={r.plan} /></td>
@@ -228,29 +228,29 @@ export default function AdminPlansPage() {
         </div>
         {numPages > 1 && (
           <div className="mt-4 flex items-center justify-between">
-            <p className="text-[13px] text-[#7C867D]">
+            <p className="text-[13px] text-text-sub">
               Page {page} of {numPages} · {totalRows} tenants
             </p>
             <div className="flex items-center gap-1.5">
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="h-8 rounded-lg border border-[#D8DCD8] bg-white px-3 text-[13px] text-[#5B655C] hover:bg-[#F3F5F3] disabled:opacity-40 disabled:cursor-not-allowed"
+                className="h-8 rounded-lg border border-border bg-layout-card px-3 text-[13px] text-text-sub hover:bg-surface disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 Previous
               </button>
 
               {pageNumbers.map((item) =>
                 String(item).startsWith('ellipsis') ? (
-                  <span key={item} className="px-1 text-[13px] text-[#9BA39B]">…</span>
+                  <span key={item} className="px-1 text-[13px] text-text-dim">…</span>
                 ) : (
                   <button
                     key={item}
                     onClick={() => setPage(item)}
                     className={`h-8 w-8 rounded-lg border text-[13px] font-medium transition-colors ${
                       page === item
-                        ? 'border-[#1D9E75] bg-[#1D9E75] text-white'
-                        : 'border-[#D8DCD8] bg-white text-[#5B655C] hover:bg-[#F3F5F3]'
+                        ? 'border-primary bg-primary text-white'
+                        : 'border-border bg-layout-card text-text-sub hover:bg-surface'
                     }`}
                   >
                     {item}
@@ -261,7 +261,7 @@ export default function AdminPlansPage() {
               <button
                 onClick={() => setPage((p) => Math.min(numPages, p + 1))}
                 disabled={page === numPages}
-                className="h-8 rounded-lg border border-[#D8DCD8] bg-white px-3 text-[13px] text-[#5B655C] hover:bg-[#F3F5F3] disabled:opacity-40 disabled:cursor-not-allowed"
+                className="h-8 rounded-lg border border-border bg-layout-card px-3 text-[13px] text-text-sub hover:bg-surface disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 Next
               </button>
@@ -289,17 +289,17 @@ export default function AdminPlansPage() {
 function UsageCell({ used, limit }) {
   const unlimited = limit === -1 || limit == null
   if (unlimited) {
-    return <span className="text-[13px] text-[#1D9E75]">↗ Unlimited</span>
+    return <span className="text-[13px] text-primary-ink">↗ Unlimited</span>
   }
   const pct = Math.min(100, Math.round((used / limit) * 100))
   const atLimit = used >= limit
   const color = atLimit ? '#E2483D' : pct >= 80 ? '#D9A33B' : '#1D9E75'
   return (
     <div className="w-28">
-      <span className={`text-[13px] font-medium ${atLimit ? 'text-[#C73A30]' : 'text-[#2A332E]'}`}>
+      <span className={`text-[13px] font-medium ${atLimit ? 'text-status-danger-text' : 'text-text-main'}`}>
         {used} / {limit}
       </span>
-      <div className="mt-1 h-1 w-full overflow-hidden rounded-full bg-[#EEF1EE]">
+      <div className="mt-1 h-1 w-full overflow-hidden rounded-full bg-surface">
         <div className="h-full rounded-full" style={{ width: `${pct}%`, background: color }} />
       </div>
     </div>

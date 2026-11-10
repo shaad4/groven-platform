@@ -45,8 +45,8 @@ export default function UserDetailPanel({ open, onClose, user, onChanged }) {
           </div>
 
           <div className="mt-6">
-            <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-[#9BA39B]">User info</p>
-            <div className="space-y-2.5 rounded-lg border border-[#EEF1EE] p-4 text-[13px]">
+            <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-text-dim">User info</p>
+            <div className="space-y-2.5 rounded-lg border border-border p-4 text-[13px]">
               <Row label="Workspace" value={user.tenant_slug ? `${user.tenant_slug}.groven.in` : '—'} link />
               <Row label="Joined" value={joinedLabel(user.joined_at)} />
               <Row label="Last login" value={relativeTimeLabel(user.last_login) || 'Never'} />
@@ -54,10 +54,10 @@ export default function UserDetailPanel({ open, onClose, user, onChanged }) {
             </div>
           </div>
 
-          {error && <p className="mt-4 text-[12px] text-[#C73A30]">{error}</p>}
+          {error && <p className="mt-4 text-[12px] text-status-danger-text">{error}</p>}
 
           <div className="mt-6 space-y-2">
-            <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-[#9BA39B]">Actions</p>
+            <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-text-dim">Actions</p>
 
             <ActionRow
               icon={Send}
@@ -113,8 +113,8 @@ export default function UserDetailPanel({ open, onClose, user, onChanged }) {
 function Row({ label, value, link, mono }) {
   return (
     <div className="flex items-center justify-between">
-      <span className="text-[#7C867D]">{label}</span>
-      <span className={`${link ? 'text-[#0F6E56] font-medium' : 'text-[#2A332E]'} ${mono ? 'font-mono text-[12px]' : ''}`}>
+      <span className="text-text-sub">{label}</span>
+      <span className={`${link ? 'text-primary-ink font-medium' : 'text-text-main'} ${mono ? 'font-mono text-[12px]' : ''}`}>
         {value}
       </span>
     </div>
@@ -127,17 +127,17 @@ function ActionRow({ icon: Icon, title, description, onClick, loading, danger, d
       onClick={onClick}
       disabled={loading || disabled || done}
       className={`flex w-full items-center gap-3 rounded-xl border px-4 py-3 text-left transition-colors disabled:opacity-50 ${
-        danger ? 'border-[#F3D2CE] hover:bg-[#FDF1EF]' : 'border-[#EEF1EE] hover:bg-[#FAFBFA]'
+        danger ? 'border-status-danger-text/20 hover:bg-status-danger-bg' : 'border-border hover:bg-surface'
       }`}
     >
-      <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${danger ? 'bg-[#FDF1EF] text-[#C73A30]' : 'bg-[#EEF1EE] text-[#5B655C]'}`}>
+      <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${danger ? 'bg-status-danger-bg text-status-danger-text' : 'bg-surface text-text-sub'}`}>
         <Icon size={15} />
       </div>
       <div className="min-w-0 flex-1">
-        <p className={`text-[13px] font-medium ${danger ? 'text-[#C73A30]' : 'text-[#10241C]'}`}>{title}</p>
-        <p className="text-[12px] text-[#9BA39B]">{description}</p>
+        <p className={`text-[13px] font-medium ${danger ? 'text-status-danger-text' : 'text-text-main'}`}>{title}</p>
+        <p className="text-[12px] text-text-dim">{description}</p>
       </div>
-      {done && <span className="text-[12px] font-medium text-[#1D9E75]">{doneLabel}</span>}
+      {done && <span className="text-[12px] font-medium text-primary-ink">{doneLabel}</span>}
     </button>
   )
 }

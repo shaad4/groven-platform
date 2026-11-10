@@ -1,49 +1,76 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap');
-
-:root {
-  --primary: #0F6E56;
-  --primary-dark: #085041;
-  --primary-light: #E6F5F0;
-  --sidebar: #0A2E24;
-  --grove-50: #E6F5F0;
-  --grove-100: #83E001;
-  --grove-200: #5DBFA0;
-  --grove-300: #1D9E75;
-  --grove-500: #0F6E56;
-  --grove-700: #085041;
-  --grove-900: #0A2E24;
-  --grove-950: #061A15;
-}
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
-  body {
-    font-family: 'DM Sans', sans-serif;
-    background: #F7F8F7;
-    color: #141A14;
-    -webkit-font-smoothing: antialiased;
+  :root {
+    color-scheme: light;
+    --page: #f6f7f4; --card: #ffffff; --surface: #eef1eb; --border: #dde4dc;
+    --text-main: #17251f; --text-sub: #526359; --text-dim: #66776d;
+    --primary: #176b4d; --primary-dark: #10543c; --primary-text: #176b4d;
+    --primary-light: #e5f1e9; --on-primary: #ffffff; --sidebar: #142b22;
+    --grove-50: #e5f1e9; --grove-100: #c5e5d1; --grove-200: #99d4b2;
+    --grove-300: #70c69f; --grove-500: #176b4d; --grove-700: #10543c;
+    --grove-900: #142b22; --grove-950: #0d1b15;
+    --review-bg: #fff2d8; --review-text: #81520d;
+    --progress-bg: #edf0ff; --progress-text: #4b4ea5;
+    --closed-bg: #edf0ec; --closed-text: #536358;
+    --danger-bg: #fff0ee; --danger-text: #b43c34;
+    --success-bg: #e6f3eb; --success-text: #1c6b47;
+    --neutral-50: #fafbf9; --neutral-100: #f0f3ee; --neutral-200: #e0e6de;
+    --neutral-300: #c9d2c7; --neutral-400: #859585; --neutral-500: #66776d;
+    --neutral-600: #526359; --neutral-700: #384b40; --neutral-800: #26392e;
+    --neutral-900: #17251f; --neutral-950: #0c1710;
+    --shadow-soft: 0 8px 28px -12px rgb(24 46 32 / 0.12);
+  }
+  :root.dark {
+    color-scheme: dark;
+    --page: #151515; --card: #1c1c1c; --surface: #252525; --border: #353535;
+    --text-main: #ededed; --text-sub: #b8b8b8; --text-dim: #989898;
+    --primary: #484848; --primary-dark: #5b5b5b; --primary-text: #e0e0e0;
+    --primary-light: #2b2b2b; --sidebar: #191919;
+    --grove-50: #252525; --grove-100: #303030; --grove-200: #5b5b5b;
+    --grove-300: #a8a8a8; --grove-500: #484848; --grove-700: #5b5b5b;
+    --grove-900: #1c1c1c; --grove-950: #151515;
+    --review-bg: #3c311d; --review-text: #f3ca7f;
+    --progress-bg: #292c48; --progress-text: #bbc0ff;
+    --closed-bg: #292929; --closed-text: #b8b8b8;
+    --danger-bg: #402624; --danger-text: #ffada3;
+    --success-bg: #203e2d; --success-text: #8bd5ac;
+    --neutral-50: #1c1c1c; --neutral-100: #252525; --neutral-200: #353535;
+    --neutral-300: #4a4a4a; --neutral-400: #858585; --neutral-500: #989898;
+    --neutral-600: #b8b8b8; --neutral-700: #cdcdcd; --neutral-800: #dfdfdf;
+    --neutral-900: #ededed; --neutral-950: #f7f7f7;
+    --shadow-soft: 0 8px 28px -12px rgb(0 0 0 / 0.38);
+  }
+  html { scroll-behavior: smooth; scroll-padding-top: 6rem; }
+  body { margin: 0; background: var(--page); color: var(--text-main); font-family: 'DM Sans Variable', 'DM Sans', sans-serif; -webkit-font-smoothing: antialiased; }
+  * { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+  ::selection { background: var(--primary-light); color: var(--primary-text); }
+  :focus-visible { outline: 2px solid var(--primary-text); outline-offset: 3px; }
+  button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
+  button:disabled { cursor: not-allowed; }
+  input, textarea, select { accent-color: var(--primary); }
+  input::placeholder, textarea::placeholder { color: var(--text-dim); opacity: 1; }
+  input[type='date'] { min-width: 0; }
+  @media (max-width: 640px) {
+    input:not([type='checkbox']):not([type='radio']), select, textarea { font-size: 16px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
   }
 }
-
-/* Hide scrollbar but keep scrolling */
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;
+@layer components {
+  .surface-panel { @apply rounded-2xl border border-border bg-layout-card shadow-soft; }
+  .eyebrow { @apply text-[11px] font-semibold uppercase tracking-[0.16em] text-text-dim; }
+  .page-heading { @apply text-2xl font-semibold tracking-tight text-text-main sm:text-[30px]; }
+  .field-control { @apply min-h-11 w-full rounded-xl border border-border bg-layout-card px-3.5 py-2.5 text-sm text-text-main transition-colors placeholder:text-text-dim focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20; }
+  .skip-link { @apply fixed left-4 top-4 z-[200] -translate-y-24 rounded-xl bg-primary px-4 py-3 font-medium text-on-primary focus:translate-y-0; }
 }
-
-.scrollbar-hide {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
-
-/* Hide scrollbar globally */
-* {
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-
-*::-webkit-scrollbar {
-  display: none;
+@layer utilities {
+  .scrollbar-hide { scrollbar-width: none; -ms-overflow-style: none; }
+  .scrollbar-hide::-webkit-scrollbar { display: none; }
+  .safe-bottom { padding-bottom: max(0.75rem, env(safe-area-inset-bottom)); }
+  .tabular-nums { font-variant-numeric: tabular-nums; }
 }

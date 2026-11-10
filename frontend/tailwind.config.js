@@ -1,59 +1,29 @@
+// Keep tenant accents independent from the neutral light/dark palette.
+const token = (name) => ({ opacityValue }) => opacityValue === undefined
+  ? `var(--${name})`
+  : `color-mix(in srgb, var(--${name}) calc(${opacityValue} * 100%), transparent)`
+const neutral = Object.fromEntries([50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950].map(n => [n, token(`neutral-${n}`)]))
+
 export default {
   content: ['./index.html', './src/**/*.{js,jsx}'],
+  darkMode: 'class',
   theme: {
     extend: {
       colors: {
-        // Original keys preserved for existing components
-        primary:  'var(--primary, #0F6E56)',
-        'primary-dark': 'var(--primary-dark, #085041)',
-        'primary-light': 'var(--primary-light, #E6F5F0)',
-        sidebar:  'var(--sidebar, #0A2E24)',
-        surface:  '#F7F8F7',
-        border:   '#E8EAE8',
-        'text-main': '#141A14',
-        'text-sub':  '#4A544A',
-        'text-dim':  '#9EA89E',
-        
-        // Full Grove Design System Ramp
-        grove: {
-          50: 'var(--grove-50, #E6F5F0)',
-          100: 'var(--grove-100, #83E001)',
-          200: 'var(--grove-200, #5DBFA0)',
-          300: 'var(--grove-300, #1D9E75)',
-          500: 'var(--grove-500, #0F6E56)',
-          700: 'var(--grove-700, #085041)',
-          900: 'var(--grove-900, #0A2E24)',
-          950: 'var(--grove-950, #061A15)',
-        },
-        
-        // Semantic Surfaces & Status Colors
-        layout: {
-          page: '#F7F8F7',
-          card: '#FFFFFF',
-        },
-        status: {
-          review: { bg: '#FEF3E2', text: '#92500A' },
-          progress: { bg: '#EEF2FF', text: '#3730A3' },
-          closed: { bg: '#F3F4F3', text: '#4A544A' },
-        }
+        primary: token('primary'), 'primary-dark': token('primary-dark'),
+        'primary-light': token('primary-light'), 'primary-ink': token('primary-text'),
+        'on-primary': token('on-primary'), sidebar: token('sidebar'),
+        surface: token('surface'), border: token('border'),
+        'text-main': token('text-main'), 'text-sub': token('text-sub'), 'text-dim': token('text-dim'),
+        layout: { page: token('page'), card: token('card') },
+        grove: Object.fromEntries([50, 100, 200, 300, 500, 700, 900, 950].map(n => [n, token(`grove-${n}`)])),
+        status: Object.fromEntries(['review', 'progress', 'closed', 'danger', 'success'].map(name => [name, { bg: token(`${name}-bg`), text: token(`${name}-text`) }])),
+        gray: neutral, slate: neutral, zinc: neutral, neutral,
       },
-      fontFamily: {
-        sans: ['DM Sans', 'Inter', 'sans-serif'],
-      },
-      boxShadow: {
-        // Custom soft shadows for the floating, borderless look
-        'soft': '0 4px 20px -2px rgba(0, 0, 0, 0.05)',
-        'glass': '0 8px 32px 0 rgba(0, 0, 0, 0.03)',
-      },
-      keyframes: {
-        shimmer: {
-          '0%':   { backgroundPosition: '200% 0' },
-          '100%': { backgroundPosition: '-200% 0' },
-        },
-      },
-      animation: {
-        shimmer: 'shimmer 1.8s ease-in-out infinite',
-      },
+      fontFamily: { sans: ['DM Sans Variable', 'DM Sans', 'sans-serif'] },
+      boxShadow: { soft: 'var(--shadow-soft)', glass: 'var(--shadow-soft)' },
+      keyframes: { shimmer: { '0%': { backgroundPosition: '200% 0' }, '100%': { backgroundPosition: '-200% 0' } } },
+      animation: { shimmer: 'shimmer 1.8s ease-in-out infinite' },
     },
   },
   plugins: [],

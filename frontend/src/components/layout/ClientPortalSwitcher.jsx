@@ -23,14 +23,14 @@ function PortalAvatar({ name, logo, size = 'sm' }) {
   const dim =
     size === 'lg'
       ? 'h-8 w-8 rounded-lg text-xs'
-      : 'h-6 w-6 rounded-md text-[10px]'
+      : 'h-6 w-6 rounded-md text-xs'
 
   if (logo) {
     return (
       <img
         src={logo}
         alt={name}
-        className={`${dim} shrink-0 object-cover shadow-sm`}
+        className={`${dim} shrink-0 object-contain bg-white p-0.5 shadow-sm`}
       />
     )
   }
@@ -95,6 +95,8 @@ export default function ClientPortalSwitcher({ isMobile = false }) {
     <div className="relative" ref={ref}>
       {/* ───────────────── Trigger ───────────────── */}
       <button
+        aria-label="Switch workspace"
+        aria-expanded={showDropdown ? open : undefined}
         onClick={() => {
           if (isMobile) {
             window.location.replace(appUrl(null, '/portals'))
@@ -147,7 +149,7 @@ export default function ClientPortalSwitcher({ isMobile = false }) {
             overflow-hidden
             rounded-xl
             border border-border/50
-            bg-white/95 backdrop-blur-xl
+            bg-layout-card/95 backdrop-blur-xl
             shadow-soft
             animate-in fade-in slide-in-from-left-2 duration-200
           "
@@ -155,7 +157,7 @@ export default function ClientPortalSwitcher({ isMobile = false }) {
           {/* ───────────────── Workspaces ───────────────── */}
           {providerPortals.length > 0 && (
             <div className="p-1.5">
-              <p className="px-2 py-1.5 text-[10px] font-bold uppercase tracking-wider text-text-dim">
+              <p className="px-2 py-1.5 text-xs font-bold uppercase tracking-wider text-text-dim">
                 Workspaces
               </p>
 
@@ -182,7 +184,7 @@ export default function ClientPortalSwitcher({ isMobile = false }) {
                     </span>
 
                     {isCurrent && (
-                      <Check size={14} className="shrink-0 text-primary" />
+                      <Check size={14} className="shrink-0 text-primary-ink" />
                     )}
                   </button>
                 )
@@ -198,7 +200,7 @@ export default function ClientPortalSwitcher({ isMobile = false }) {
           {/* ───────────────── Client portals ───────────────── */}
           {clientPortals.length > 0 && (
             <div className="p-1.5">
-              <p className="px-2 py-1.5 text-[10px] font-bold uppercase tracking-wider text-text-dim">
+              <p className="px-2 py-1.5 text-xs font-bold uppercase tracking-wider text-text-dim">
                 Client portals
               </p>
 
@@ -225,7 +227,7 @@ export default function ClientPortalSwitcher({ isMobile = false }) {
                     </span>
 
                     {isCurrent && (
-                      <Check size={14} className="shrink-0 text-primary" />
+                      <Check size={14} className="shrink-0 text-primary-ink" />
                     )}
                   </button>
                 )

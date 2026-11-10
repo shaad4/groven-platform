@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { X } from 'lucide-react'
+import { useDialogFocus } from '../../hooks/useDialogFocus'
 
 const RAIL_TONES = {
   neutral: '#2A332E',
@@ -16,6 +17,7 @@ export default function AdminSlidePanel({
 }) {
   const [mounted, setMounted] = useState(open)
   const [animateIn, setAnimateIn] = useState(false)
+  const dialogRef = useDialogFocus(mounted, onClose)
 
   useEffect(() => {
     if (open) {
@@ -28,13 +30,6 @@ export default function AdminSlidePanel({
       return () => clearTimeout(t)
     }
   }, [open])
-
-  useEffect(() => {
-    if (!mounted) return
-    const onKey = (e) => { if (e.key === 'Escape') onClose() }
-    document.addEventListener('keydown', onKey)
-    return () => document.removeEventListener('keydown', onKey)
-  }, [mounted, onClose])
 
   if (!mounted) return null
 
@@ -51,9 +46,11 @@ export default function AdminSlidePanel({
       {/* Panel */}
       <div
         role="dialog"
+        ref={dialogRef}
+        tabIndex={-1}
         aria-modal="true"
         style={{ '--panel-width': `${width}px` }}
-        className={`absolute right-0 top-0 h-full bg-[#FBFCFB] shadow-[-24px_0_60px_rgba(4,8,6,0.25)] transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] w-full sm:w-[var(--panel-width)] ${
+        className={`absolute right-0 top-0 h-full bg-surface shadow-[-24px_0_60px_rgba(4,8,6,0.25)] transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] w-full sm:w-[var(--panel-width)] ${
           animateIn ? 'translate-x-0' : 'translate-x-full'
         }`}
       >
@@ -75,19 +72,20 @@ export default function AdminSlidePanel({
 
 export function PanelHeader({ eyebrow, title, subtitle, onClose }) {
   return (
-    <div className="flex items-start justify-between gap-4 border-b border-[#E5E8E5] px-6 py-5 shrink-0">
+    <div className="flex items-start justify-between gap-4 border-b border-border px-6 py-5 shrink-0">
       <div className="min-w-0">
         {eyebrow && (
-          <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-[#8B958C]">
+          <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-text-dim">
             {eyebrow}
           </p>
         )}
-        <h2 className="truncate text-[18px] font-semibold text-[#10241C]">{title}</h2>
-        {subtitle && <p className="mt-1 text-[13px] text-[#7C867D]">{subtitle}</p>}
+        <h2 className="truncate text-[18px] font-semibold text-text-main">{title}</h2>
+        {subtitle && <p className="mt-1 text-[13px] text-text-sub">{subtitle}</p>}
       </div>
       <button
         onClick={onClose}
-        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-[#8B958C] hover:bg-[#EEF1EE] hover:text-[#10241C] transition-colors"
+        aria-label="Close panel"
+        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-text-dim hover:bg-surface hover:text-text-main transition-colors"
       >
         <X size={16} />
       </button>
@@ -105,7 +103,7 @@ export function PanelBody({ children }) {
 
 export function PanelFooter({ children }) {
   return (
-    <div className="flex items-center justify-end gap-3 border-t border-[#E5E8E5] bg-white px-6 py-4 shrink-0">
+    <div className="flex items-center justify-end gap-3 border-t border-border bg-layout-card px-6 py-4 shrink-0">
       {children}
     </div>
   )

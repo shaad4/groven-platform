@@ -2,9 +2,9 @@ import { useSelector } from 'react-redux'
 import { selectWsStatus } from '../../features/ws/wsSlice'
 
 const PILL_META = {
-  connected:    { dot: 'bg-[#1d9e75] animate-pulse', text: 'text-[#0f6e56]', bg: 'bg-[#e6f5f0]', label: 'Live' },
-  reconnecting: { dot: 'bg-[#f59e0b] animate-pulse', text: 'text-[#92500a]', bg: 'bg-[#fef3e2]', label: 'Reconnecting' },
-  disconnected: { dot: 'bg-[#9ea89e]',               text: 'text-[#4a544a]', bg: 'bg-[#f1f3f1]', label: 'Offline' },
+  connected:    { dot: 'bg-primary animate-pulse', text: 'text-primary-ink', bg: 'bg-primary-light', label: 'Live' },
+  reconnecting: { dot: 'bg-[#f59e0b] animate-pulse', text: 'text-status-review-text', bg: 'bg-status-review-bg', label: 'Reconnecting' },
+  disconnected: { dot: 'bg-[#9ea89e]',               text: 'text-text-sub', bg: 'bg-surface', label: 'Offline' },
 }
 
 export default function ConnectionPill({ connectionKey = 'default' }) {

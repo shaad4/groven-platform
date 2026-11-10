@@ -1,13 +1,13 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Eye, EyeOff, AlertCircle, Star } from 'lucide-react'
+import { Eye, EyeOff, AlertCircle, ArrowRight, Mail, LockKeyhole } from 'lucide-react'
+import AuthShell from '../components/layout/AuthShell'
 import { useDispatch } from 'react-redux'
 import { useGoogleLogin } from '@react-oauth/google'
 
 import { useAuth } from '../context/AuthContext'
 import { setMemberships } from '../features/auth/authSlice'
 import { authApi } from '../api/auth.api'
-import groveLogo from '../assets/Grove_transparent_logo(Green).png'
 
 import { setLoggingOut } from '../api/interceptors/authResponseInterceptor'
 
@@ -40,7 +40,7 @@ async function redirectAfterLogin(data, dispatch, saveSession) {
   try {
     const res = await authApi.getMemberships(access)
     dispatch(setMemberships(res.data))
-  } catch (_) { /* silent */ }
+  } catch { /* Memberships can be restored by the portal chooser. */ }
 
   window.location.replace(
     appUrl(null, '/portals')
@@ -62,12 +62,10 @@ export default function LoginPage() {
   //Google OAuth
   const googleLogin = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
-      console.log('Google token response:', tokenResponse) // ← add this
       setGoogleLoading(true)
       setError('')
       try {
         const { data } = await authApi.googleAuth(tokenResponse.access_token)
-        console.log('Backend response:', data)
 
         setLoggingOut(false)
 
@@ -81,14 +79,12 @@ export default function LoginPage() {
 
         await redirectAfterLogin(data, dispatch, saveSession)
       } catch (err) {
-        console.log('Error response:', err.response) // add this
         setError(err.response?.data?.message || 'Google sign-in failed. Please try again.')
       } finally {
         setGoogleLoading(false)
       }
     },
-    onError: (err) => {
-      console.log('Google onError:', err) // ← add this
+    onError: () => {
       setError('Google sign-in failed. Please try again.')
     },
     flow: 'implicit',
@@ -139,177 +135,25 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen bg-[#FAFBFA]">
-
-      {/* ── LEFT: form ─────────────────────────────────────────── */}
-      <div className="flex w-full items-center justify-center px-6 py-10 lg:w-1/2 lg:px-24">
-        <div className="w-full max-w-md">
-
-          <div className="mb-10">
-            <a href={appUrl(null, '/')} className="inline-block cursor-pointer outline-none">
-              <img src={groveLogo} alt="Groven" className="h-8 object-contain" />
-            </a>
-          </div>
-
-          <div className="mb-8">
-            <h1 className="text-[38px] font-semibold leading-tight text-[#0A2E24]">
-              Welcome back
-            </h1>
-            <p className="mt-2 text-sm text-[#8B948B]">
-              Sign in to access your portals.
-            </p>
-          </div>
-
-          {/* Error banner */}
-          {error && (
-            <div className="mb-5 flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3">
-              <AlertCircle size={18} className="mt-0.5 text-red-500" />
-              <p className="text-sm text-red-700">{error}</p>
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} noValidate className="space-y-5">
-
-            {/* Email */}
-            <div>
-              <label className="mb-2 block text-sm font-medium text-[#4A544A]">
-                Email address
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => {
-                  setEmail(e.target.value)
-                  if (fieldErrors.email) setFieldErrors(p => ({ ...p, email: '' }))
-                }}
-                placeholder="you@example.com"
-                autoComplete="email"
-                autoFocus
-                className={`h-12 w-full rounded-xl border bg-white px-4 text-sm outline-none transition-all ${fieldErrors.email
-                  ? 'border-red-400'
-                  : 'border-[#E5E7EB] focus:border-[#0F6E56] focus:ring-4 focus:ring-[#0F6E56]/10'
-                  }`}
-              />
-              {fieldErrors.email && (
-                <p className="mt-1 text-xs text-red-500">{fieldErrors.email}</p>
-              )}
-            </div>
-
-            {/* Password */}
-            <div>
-              <div className="mb-2 flex items-center justify-between">
-                <label className="text-sm font-medium text-[#4A544A]">Password</label>
-                <Link to="/forgot-password" className="text-xs text-[#0F6E56] hover:underline">
-                  Forgot password?
-                </Link>
-              </div>
-              <div className="relative">
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => {
-                    setPassword(e.target.value)
-                    if (fieldErrors.password) setFieldErrors(p => ({ ...p, password: '' }))
-                  }}
-                  placeholder="Enter your password"
-                  autoComplete="current-password"
-                  className={`h-12 w-full rounded-xl border bg-white px-4 pr-12 text-sm outline-none transition-all ${fieldErrors.password
-                    ? 'border-red-400'
-                    : 'border-[#E5E7EB] focus:border-[#0F6E56] focus:ring-4 focus:ring-[#0F6E56]/10'
-                    }`}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(v => !v)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-[#9CA3AF]"
-                >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
-              </div>
-              {fieldErrors.password && (
-                <p className="mt-1 text-xs text-red-500">{fieldErrors.password}</p>
-              )}
-            </div>
-
-            {/* Submit */}
-            <button
-              type="submit"
-              disabled={loading || googleLoading}
-              className="h-12 w-full rounded-xl bg-[#0F6E56] font-medium text-white transition-all hover:bg-[#0C5B48] disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {loading ? 'Signing in…' : 'Sign in'}
-            </button>
-
-            {/* Divider */}
-            <div className="flex items-center gap-4">
-              <div className="h-px flex-1 bg-[#E5E7EB]" />
-              <span className="text-xs text-[#9EA89E]">or</span>
-              <div className="h-px flex-1 bg-[#E5E7EB]" />
-            </div>
-
-            {/* Google */}
-            <button
-              type="button"
-              disabled={googleLoading || loading}
-              onClick={() => googleLogin()}
-              className="flex h-12 w-full items-center justify-center gap-3 rounded-xl border border-[#E5E7EB] bg-white text-sm font-medium text-[#141A14] shadow-sm transition-all hover:bg-[#F7F8F7] disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {googleLoading
-                ? <svg className="h-4 w-4 animate-spin text-[#9EA89E]" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" /></svg>
-                : <GoogleIcon />
-              }
-              {googleLoading ? 'Connecting…' : 'Continue with Google'}
-            </button>
-
-            <p className="text-center text-sm text-[#9EA89E]">
-              Don't have a portal?{' '}
-              <Link to="/signup" className="font-medium text-[#0F6E56] underline">
-                Create one free
-              </Link>
-            </p>
-
-          </form>
+    <AuthShell>
+      <div className="mb-8"><p className="text-xs font-semibold uppercase tracking-[0.15em] text-primary-ink">Sign in</p><h1 className="mt-3 text-[36px] font-medium leading-tight tracking-[-0.04em] text-text-main">Welcome back</h1><p className="mt-3 text-sm leading-6 text-text-sub">Sign in to access your workspaces.</p></div>
+      {error && <div role="alert" className="mb-5 flex items-start gap-3 rounded-xl border border-status-danger-text/20 bg-status-danger-bg px-4 py-3 text-status-danger-text"><AlertCircle size={18} className="mt-0.5 shrink-0" /><p className="text-sm">{error}</p></div>}
+      <form onSubmit={handleSubmit} noValidate className="space-y-5">
+        <div>
+          <label htmlFor="login-email" className="mb-2 flex items-center gap-2 text-xs font-semibold text-text-sub"><Mail size={14} />Email address</label>
+          <input id="login-email" type="email" value={email} onChange={e => { setEmail(e.target.value); if (fieldErrors.email) setFieldErrors(p => ({ ...p, email: '' })) }} placeholder="you@yourstudio.com" autoComplete="email" aria-invalid={!!fieldErrors.email} aria-describedby={fieldErrors.email ? 'login-email-error' : undefined} className={`h-12 w-full rounded-xl border bg-layout-card px-4 text-sm text-text-main placeholder:text-text-dim outline-none transition-colors focus:border-primary focus:ring-4 focus:ring-primary/10 ${fieldErrors.email ? 'border-status-danger-text' : 'border-border'}`} />
+          {fieldErrors.email && <p id="login-email-error" className="mt-1.5 text-xs text-status-danger-text">{fieldErrors.email}</p>}
         </div>
-      </div>
-
-      {/* ── RIGHT: testimonial ──────────────────────────────────── */}
-      <div className="hidden flex-col justify-between bg-[#F7F8F7] px-12 py-16 lg:flex lg:w-1/2">
-        <div className="flex flex-1 items-center">
-          <div className="w-full rounded-2xl border border-[#E5E7EB] bg-white p-10 shadow-sm">
-            <div className="mb-6 flex gap-1 text-[#0F6E56]">
-              {[...Array(5)].map((_, i) => <Star key={i} size={16} fill="currentColor" />)}
-            </div>
-            <p className="text-lg italic leading-9 text-[#141A14]">
-              Groven changed how I handle client relationships entirely. Every project has
-              a home now. My clients send me thank-you notes instead of chasing messages —
-              that's never happened before.
-            </p>
-            <div className="mt-10 flex items-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#E6F5F0] font-semibold text-[#085041]">
-                NK
-              </div>
-              <div>
-                <h4 className="font-medium text-[#141A14]">Nisha Kreations</h4>
-                <p className="text-sm text-[#9EA89E]">UI/UX Freelancer · Groven Pro</p>
-              </div>
-            </div>
-          </div>
+        <div>
+          <div className="mb-2 flex items-center justify-between gap-2"><label htmlFor="login-password" className="flex items-center gap-2 text-xs font-semibold text-text-sub"><LockKeyhole size={14} />Password</label><Link to="/forgot-password" className="text-xs font-medium text-primary-ink hover:underline">Forgot password?</Link></div>
+          <div className="relative"><input id="login-password" type={showPassword ? 'text' : 'password'} value={password} onChange={e => { setPassword(e.target.value); if (fieldErrors.password) setFieldErrors(p => ({ ...p, password: '' })) }} placeholder="Enter your password" autoComplete="current-password" aria-invalid={!!fieldErrors.password} aria-describedby={fieldErrors.password ? 'login-password-error' : undefined} className={`h-12 w-full rounded-xl border bg-layout-card px-4 pr-12 text-sm text-text-main placeholder:text-text-dim outline-none transition-colors focus:border-primary focus:ring-4 focus:ring-primary/10 ${fieldErrors.password ? 'border-status-danger-text' : 'border-border'}`} /><button type="button" aria-label={showPassword ? 'Hide password' : 'Show password'} aria-pressed={showPassword} onClick={() => setShowPassword(v => !v)} className="absolute right-1 top-1 flex h-10 w-10 items-center justify-center rounded-lg text-text-dim hover:text-text-main">{showPassword ? <EyeOff size={17} /> : <Eye size={17} />}</button></div>
+          {fieldErrors.password && <p id="login-password-error" className="mt-1.5 text-xs text-status-danger-text">{fieldErrors.password}</p>}
         </div>
-
-        <div className="grid grid-cols-3 gap-6 border-t border-[#E5E7EB] pt-10">
-          {[
-            ['500+', 'Portals created'],
-            ['3,200+', 'Clients onboarded'],
-            ['98%', 'Provider retention'],
-          ].map(([stat, label]) => (
-            <div key={label} className="text-center">
-              <h3 className="text-3xl font-semibold text-[#0A2E24]">{stat}</h3>
-              <p className="mt-1 text-sm text-[#9EA89E]">{label}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-
-    </div>
+        <button type="submit" disabled={loading || googleLoading} className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary text-sm font-semibold text-on-primary transition-colors hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-60">{loading ? 'Signing in…' : <>Sign in <ArrowRight size={16} /></>}</button>
+        <div className="flex items-center gap-4 py-1"><div className="h-px flex-1 bg-border" /><span className="text-[11px] text-text-dim">or continue with</span><div className="h-px flex-1 bg-border" /></div>
+        <button type="button" disabled={googleLoading || loading} onClick={() => googleLogin()} className="flex h-12 w-full items-center justify-center gap-3 rounded-xl border border-border bg-layout-card text-sm font-medium text-text-main transition-colors hover:bg-surface disabled:cursor-not-allowed disabled:opacity-60"><GoogleIcon />{googleLoading ? 'Connecting…' : 'Google'}</button>
+        <p className="pt-2 text-center text-xs leading-6 text-text-sub">New to Groven? <Link to="/signup" className="font-semibold text-primary-ink hover:underline">Create your workspace</Link></p>
+      </form>
+    </AuthShell>
   )
 }

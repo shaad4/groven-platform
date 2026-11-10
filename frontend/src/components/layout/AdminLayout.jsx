@@ -2,9 +2,10 @@ import AdminSidebar from './AdminSidebar'
 
 export default function AdminLayout({ children }) {
   return (
-    <div className="flex h-screen overflow-hidden bg-[#F4F6F4]">
+    <div className="flex h-dvh overflow-hidden bg-layout-page">
+      <a href="#admin-content" className="skip-link">Skip to content</a>
       <AdminSidebar />
-      <main className="flex-1 overflow-y-auto pt-[60px] pb-[64px] lg:pt-0 lg:pb-0">
+      <main id="admin-content" tabIndex={-1} className="min-w-0 flex-1 overflow-y-auto pt-16 pb-[calc(88px+env(safe-area-inset-bottom))] lg:pt-0 lg:pb-0">
         {children}
       </main>
     </div>
