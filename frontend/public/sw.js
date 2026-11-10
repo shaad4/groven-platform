@@ -66,7 +66,7 @@ self.addEventListener('fetch', (event) => {
           const response = await fetch(request);
           if (response.ok) cache.put(request, response.clone());
           return response;
-        } catch (err) {
+        } catch {
           return cached || Response.error();
         }
       }),
@@ -84,7 +84,7 @@ self.addEventListener('fetch', (event) => {
           const cache = await caches.open(PAGES_CACHE);
           cache.put(request, response.clone());
           return response;
-        } catch (err) {
+        } catch {
           const cache = await caches.open(PAGES_CACHE);
           const cached = await cache.match(request);
           return cached || cache.match(OFFLINE_URL);

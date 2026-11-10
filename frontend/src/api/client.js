@@ -1,5 +1,4 @@
 import axios from 'axios'
-import applyCaseMiddleware from 'axios-case-converter'
 import { authRequestInterceptor }  from './interceptors/authRequestInterceptor'
 import { authResponseInterceptor } from './interceptors/authResponseInterceptor'
 

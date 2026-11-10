@@ -1,42 +1,23 @@
 import { Plus } from 'lucide-react'
 import NotificationBell from '../notifications/NotificationBell'
 
-export default function ProviderTopbar({
-  title,
-  onAddClient,
-  showAddBtn = true,
-  liveIndicator = false,
-  actions,
-  rightSlot,
-}) {
+export default function ProviderTopbar({ title, onAddClient, showAddBtn = true, actions, rightSlot }) {
+  const hasAddButton = showAddBtn && onAddClient
   return (
-    <header className="flex h-[64px] items-center justify-between border-b border-[#e8eae8] bg-white px-6 shrink-0">
-      <h1 className="text-[20px] font-semibold text-[#141a14]">{title}</h1>
-
-      <div className="flex items-center gap-3">
-        {liveIndicator && (
-          <div className="flex items-center gap-2 rounded-full bg-[#e6f5f0] px-3 py-1">
-            <div className="h-2 w-2 rounded-full bg-[#1d9e75] animate-pulse" />
-            <span className="text-[12px] font-medium text-[#0f6e56]">Live</span>
-          </div>
-        )}
-
-        {actions}
-
-        {rightSlot && <div className="flex items-center gap-2">{rightSlot}</div>}
-
-        <NotificationBell />
-
-        {showAddBtn && onAddClient && (
-          <button
-            onClick={onAddClient}
-            className="flex items-center gap-2 rounded-xl bg-[#0f6e56] px-5 py-2.5 text-[13px] font-medium text-white hover:bg-[#0c5b47] transition-colors"
-          >
-            <Plus size={15} />
-            Add client
-          </button>
-        )}
+    <header className="flex min-h-[76px] flex-wrap items-center justify-between gap-3 border-b border-border bg-layout-card px-4 py-4 sm:px-6 lg:px-8">
+      <div className="min-w-0">
+        <h1 className="text-xl font-semibold tracking-tight text-text-main sm:text-[23px]">{title}</h1>
       </div>
+      <div className="ml-auto flex flex-wrap items-center justify-end gap-2 sm:gap-3">
+        {actions}
+        {rightSlot && <div className="flex items-center gap-2">{rightSlot}</div>}
+        <NotificationBell />
+      </div>
+      {hasAddButton && (
+        <button type="button" onClick={onAddClient} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-primary px-3.5 text-sm font-semibold text-on-primary transition-colors hover:bg-primary-dark sm:px-4">
+          <Plus size={16} aria-hidden="true" />Add client
+        </button>
+      )}
     </header>
   )
 }

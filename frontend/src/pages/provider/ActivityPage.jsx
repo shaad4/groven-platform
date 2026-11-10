@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import {
   Search, ChevronDown, Loader2, ArrowUpRight,
   CheckCircle2, FileText, MessageSquare, Bell,
-  Lock, Download, Sparkles,
+  Lock, Download,
 } from 'lucide-react'
 import ProviderLayout from '../../components/layout/ProviderLayout'
 import ProviderTopbar from '../../components/layout/ProviderTopbar'
@@ -14,21 +14,21 @@ import clientsApi from '../../api/clients.api'
 
 // ── Event type config ─────────────────────────────────────────
 const EVENT_CONFIG = {
-  request_created:  { icon: FileText,      color: 'text-[#0f6e56]',  dot: 'bg-[#0f6e56]',  label: 'Requests' },
-  status_change:    { icon: ArrowUpRight,  color: 'text-[#6366f1]',  dot: 'bg-[#6366f1]',  label: 'Status changes' },
-  message_sent:     { icon: MessageSquare, color: 'text-[#f59e0b]',  dot: 'bg-[#f59e0b]',  label: 'Messages' },
-  delivery_created: { icon: CheckCircle2,  color: 'text-[#0f6e56]',  dot: 'bg-[#0f6e56]',  label: 'Deliveries' },
-  note_added:       { icon: Lock,          color: 'text-[#9ea89e]',  dot: 'bg-[#9ea89e]',  label: 'Notes' },
-  file_uploaded:    { icon: FileText,      color: 'text-[#9ea89e]',  dot: 'bg-[#9ea89e]',  label: 'Files' },
-  ai_summary_generated: { icon: Bell,     color: 'text-[#0f6e56]',  dot: 'bg-[#0f6e56]',  label: 'AI events' },
+  request_created:  { icon: FileText,      color: 'text-primary-ink',  dot: 'bg-primary',  label: 'Requests' },
+  status_change:    { icon: ArrowUpRight,  color: 'text-status-progress-text',  dot: 'bg-[#6366f1]',  label: 'Status changes' },
+  message_sent:     { icon: MessageSquare, color: 'text-status-review-text',  dot: 'bg-[#f59e0b]',  label: 'Messages' },
+  delivery_created: { icon: CheckCircle2,  color: 'text-primary-ink',  dot: 'bg-primary',  label: 'Deliveries' },
+  note_added:       { icon: Lock,          color: 'text-text-dim',  dot: 'bg-text-dim',  label: 'Notes' },
+  file_uploaded:    { icon: FileText,      color: 'text-text-dim',  dot: 'bg-text-dim',  label: 'Files' },
+  ai_summary_generated: { icon: Bell,     color: 'text-primary-ink',  dot: 'bg-primary',  label: 'AI events' },
 }
 
 const STATUS_PILL = {
-  received:    'bg-[#e6f5f0] text-[#085041]',
-  in_review:   'bg-[#fef3e2] text-[#92500a]',
-  in_progress: 'bg-[#eef2ff] text-[#3730a3]',
-  delivered:   'bg-[#e6f5f0] text-[#0f6e56]',
-  closed:      'bg-[#f3f4f3] text-[#4a544a]',
+  received:    'bg-primary-light text-primary-ink',
+  in_review:   'bg-status-review-bg text-status-review-text',
+  in_progress: 'bg-status-progress-bg text-status-progress-text',
+  delivered:   'bg-primary-light text-primary-ink',
+  closed:      'bg-surface text-text-sub',
 }
 
 const STATUS_LABEL = {
@@ -41,8 +41,8 @@ function Avatar({ name = '', avatarUrl, size = 'sm', isAI = false }) {
   const sizeClasses = size === 'sm' ? 'h-7 w-7 text-[9px]' : 'h-9 w-9 text-[11px]'
 
   if (isAI) return (
-    <div className={`${sizeClasses} rounded-full bg-[#e6f5f0] flex items-center justify-center shrink-0 border border-[#d1fae5]`}>
-      <span className="font-bold text-[#0f6e56]">AI</span>
+    <div className={`${sizeClasses} rounded-full bg-primary-light flex items-center justify-center shrink-0 border border-primary-light`}>
+      <span className="font-bold text-primary-ink">AI</span>
     </div>
   )
 
@@ -52,14 +52,14 @@ function Avatar({ name = '', avatarUrl, size = 'sm', isAI = false }) {
         src={avatarUrl}
         alt={name}
         onError={() => setImgError(true)}
-        className={`${sizeClasses} rounded-full object-cover shrink-0 border border-[#e8eae8]`}
+        className={`${sizeClasses} rounded-full object-cover shrink-0 border border-border`}
       />
     )
   }
 
   const c = getAvatarColor(name)
   return (
-    <div className={`${sizeClasses} rounded-full flex items-center justify-center font-semibold shrink-0 border border-white/10 ${c.bg} ${c.text}`}>
+    <div className={`${sizeClasses} rounded-full flex items-center justify-center font-semibold shrink-0 border border-layout-card/10 ${c.bg} ${c.text}`}>
       {getInitials(name)}
     </div>
   )
@@ -94,11 +94,11 @@ function ClientAvatarMini({ name, avatarUrl }) {
 function StatusTransitionBadge({ from, to }) {
   return (
     <span className="inline-flex items-center gap-1.5 ml-1">
-      <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-medium ${STATUS_PILL[from] || 'bg-[#f3f4f3] text-[#4a544a]'}`}>
+      <span className={`rounded-full px-1.5 py-0.5 text-[11px] font-medium ${STATUS_PILL[from] || 'bg-surface text-text-sub'}`}>
         {STATUS_LABEL[from] || from}
       </span>
-      <ArrowUpRight size={11} className="text-[#9ea89e]" />
-      <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-medium ${STATUS_PILL[to] || 'bg-[#f3f4f3] text-[#4a544a]'}`}>
+      <ArrowUpRight size={11} className="text-text-dim" />
+      <span className={`rounded-full px-1.5 py-0.5 text-[11px] font-medium ${STATUS_PILL[to] || 'bg-surface text-text-sub'}`}>
         {STATUS_LABEL[to] || to}
       </span>
     </span>
@@ -138,28 +138,28 @@ function ActivityRow({ activity, onNavigate }) {
   const IconComponent = cfg.icon || FileText
 
   return (
-    <div className="flex items-start gap-3.5 py-4 border-b border-[#f1f3f1] last:border-0 group hover:bg-[#fafafa]/50 px-3 rounded-xl transition-all duration-200">
-      
+    <div className="flex items-start gap-3.5 py-4 border-b border-border last:border-0 group hover:bg-surface/50 px-3 rounded-xl transition-all duration-200">
+
       {/* Left Column: Avatar with Badge */}
       <div className="relative shrink-0 pt-0.5">
         <Avatar name={actorName} avatarUrl={activity.actor_avatar_url} size="md" isAI={isAI} />
-        <div className={`absolute -bottom-0.5 -right-0.5 h-4.5 w-4.5 rounded-full border-2 border-white flex items-center justify-center ${cfg.dot} text-white shadow-xs`}>
-          <IconComponent size={8} className="text-white" />
+        <div className={`absolute -bottom-0.5 -right-0.5 h-4.5 w-4.5 rounded-full border-2 border-layout-card flex items-center justify-center ${cfg.dot} text-on-primary shadow-xs`}>
+          <IconComponent size={8} className="text-on-primary" />
         </div>
       </div>
 
       {/* Middle/Main Column */}
       <div className="flex-1 min-w-0">
-        <div className="text-[13px] text-[#141a14] leading-relaxed">
-          <span className={`font-semibold mr-1.5 ${isAI ? 'text-[#0f6e56]' : 'text-[#141a14]'}`}>
+        <div className="text-[13px] text-text-main leading-relaxed">
+          <span className={`font-semibold mr-1.5 ${isAI ? 'text-primary-ink' : 'text-text-main'}`}>
             {isYou ? 'You' : actorName}
           </span>
-          <span className="text-[#4a544a]">{activity.description}</span>
-          
+          <span className="text-text-sub">{activity.description}</span>
+
           {target.request_ref && (
             <button
               onClick={() => onNavigate && onNavigate(target.request_id)}
-              className="ml-1.5 inline-flex items-center font-medium text-[#0f6e56] hover:underline align-baseline"
+              className="ml-1.5 inline-flex items-center font-medium text-primary-ink hover:underline align-baseline"
               title={target.request_title}
             >
               for <span className="font-semibold ml-0.5">{target.request_ref}</span>
@@ -171,48 +171,48 @@ function ActivityRow({ activity, onNavigate }) {
               <StatusTransitionBadge from={meta.from} to={meta.to} />
             </span>
           )}
-          
+
           {meta.file_count && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-[#e6f5f0] px-2 py-0.5 text-[11px] font-medium text-[#0f6e56] ml-2">
+            <span className="inline-flex items-center gap-1 rounded-full bg-primary-light px-2 py-0.5 text-[11px] font-medium text-primary-ink ml-2">
               <CheckCircle2 size={10} /> {meta.file_count} files
             </span>
           )}
         </div>
 
         {target.request_title && (
-          <p className="text-[11px] text-[#9ea89e] mt-0.5 truncate max-w-xl">
+          <p className="text-[11px] text-text-dim mt-0.5 truncate max-w-xl">
             {target.request_title}
           </p>
         )}
 
         {/* Mobile Info Row */}
-        <div className="flex lg:hidden items-center gap-2 mt-2 text-[11px] text-[#9ea89e]">
+        <div className="flex lg:hidden items-center gap-2 mt-2 text-[11px] text-text-dim">
           <span>{timeAgo(activity.created_at)}</span>
           {target.client_name && (
             <>
               <span className="text-gray-300">•</span>
-              <div className="flex items-center gap-1 bg-[#f7f8f7] px-1.5 py-0.5 rounded-md border border-[#e8eae8]">
+              <div className="flex items-center gap-1 bg-surface px-1.5 py-0.5 rounded-md border border-border">
                 <ClientAvatarMini name={target.client_name} avatarUrl={target.client_avatar_url} />
-                <span className="truncate max-w-[120px] font-medium text-[#4a544a]">{target.client_name}</span>
+                <span className="truncate max-w-[120px] font-medium text-text-sub">{target.client_name}</span>
               </div>
             </>
           )}
         </div>
 
         {hasSummary && (
-          <div className="mt-2.5 rounded-xl bg-[#f0faf6] border border-[#d1fae5] px-3.5 py-3 shadow-xs">
+          <div className="mt-2.5 rounded-xl bg-primary-light border border-primary-light px-3.5 py-3 shadow-xs dark:bg-surface dark:border-border">
             <div className="flex items-center justify-between">
-              <span className="text-[12px] font-semibold text-[#0f6e56] flex items-center gap-1">
+              <span className="text-[12px] font-semibold text-primary-ink flex items-center gap-1">
                 Summary:
               </span>
               <button
                 onClick={() => setExpanded(!expanded)}
-                className="text-[12px] font-medium text-[#0f6e56] hover:underline"
+                className="text-[12px] font-medium text-primary-ink hover:underline"
               >
                 {expanded ? 'Less ↑' : 'More ↓'}
               </button>
             </div>
-            {expanded && <p className="text-[12px] text-[#4a544a] mt-1.5 leading-relaxed whitespace-pre-wrap">{activity.description}</p>}
+            {expanded && <p className="text-[12px] text-text-sub mt-1.5 leading-relaxed whitespace-pre-wrap">{activity.description}</p>}
           </div>
         )}
       </div>
@@ -222,7 +222,7 @@ function ActivityRow({ activity, onNavigate }) {
         {target.client_name && (
           <ClientAvatarMini name={target.client_name} avatarUrl={target.client_avatar_url} />
         )}
-        <span className="text-[12px] text-[#9ea89e] w-16 text-right whitespace-nowrap">
+        <span className="text-[12px] text-text-dim w-16 text-right whitespace-nowrap">
           {timeAgo(activity.created_at)}
         </span>
       </div>
@@ -257,18 +257,6 @@ export default function ActivityPage() {
   const [clients, setClients] = useState([])
   const [clientFilter, setClientFilter] = useState(null)
   const [clientDropdownOpen, setClientDropdownOpen] = useState(false)
-
-  const [isMobile, setIsMobile] = useState(
-    typeof window !== 'undefined' ? window.innerWidth < 1024 : false
-  )
-
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 1024)
-    }
-    window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
-  }, [])
 
   useEffect(() => {
     clientsApi.list().then(res => {
@@ -333,17 +321,17 @@ export default function ActivityPage() {
           title="Activity"
           rightSlot={
             <button
-              onClick={handleExport}
-              className="flex items-center gap-2 rounded-xl border border-[#e8eae8] bg-white px-3 py-2 text-[12px] font-medium text-[#4a544a] hover:border-[#0f6e56]/30 transition-colors"
+              onClick={handleExport} aria-label="Export activity as CSV"
+              className="flex items-center gap-2 rounded-xl border border-border bg-layout-card px-3 py-2 text-[12px] font-medium text-text-sub hover:border-primary/30 transition-colors"
             >
-              <Download size={13} className="text-[#9ea89e]" />
+              <Download size={13} className="text-text-dim" />
               <span className="hidden sm:inline">Export CSV</span>
             </button>
           }
         />
       }
     >
-      {/* 
+      {/*
         Scrollbar hiding styles for horizontal tabs navigation.
         Using .no-scrollbar selector to hide browser scrollbars while keeping swipe behavior active.
       */}
@@ -358,22 +346,22 @@ export default function ActivityPage() {
       `}</style>
 
       {/* Sticky Filters Container for Mobile */}
-      <div className="lg:hidden sticky top-0 z-30 bg-white border-b border-[#e8eae8] p-3 space-y-2.5 shadow-sm">
+      <div className="lg:hidden sticky top-0 z-30 bg-layout-card border-b border-border p-3 space-y-2.5 shadow-sm">
         {/* Row 1: Search + Date filter select */}
         <div className="flex items-center gap-2">
           <div className="relative flex-1">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9ea89e]" />
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-dim" />
             <input
               value={searchInput}
               onChange={e => setSearchInput(e.target.value)}
-              placeholder="Search logs..."
-              className="w-full h-9 rounded-xl border border-[#e8eae8] pl-9 pr-3 text-[12px] outline-none placeholder:text-[#9ea89e] focus:border-[#0f6e56] transition-all bg-[#fafafa]"
+              aria-label="Search activity" placeholder="Search activity..."
+              className="w-full h-9 rounded-xl border border-border pl-9 pr-3 text-[12px] outline-none placeholder:text-text-dim focus:border-primary transition-all bg-surface"
             />
           </div>
           <select
-            value={dateRange}
+            aria-label="Activity date range" value={dateRange}
             onChange={e => setDateRange(e.target.value)}
-            className="h-9 px-2 rounded-xl border border-[#e8eae8] text-[12px] font-semibold text-[#4a544a] bg-white outline-none"
+            className="h-9 px-2 rounded-xl border border-border text-[12px] font-semibold text-text-sub bg-layout-card outline-none"
           >
             {DATE_OPTIONS.map(o => (
               <option key={o.value} value={o.value}>{o.label}</option>
@@ -388,7 +376,7 @@ export default function ActivityPage() {
               key={key}
               onClick={() => setEventFilter(key)}
               className={`shrink-0 rounded-lg px-3 py-1.5 text-[11px] font-semibold transition-colors
-                ${eventFilter === key ? 'bg-[#0f6e56] text-white' : 'bg-[#f7f8f7] text-[#4a544a] active:bg-[#e8eae8]'}`}
+                ${eventFilter === key ? 'bg-primary text-on-primary' : 'bg-surface text-text-sub active:bg-border'}`}
             >
               {label}
             </button>
@@ -397,11 +385,11 @@ export default function ActivityPage() {
 
         {/* Row 3: Client Filter Select */}
         <div className="flex items-center justify-between">
-          <span className="text-[11px] font-semibold text-[#9ea89e]">Client Filter:</span>
+          <span className="text-[11px] font-semibold text-text-dim">Client Filter:</span>
           <select
-            value={clientFilter || ''}
+            aria-label="Filter activity by client" value={clientFilter || ''}
             onChange={e => setClientFilter(e.target.value || null)}
-            className="h-8 px-2.5 rounded-lg border border-[#e8eae8] text-[11px] font-medium text-[#4a544a] bg-white outline-none"
+            className="h-8 px-2.5 rounded-lg border border-border text-[11px] font-medium text-text-sub bg-layout-card outline-none"
           >
             <option value="">All clients</option>
             {clients.map(c => (
@@ -412,17 +400,17 @@ export default function ActivityPage() {
       </div>
 
       <div className="p-0 lg:p-6">
-        <div className="rounded-none lg:rounded-2xl border-0 lg:border border-[#e8eae8] bg-white overflow-hidden">
+        <div className="rounded-none lg:rounded-2xl border-0 lg:border border-border bg-layout-card overflow-hidden">
 
           {/* Search + Input layout (DESKTOP) */}
-          <div className="hidden lg:flex items-center gap-3 p-4 border-b border-[#f1f3f1]">
+          <div className="hidden lg:flex items-center gap-3 p-4 border-b border-border">
             <div className="relative flex-1">
-              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9ea89e]" />
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-dim" />
               <input
                 value={searchInput}
                 onChange={e => setSearchInput(e.target.value)}
                 placeholder="Search activity by client, request title, context..."
-                className="w-full h-9 rounded-xl border border-[#e8eae8] pl-9 pr-4 text-[13px] outline-none placeholder:text-[#9ea89e] focus:border-[#0f6e56] focus:ring-4 focus:ring-[#0f6e56]/10 transition-all"
+                className="w-full h-9 rounded-xl border border-border pl-9 pr-4 text-[13px] outline-none placeholder:text-text-dim focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all"
               />
             </div>
             <div className="flex items-center gap-1.5">
@@ -431,7 +419,7 @@ export default function ActivityPage() {
                   key={o.value}
                   onClick={() => setDateRange(o.value)}
                   className={`flex items-center gap-1.5 h-9 rounded-lg border px-3 text-[12px] font-medium transition-colors
-                    ${dateRange === o.value ? 'border-[#0f6e56] bg-[#e6f5f0] text-[#0f6e56]' : 'border-[#e8eae8] text-[#4a544a] hover:border-[#0f6e56]/30'}
+                    ${dateRange === o.value ? 'border-primary bg-primary-light text-primary-ink' : 'border-border text-text-sub hover:border-primary/30'}
                   `}
                 >
                   {o.label}
@@ -440,15 +428,15 @@ export default function ActivityPage() {
             </div>
           </div>
 
-          <div className="hidden lg:flex items-center justify-between px-4 py-3 border-b border-[#f1f3f1]">
+          <div className="hidden lg:flex items-center justify-between px-4 py-3 border-b border-border">
             <div className="flex items-center gap-1">
-              <span className="text-[12px] font-semibold text-[#9ea89e] mr-2">Filter by:</span>
+              <span className="text-[12px] font-semibold text-text-dim mr-2">Filter by:</span>
               {FILTER_TABS.map(({ key, label }) => (
                 <button
                   key={key}
                   onClick={() => setEventFilter(key)}
                   className={`rounded-lg px-3 py-1.5 text-[12px] font-medium transition-colors
-                    ${eventFilter === key ? 'bg-[#0f6e56] text-white' : 'text-[#4a544a] hover:bg-[#f7f8f7]'}`
+                    ${eventFilter === key ? 'bg-primary text-on-primary' : 'text-text-sub hover:bg-surface'}`
                   }
                 >
                   {label}
@@ -458,16 +446,16 @@ export default function ActivityPage() {
             <div className="relative">
               <button
                 onClick={() => setClientDropdownOpen(o => !o)}
-                className="flex items-center gap-1.5 h-8 rounded-lg border border-[#e8eae8] px-3 text-[12px] font-medium text-[#4a544a] hover:border-[#0f6e56]/30 transition-colors"
+                className="flex items-center gap-1.5 h-8 rounded-lg border border-border px-3 text-[12px] font-medium text-text-sub hover:border-primary/30 transition-colors"
               >
                 {clientFilter ? clients.find(c => c.id === clientFilter)?.display_name || 'Client' : 'All clients'}
-                <ChevronDown size={12} className="text-[#9ea89e]" />
+                <ChevronDown size={12} className="text-text-dim" />
               </button>
               {clientDropdownOpen && (
-                <div className="absolute right-0 top-10 z-20 w-52 rounded-xl border border-[#e8eae8] bg-white shadow-lg py-1">
+                <div className="absolute right-0 top-10 z-20 w-52 rounded-xl border border-border bg-layout-card shadow-lg py-1">
                   <button
                     onClick={() => { setClientFilter(null); setClientDropdownOpen(false) }}
-                    className={`w-full text-left px-3 py-2 text-[13px] hover:bg-[#f7f8f7] ${!clientFilter ? 'font-semibold text-[#0f6e56]' : 'text-[#4a544a]'}`}
+                    className={`w-full text-left px-3 py-2 text-[13px] hover:bg-surface ${!clientFilter ? 'font-semibold text-primary-ink' : 'text-text-sub'}`}
                   >
                     All clients
                   </button>
@@ -475,7 +463,7 @@ export default function ActivityPage() {
                     <button
                       key={c.id}
                       onClick={() => { setClientFilter(c.id); setClientDropdownOpen(false) }}
-                      className={`w-full text-left px-3 py-2 text-[13px] hover:bg-[#f7f8f7] ${clientFilter === c.id ? 'font-semibold text-[#0f6e56]' : 'text-[#4a544a]'}`}
+                      className={`w-full text-left px-3 py-2 text-[13px] hover:bg-surface ${clientFilter === c.id ? 'font-semibold text-primary-ink' : 'text-text-sub'}`}
                     >
                       {c.display_name || c.client_name}
                     </button>
@@ -487,30 +475,30 @@ export default function ActivityPage() {
 
           {/* Cleaned minimalist event metadata readout block */}
           {!loading && (
-            <div className="flex items-center justify-between px-5 py-3.5 border-b border-[#f1f3f1] bg-[#fafafa]">
-              <p className="text-[12px] text-[#4a544a]">
-                Showing <span className="font-semibold text-[#141a14]">{activities.length} logs</span> matching your tracking timeframe filter selection criteria.
+            <div className="flex items-center justify-between px-5 py-3.5 border-b border-border bg-surface">
+              <p className="text-[12px] text-text-sub">
+                Showing <span className="font-semibold text-text-main">{activities.length} logs</span> matching your tracking timeframe filter selection criteria.
               </p>
             </div>
           )}
 
           {loading ? (
             <div className="flex items-center justify-center py-20">
-              <Loader2 size={22} className="animate-spin text-[#0f6e56]" />
+              <Loader2 size={22} className="animate-spin text-primary-ink" />
             </div>
           ) : activities.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-center">
-              <Bell size={24} className="text-[#9ea89e] mb-3" />
-              <p className="text-[15px] font-medium text-[#141a14]">No activity found</p>
-              <p className="text-[13px] text-[#9ea89e] mt-1">Try adjusting your filters or date range</p>
+              <Bell size={24} className="text-text-dim mb-3" />
+              <p className="text-[15px] font-medium text-text-main">No activity found</p>
+              <p className="text-[13px] text-text-dim mt-1">Try adjusting your filters or date range</p>
             </div>
           ) : (
-            <div className="px-2 lg:px-5 divide-y divide-[#f1f3f1]">
+            <div className="px-2 lg:px-5 divide-y divide-border">
               {Object.entries(grouped).map(([date, acts]) => (
                 <div key={date} className="pt-2">
-                  <div className="flex items-center justify-between py-2 px-3 sticky top-[138px] lg:top-0 bg-white z-10">
-                    <p className="text-[12px] font-semibold text-[#141a14]">{date}</p>
-                    <p className="text-[11px] text-[#9ea89e]">{acts.length} logs</p>
+                  <div className="flex items-center justify-between py-2 px-3 sticky top-[138px] lg:top-0 bg-layout-card z-10">
+                    <p className="text-[12px] font-semibold text-text-main">{date}</p>
+                    <p className="text-[11px] text-text-dim">{acts.length} logs</p>
                   </div>
                   <div className="pb-3 space-y-1">
                     {acts.map(a => (
@@ -524,10 +512,10 @@ export default function ActivityPage() {
                 </div>
               ))}
               {activities.length > visibleCount && (
-                <div className="py-5 text-center border-t border-[#f1f3f1]">
+                <div className="py-5 text-center border-t border-border">
                   <button
                     onClick={() => setVisibleCount(v => v + 25)}
-                    className="text-[13px] font-medium text-[#0f6e56] hover:underline"
+                    className="text-[13px] font-medium text-primary-ink hover:underline"
                   >
                     Load more events
                   </button>

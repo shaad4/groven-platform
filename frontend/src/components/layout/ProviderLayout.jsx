@@ -1,40 +1,24 @@
 import ProviderSidebar from './ProviderSidebar'
 import { useBadges } from '../../hooks/useBadges'
 
-
-
-export default function ProviderLayout({
-  children,
-  topbar,
-  fullBleed = false,
-}) {
+export default function ProviderLayout({ children, topbar, fullBleed = false }) {
   const { badges } = useBadges()
-  
+
   return (
-    <div className="flex h-screen overflow-hidden bg-[#f7f8f7]">
+    <div className="flex h-dvh overflow-hidden bg-layout-page text-text-main">
+      <a href="#workspace-content" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[300] focus:rounded-xl focus:bg-layout-card focus:px-4 focus:py-3 focus:text-primary">Skip to content</a>
       <ProviderSidebar badges={badges} />
-
-      {/* Right column */}
-      <div className="flex flex-1 flex-col min-w-0 overflow-hidden">
-
-        {/* Sticky Topbar */}
-        {topbar && (
-          <div className="sticky top-0 z-50 border-b border-[#e8eae8] bg-[#f7f8f7]/80 backdrop-blur-xl">
-            {topbar}
-          </div>
-        )}
-
-        {/* Scrollable Content */}
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+        {topbar && <div className="relative z-40 shrink-0">{topbar}</div>}
         <main
-          className={
-            fullBleed
-              ? "flex-1 overflow-hidden h-[100dvh]"
-              : "flex-1 overflow-y-auto pb-[88px] lg:pb-0"
-          }
+          id="workspace-content"
+          tabIndex={-1}
+          className={fullBleed
+            ? 'min-h-0 flex-1 overflow-hidden pb-[calc(76px+env(safe-area-inset-bottom))] lg:pb-0'
+            : 'min-h-0 flex-1 overflow-y-auto pb-[calc(92px+env(safe-area-inset-bottom))] lg:pb-0'}
         >
           {children}
         </main>
-
       </div>
     </div>
   )

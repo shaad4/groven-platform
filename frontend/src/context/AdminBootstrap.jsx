@@ -38,8 +38,8 @@ export default function AdminBootstrap({ children }) {
 
   if (!ready) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#070D0A]">
-        <div className="h-7 w-7 rounded-full border-2 border-white/10 border-t-[#1D9E75] animate-spin" />
+      <div className="flex min-h-screen items-center justify-center bg-layout-page">
+        <div className="h-7 w-7 rounded-full border-2 border-border border-t-primary animate-spin" />
       </div>
     )
   }

@@ -63,14 +63,14 @@ export default function PlanOverridePanel({ open, onClose, tenant, onChanged }) 
         <PlanBadge plan={tenant.plan} />
 
         <div className="mt-6 space-y-4">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-[#9BA39B]">Usage</p>
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-text-dim">Usage</p>
           <UsageBar used={tenant.client_count} limit={tenant.client_limit} label="Clients" />
           <UsageBar used={tenant.request_count} limit={tenant.request_limit} label="Requests" />
         </div>
 
         {!isPro && (
-          <div className="mt-6 border-t border-[#EEF1EE] pt-5">
-            <p className="mb-3 text-[11px] font-semibold uppercase tracking-wide text-[#9BA39B]">
+          <div className="mt-6 border-t border-border pt-5">
+            <p className="mb-3 text-[11px] font-semibold uppercase tracking-wide text-text-dim">
               Plan actions
             </p>
             <AdminButton
@@ -82,23 +82,23 @@ export default function PlanOverridePanel({ open, onClose, tenant, onChanged }) 
             >
               Upgrade to Pro
             </AdminButton>
-            <p className="mt-1.5 text-[12px] text-[#9BA39B]">Instantly sets plan to Pro</p>
+            <p className="mt-1.5 text-[12px] text-text-dim">Instantly sets plan to Pro</p>
 
-            <div className="mt-6 border-t border-[#EEF1EE] pt-5">
-              <p className="mb-3 text-[11px] font-semibold uppercase tracking-wide text-[#9BA39B]">
+            <div className="mt-6 border-t border-border pt-5">
+              <p className="mb-3 text-[11px] font-semibold uppercase tracking-wide text-text-dim">
                 Limit override
               </p>
               <div className="flex items-center justify-between gap-3">
-                <label className="text-[13px] text-[#5B655C]">Client limit</label>
+                <label className="text-[13px] text-text-sub">Client limit</label>
                 <input
                   type="number"
                   min={0}
                   value={clientLimit}
                   onChange={(e) => { setClientLimit(e.target.value); setSaved(false) }}
-                  className="h-9 w-24 rounded-lg border border-[#D8DCD8] px-3 text-[13px] outline-none focus:border-[#1D9E75] focus:ring-2 focus:ring-[#1D9E75]/15"
+                  className="h-9 w-24 rounded-lg border border-border px-3 text-[13px] outline-none focus:border-primary focus:ring-2 focus:ring-[#1D9E75]/15"
                 />
               </div>
-              <p className="mt-1.5 text-[12px] text-[#9BA39B]">Leave blank to clear the override.</p>
+              <p className="mt-1.5 text-[12px] text-text-dim">Leave blank to clear the override.</p>
 
               <AdminButton
                 size="sm"
@@ -110,12 +110,12 @@ export default function PlanOverridePanel({ open, onClose, tenant, onChanged }) 
               >
                 Save changes
               </AdminButton>
-              {saved && <span className="ml-3 text-[12px] text-[#1D9E75]">Saved</span>}
+              {saved && <span className="ml-3 text-[12px] text-primary-ink">Saved</span>}
             </div>
           </div>
         )}
 
-        {error && <p className="mt-4 text-[12px] text-[#C73A30]">{error}</p>}
+        {error && <p className="mt-4 text-[12px] text-status-danger-text">{error}</p>}
       </PanelBody>
     </AdminSlidePanel>
   )

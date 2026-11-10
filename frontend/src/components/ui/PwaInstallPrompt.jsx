@@ -5,7 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { getSubdomain } from '../../utils/domain';
 
 export default function PwaInstallPrompt() {
-  const { tenantInfo } = useTenantBranding();
+  const { tenantInfo, colors } = useTenantBranding();
   const { isAuth, loading, user } = useAuth();
   const subdomain = getSubdomain();
   const [deferredPrompt, setDeferredPrompt] = useState(null);
@@ -76,12 +76,12 @@ export default function PwaInstallPrompt() {
 
   const isClient = user?.role === 'client';
   
-  const appName = isClient ? (tenantInfo?.name || 'Groven') : 'Groven';
-  const brandColor = isClient ? (tenantInfo?.accent_color || '#0F6E56') : '#0F6E56';
+  const appName = isClient ? (tenantInfo?.name || 'Client portal') : 'Groven';
+  const brandColor = colors.accent;
   const logoUrl = isClient ? tenantInfo?.logo_url : null;
 
   return (
-    <div className="fixed bottom-4 left-4 right-4 md:left-auto md:right-8 md:w-[380px] bg-white rounded-2xl shadow-2xl border border-gray-200 p-5 z-[9999] animate-in slide-in-from-bottom-5 fade-in duration-300">
+    <div className="fixed bottom-[calc(88px+env(safe-area-inset-bottom))] lg:bottom-4 left-4 right-4 md:left-auto md:right-8 md:w-[380px] bg-layout-card rounded-2xl shadow-2xl border border-gray-200 p-5 z-[9999] animate-in slide-in-from-bottom-5 fade-in duration-300">
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-3">
           {logoUrl ? (
@@ -91,7 +91,7 @@ export default function PwaInstallPrompt() {
               className="p-2.5 rounded-xl shrink-0" 
               style={{ backgroundColor: `${brandColor}1A` }}
             >
-              <Download className="w-6 h-6" style={{ color: brandColor }} />
+              <Download className="w-6 h-6" style={{ color: colors.accentText }} />
             </div>
           )}
           <div>
@@ -101,7 +101,7 @@ export default function PwaInstallPrompt() {
             </p>
           </div>
         </div>
-        <button onClick={handleDismiss} className="p-1 hover:bg-gray-100 rounded-full transition-colors text-gray-400 hover:text-gray-600 shrink-0">
+        <button aria-label="Dismiss install prompt" onClick={handleDismiss} className="p-1 hover:bg-gray-100 rounded-full transition-colors text-gray-400 hover:text-gray-600 shrink-0">
           <X className="w-5 h-5" />
         </button>
       </div>

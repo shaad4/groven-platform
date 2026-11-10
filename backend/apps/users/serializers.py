@@ -1,16 +1,11 @@
 import re
 
 import requests as http_requests
-from django.conf import settings
-from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
-from django.db import transaction
-from django.utils import timezone
 from rest_framework import serializers
 
 from apps.tenants.models import Tenant
 
-from .models import EmailVerificationToken, PasswordResetToken, User
 from .repositories import UserRepository
 
 

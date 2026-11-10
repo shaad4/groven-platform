@@ -6,7 +6,7 @@ from apps.clients.models import Client
 from apps.common.ai.client import AIService
 from apps.common.ai.exceptions import AIRateLimitError, AIServiceError
 from apps.common.logger import logger
-from apps.request_management.models import File, Request
+from apps.request_management.models import File
 from config.celery import app
 
 from .models import InternalNote, Request, RequestActivity

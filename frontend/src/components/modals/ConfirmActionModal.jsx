@@ -37,20 +37,20 @@ export default function ConfirmActionModal({
         onClose={onClose}
       />
       <PanelBody>
-        <div className="flex items-start gap-3 rounded-xl border border-[#F3D2CE] bg-[#FDF1EF] p-4">
-          <AlertTriangle size={18} className="mt-0.5 shrink-0 text-[#C73A30]" />
+        <div className="flex items-start gap-3 rounded-xl border border-status-danger-text/20 bg-status-danger-bg p-4">
+          <AlertTriangle size={18} className="mt-0.5 shrink-0 text-status-danger-text" />
           <div>
-            <p className="text-[13px] font-medium text-[#10241C]">{targetName}</p>
-            <p className="mt-1 text-[13px] leading-5 text-[#5B655C]">{description}</p>
+            <p className="text-[13px] font-medium text-text-main">{targetName}</p>
+            <p className="mt-1 text-[13px] leading-5 text-text-sub">{description}</p>
           </div>
         </div>
 
-        <p className="mt-4 text-[12px] font-medium text-[#8B958C]">
+        <p className="mt-4 text-[12px] font-medium text-text-dim">
           This action cannot be undone.
         </p>
 
         {error && (
-          <p className="mt-3 text-[12px] text-[#C73A30]">{error}</p>
+          <p className="mt-3 text-[12px] text-status-danger-text">{error}</p>
         )}
       </PanelBody>
       <PanelFooter>

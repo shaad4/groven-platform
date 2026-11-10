@@ -29,7 +29,7 @@ function formatBytes(bytes) {
 }
 
 //  Attachment bubble (sent/received) 
-function AttachmentBubble({ attachment, isMe, isClient, accent, accentSoft, accentDark }) {
+function AttachmentBubble({ attachment, isMe, isClient }) {
   const { icon: Icon, color, bg } = getFileIcon(
     attachment.file_type,
     attachment.file_name
@@ -53,7 +53,7 @@ function AttachmentBubble({ attachment, isMe, isClient, accent, accentSoft, acce
           rel="noreferrer"
           className="absolute inset-0 flex items-center justify-center bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl backdrop-blur-[2px]"
         >
-          <div className="h-9 w-9 rounded-full bg-white/90 shadow flex items-center justify-center">
+          <div className="h-9 w-9 rounded-full bg-layout-card/90 shadow flex items-center justify-center">
             <Download size={15} className="text-slate-700" />
           </div>
         </a>
@@ -74,7 +74,7 @@ function AttachmentBubble({ attachment, isMe, isClient, accent, accentSoft, acce
                 ? 'client-chat-attachment-me'
                 : 'bg-emerald-50/40 hover:bg-emerald-50 border-emerald-100/70'
               )
-            : 'bg-white hover:bg-slate-50 border-slate-100'
+            : 'bg-layout-card hover:bg-slate-50 border-slate-100'
         }
       `}
     >
@@ -161,6 +161,7 @@ export default function ChatPanel({
   const [messages,    setMessages]    = useState([])
   const [input,       setInput]       = useState('')
   const [sending,     setSending]     = useState(false)
+  const [sendError, setSendError] = useState('')
   const [attachments, setAttachments] = useState([])
   const messagesEndRef = useRef(null)
   const fileInputRef   = useRef(null)
@@ -329,9 +330,10 @@ export default function ChatPanel({
   const handleSend = async () => {
     const content         = input.trim()
     const doneAttachments = attachments.filter(a => a.status === 'done')
-    if (!content && doneAttachments.length === 0) return
+    if (sending || isClosed || (!content && doneAttachments.length === 0)) return
     if (attachments.some(a => a.status === 'uploading')) return
 
+    setSendError('')
     setInput('')
     setAttachments([])
     setSending(true)
@@ -363,13 +365,16 @@ export default function ChatPanel({
       })
     } catch {
       setMessages(prev => prev.filter(m => m.id !== optimistic.id))
+      setInput(current => current ? `${content}\n${current}` : content)
+      setAttachments(current => [...doneAttachments, ...current])
+      setSendError('Your message could not be sent. Your draft is saved below — try again.')
     } finally {
       setSending(false)
     }
   }
 
   const handleKeyDown = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
       e.preventDefault()
       handleSend()
     }
@@ -418,23 +423,28 @@ export default function ChatPanel({
       {isClient && (
         <style>{`
           .client-chat-bubble-me {
-            background: linear-gradient(135deg, ${accent} 0%, ${accentDark || accent} 100%) !important;
-            border-color: ${accent} !important;
+            background: ${accent} !important;
+            border-color: var(--primary-text) !important;
             color: #ffffff !important;
           }
           .client-chat-send-btn {
-            background: linear-gradient(135deg, ${accent} 0%, ${accentDark || accent} 100%) !important;
+            background: ${accent} !important;
             color: #ffffff !important;
           }
           .client-chat-send-btn:hover {
-            box-shadow: 0 4px 12px ${accent}33 !important;
+            background: ${accentDark || accent} !important;
+          }
+          .dark .client-chat-bubble-me {
+            background: var(--surface) !important;
+            border-color: var(--border) !important;
+            color: var(--text-main) !important;
           }
           .client-chat-input:focus-within {
             border-color: ${accent}cc !important;
             box-shadow: 0 0 0 4px ${accent}1a !important;
           }
           .client-chat-attachment-me {
-            background-color: ${accentSoft}66 !important;
+            background-color: ${accentSoft} !important;
             border-color: ${accent}33 !important;
           }
           .client-chat-attachment-me:hover {
@@ -442,35 +452,35 @@ export default function ChatPanel({
             border-color: ${accent}66 !important;
           }
           .client-chat-attachment-text-me {
-            color: ${accentDark || accent} !important;
+            color: var(--primary-text) !important;
           }
           .client-chat-attachment-icon-bg {
             background-color: ${accentSoft} !important;
           }
           .client-chat-attachment-icon {
-            color: ${accent} !important;
+            color: var(--primary-text) !important;
           }
           .client-chat-read-receipt {
-            color: ${accent} !important;
+            color: var(--primary-text) !important;
           }
           .client-chat-upload-loader {
-            color: ${accent} !important;
+            color: var(--primary-text) !important;
           }
           .client-chat-upload-check {
-            color: ${accent} !important;
+            color: var(--primary-text) !important;
           }
           .client-chat-upload-done {
             background-color: ${accentSoft} !important;
             border-color: ${accent}33 !important;
-            color: ${accentDark || accent} !important;
+            color: var(--primary-text) !important;
           }
           .client-chat-empty-icon {
             background-color: ${accentSoft} !important;
             border-color: ${accent}33 !important;
-            color: ${accent} !important;
+            color: var(--primary-text) !important;
           }
           .client-chat-clip-btn:hover {
-            color: ${accent} !important;
+            color: var(--primary-text) !important;
             background-color: ${accentSoft} !important;
           }
         `}</style>
@@ -498,7 +508,7 @@ export default function ChatPanel({
               {/* Date divider */}
               <div className="flex items-center gap-4 my-6">
                 <div className="flex-1 h-px bg-slate-200/60" />
-                <span className="text-[10px] font-semibold tracking-wider uppercase px-3 py-1 rounded-full bg-slate-100 text-slate-400 border border-slate-200/40">
+                <span className="text-[11px] font-semibold tracking-wider uppercase px-3 py-1 rounded-full bg-slate-100 text-slate-400 border border-slate-200/40">
                   {formatGroupDate(group.date)}
                 </span>
                 <div className="flex-1 h-px bg-slate-200/60" />
@@ -545,7 +555,7 @@ export default function ChatPanel({
                       {/* Avatar column */}
                       <div className="w-8 shrink-0 self-end pb-0.5">
                         {isLastInGroup && !isMe && (
-                          <div className={`h-8 w-8 rounded-full overflow-hidden flex items-center justify-center text-[10px] font-bold shadow-sm
+                          <div className={`h-8 w-8 rounded-full overflow-hidden flex items-center justify-center text-[11px] font-bold shadow-sm
                             ${getAvatarColor(clientName).bg} ${getAvatarColor(clientName).text}`}>
                             {clientAvatarUrl ? (
                               <img src={clientAvatarUrl} alt={clientName} className="w-full h-full object-cover" />
@@ -570,9 +580,9 @@ export default function ChatPanel({
                             ${isMe
                               ? (isClient
                                 ? `client-chat-bubble-me rounded-2xl rounded-br-none`
-                                : `text-white rounded-2xl rounded-br-none border-emerald-600 bg-gradient-to-br from-emerald-600 to-emerald-700`
+                                : `text-on-primary rounded-2xl rounded-br-none border-primary bg-primary dark:border-border dark:bg-surface dark:text-text-main`
                                 )
-                              : `text-slate-700 bg-white rounded-2xl rounded-bl-none border-slate-100`
+                              : `text-slate-700 bg-layout-card rounded-2xl rounded-bl-none border-slate-100`
                             }
                             ${item.optimistic ? 'opacity-60' : ''}
                           `}>
@@ -589,9 +599,6 @@ export default function ChatPanel({
                                 attachment={att.file || att}
                                 isMe={isMe}
                                 isClient={isClient}
-                                accent={accent}
-                                accentSoft={accentSoft}
-                                accentDark={accentDark}
                               />
                             ))}
                           </div>
@@ -600,7 +607,7 @@ export default function ChatPanel({
                         {/* Timestamp + read receipt */}
                         {isLastInGroup && (
                           <div className={`flex items-center gap-1.5 px-1 mt-0.5 ${isMe ? 'flex-row-reverse' : 'flex-row'}`}>
-                            <span className="text-[10px] text-slate-400 font-medium">
+                            <span className="text-[11px] text-slate-400 font-medium">
                               {formatMsgTime(item.created_at)}
                               {item.optimistic && ' · Sending…'}
                             </span>
@@ -636,7 +643,7 @@ export default function ChatPanel({
           </p>
         </div>
       ) : (
-        <div className="shrink-0 p-4 bg-white border-t border-slate-200/80 shadow-[0_-4px_12px_rgba(0,0,0,0.02)]">
+        <div className="shrink-0 p-4 bg-layout-card border-t border-slate-200/80 shadow-[0_-4px_12px_rgba(0,0,0,0.02)]">
           
           {/* AI reply suggestions */}
           <div className="mb-3">
@@ -672,7 +679,7 @@ export default function ChatPanel({
                       key={i}
                       onClick={() => applySuggestion(s)}
                       title={s}
-                      className="text-left max-w-[260px] truncate rounded-full px-3 py-1.5 text-[12px] font-medium text-slate-700 bg-gradient-to-r from-violet-50 to-emerald-50 hover:from-violet-100 hover:to-emerald-100 shadow-sm transition-all"
+                      className="text-left max-w-[260px] truncate rounded-lg border border-border px-3 py-2 text-[12px] font-medium text-text-sub bg-layout-card hover:bg-surface transition-colors"
                     >
                       {s}
                     </button>
@@ -699,8 +706,9 @@ export default function ChatPanel({
             </div>
           )}
 
+          {sendError && <p role="alert" className="mb-3 rounded-xl bg-status-danger-bg px-3 py-2 text-xs text-status-danger-text">{sendError}</p>}
           {/* Input area */}
-          <div className={`rounded-2xl transition-all duration-200 bg-slate-50 border border-slate-200 focus-within:bg-white
+          <div className={`rounded-2xl transition-all duration-200 bg-slate-50 border border-slate-200 focus-within:bg-layout-card
             ${isClient 
               ? 'client-chat-input' 
               : 'focus-within:border-emerald-500/80 focus-within:ring-4 focus-within:ring-emerald-500/10'
@@ -708,6 +716,7 @@ export default function ChatPanel({
           `}>
             <textarea
               ref={textareaRef}
+              aria-label={`Message ${clientName || 'your team'}`}
               value={input}
               onChange={e => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
@@ -722,10 +731,11 @@ export default function ChatPanel({
             <div className="flex items-center justify-between px-3 pb-3 pt-1">
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className={`h-8 w-8 flex items-center justify-center rounded-xl text-slate-400 transition-all
+                className={`h-11 w-11 flex items-center justify-center rounded-xl text-slate-400 transition-all
                   ${isClient ? 'client-chat-clip-btn' : 'hover:text-emerald-600 hover:bg-emerald-50'}
                 `}
                 title="Attach file"
+                aria-label="Attach file"
               >
                 <Paperclip size={16} />
               </button>
@@ -741,11 +751,12 @@ export default function ChatPanel({
                   ⏎ Send &nbsp;·&nbsp; ⇧⏎ Newline
                 </span>
                 <button
+                  aria-label="Send message"
                   onClick={handleSend}
                   disabled={!canSend || sending}
-                  className={`h-8 w-8 flex items-center justify-center rounded-xl transition-all shadow-sm
+                  className={`h-11 w-11 flex items-center justify-center rounded-xl transition-all shadow-sm
                     ${canSend && !sending
-                      ? `${isClient ? 'client-chat-send-btn' : 'bg-gradient-to-br from-emerald-600 to-emerald-700'} text-white hover:shadow-md hover:scale-[1.02] active:scale-[0.98]`
+                      ? `${isClient ? 'client-chat-send-btn' : 'bg-primary hover:bg-primary-dark'} text-white`
                       : 'bg-slate-100 text-slate-300 cursor-not-allowed shadow-none border border-slate-200/50'
                     }
                   `}

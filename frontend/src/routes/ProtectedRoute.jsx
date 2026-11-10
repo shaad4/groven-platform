@@ -14,7 +14,7 @@ export function ProtectedRoute() {
   const { isAuth, loading } = useAuth()
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#F7F8F7]">
+      <div className="min-h-screen flex items-center justify-center bg-layout-page">
         <div className="h-8 w-8 rounded-full border-2 border-[#D4E9E2] border-t-[#0F6E56] animate-spin" />
       </div>
     )
@@ -48,7 +48,7 @@ export function GuestRoute() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#F7F8F7]">
+      <div className="min-h-screen flex items-center justify-center bg-layout-page">
         <div className="h-8 w-8 rounded-full border-2 border-[#D4E9E2] border-t-[#0F6E56] animate-spin" />
       </div>
     )
@@ -98,7 +98,7 @@ export function SetupRoute() {
   const { isAuth, user, tenant, loading } = useAuth()
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#F7F8F7]">
+      <div className="min-h-screen flex items-center justify-center bg-layout-page">
         <div className="h-8 w-8 rounded-full border-2 border-[#D4E9E2] border-t-[#0F6E56] animate-spin" />
       </div>
     )

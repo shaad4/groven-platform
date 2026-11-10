@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { createPortal } from 'react-dom'
 import {
@@ -50,19 +50,19 @@ function groupByDay(notifications) {
 //Event Type config
 
 const EVENT_CONFIG = {
-  new_request:    { Icon: PlusCircle,   bg: 'bg-[#e6f5f0]',  iconColor: 'text-[#0f6e56]' },
-  status_change:  { Icon: RefreshCw,    bg: 'bg-[#e6f5f0]',  iconColor: 'text-[#0f6e56]' },
-  new_message:    { Icon: MessageSquare,bg: 'bg-[#e6f5f0]',  iconColor: 'text-[#0f6e56]' },
-  files_delivered:{ Icon: Package,      bg: 'bg-[#eef2ff]',  iconColor: 'text-[#3730a3]' },
-  invite_accepted:{ Icon: CheckCircle2, bg: 'bg-[#e6f5f0]',  iconColor: 'text-[#0f6e56]' },
+  new_request:    { Icon: PlusCircle,   bg: 'bg-primary-light',  iconColor: 'text-primary-ink' },
+  status_change:  { Icon: RefreshCw,    bg: 'bg-primary-light',  iconColor: 'text-primary-ink' },
+  new_message:    { Icon: MessageSquare,bg: 'bg-primary-light',  iconColor: 'text-primary-ink' },
+  files_delivered:{ Icon: Package,      bg: 'bg-status-progress-bg',  iconColor: 'text-status-progress-text' },
+  invite_accepted:{ Icon: CheckCircle2, bg: 'bg-primary-light',  iconColor: 'text-primary-ink' },
 }
 
 const STATUS_META = {
-  received:    { label: 'Submitted',   bg: 'bg-[#e6f5f0]', text: 'text-[#085041]' },
-  in_review:   { label: 'In Review',   bg: 'bg-[#fef3e2]', text: 'text-[#92500a]' },
-  in_progress: { label: 'In Progress', bg: 'bg-[#eef2ff]', text: 'text-[#3730a3]' },
-  delivered:   { label: 'Delivered',   bg: 'bg-[#e6f5f0]', text: 'text-[#0f6e56]' },
-  closed:      { label: 'Done',        bg: 'bg-[#f3f4f3]', text: 'text-[#4a544a]' },
+  received:    { label: 'Submitted',   bg: 'bg-primary-light', text: 'text-primary-ink' },
+  in_review:   { label: 'In Review',   bg: 'bg-status-review-bg', text: 'text-status-review-text' },
+  in_progress: { label: 'In Progress', bg: 'bg-status-progress-bg', text: 'text-status-progress-text' },
+  delivered:   { label: 'Delivered',   bg: 'bg-primary-light', text: 'text-primary-ink' },
+  closed:      { label: 'Done',        bg: 'bg-surface', text: 'text-text-sub' },
 }
 
 //  status transition 
@@ -93,11 +93,11 @@ function StatusPills({ from, to }) {
   if (!fromMeta || !toMeta) return null
   return (
     <div className="flex items-center gap-1.5 mt-1.5">
-      <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${fromMeta.bg} ${fromMeta.text}`}>
+      <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${fromMeta.bg} ${fromMeta.text}`}>
         {fromMeta.label}
       </span>
-      <span className="text-[10px] text-[#9ea89e]">→</span>
-      <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${toMeta.bg} ${toMeta.text}`}>
+      <span className="text-[11px] text-text-dim">→</span>
+      <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${toMeta.bg} ${toMeta.text}`}>
         {toMeta.label}
       </span>
     </div>
@@ -134,8 +134,8 @@ function NotificationItem({ notification, onRead }) {
   return (
     <button
       onClick={handleClick}
-      className={`w-full text-left flex items-start gap-3 px-4 py-3.5 transition-colors hover:bg-[#f7fdfb] ${
-        !notification.is_read ? 'bg-[#fafcfa]' : ''
+      className={`w-full text-left flex items-start gap-3 px-4 py-3.5 transition-colors hover:bg-surface ${
+        !notification.is_read ? 'bg-surface' : ''
       }`}
     >
       {/* icon bubble */}
@@ -144,27 +144,27 @@ function NotificationItem({ notification, onRead }) {
           <Icon size={16} className={iconColor} />
         </div>
         {!notification.is_read && (
-          <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-[#0f6e56] border-2 border-white" />
+          <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-primary border-2 border-white" />
         )}
       </div>
  
       {/* content */}
       <div className="flex-1 min-w-0">
-        <p className="text-[13px] text-[#141a14] leading-snug">
+        <p className="text-[13px] text-text-main leading-snug">
           {notification.title}
         </p>
-        <p className="text-[11px] text-[#9ea89e] mt-0.5">
+        <p className="text-[11px] text-text-dim mt-0.5">
           {relativeTime(notification.created_at)}
         </p>
  
         {snippet && (
-          <p className="text-[11px] text-[#4a544a] italic mt-1 line-clamp-1">
+          <p className="text-[11px] text-text-sub italic mt-1 line-clamp-1">
             "{snippet}"
           </p>
         )}
  
         {fileCount && (
-          <p className="flex items-center gap-1 text-[11px] text-[#9ea89e] mt-1">
+          <p className="flex items-center gap-1 text-[11px] text-text-dim mt-1">
             <Paperclip size={10} />
             {fileCount} file{fileCount !== 1 ? 's' : ''} delivered
           </p>
@@ -232,11 +232,11 @@ export default function NotificationBell() {
     return (
       <>
         {/* header */}
-        <div className="flex items-center justify-between px-4 py-4 md:py-3.5 border-b border-[#eef0ee] shrink-0 bg-white">
+        <div className="flex items-center justify-between px-4 py-4 md:py-3.5 border-b border-border shrink-0 bg-layout-card">
           <div className="flex items-center gap-2">
-            <span className="text-[16px] md:text-[15px] font-semibold text-[#141a14]">Notifications</span>
+            <span className="text-[16px] md:text-[15px] font-semibold text-text-main">Notifications</span>
             {unreadCount > 0 && (
-              <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-[#0f6e56] px-1.5 text-[10px] font-bold text-white">
+              <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-bold text-white">
                 {unreadCount}
               </span>
             )}
@@ -246,7 +246,7 @@ export default function NotificationBell() {
               <button
                 type="button"
                 onClick={markAllRead}
-                className="text-[12px] font-semibold text-[#0f6e56] hover:underline"
+                className="text-[12px] font-semibold text-primary-ink hover:underline"
               >
                 Mark all read
               </button>
@@ -254,40 +254,40 @@ export default function NotificationBell() {
             <button
               type="button"
               onClick={() => setOpen(false)}
-              className="flex h-8 w-8 md:h-7 md:w-7 items-center justify-center rounded-xl bg-[#f7f8f7] md:bg-transparent hover:bg-[#eef0ee] md:hover:bg-[#f1f3f1] transition-colors"
+              className="flex h-8 w-8 md:h-7 md:w-7 items-center justify-center rounded-xl bg-layout-page md:bg-transparent hover:bg-surface md:hover:bg-surface transition-colors"
             >
-              <X size={16} className="text-[#7c867d]" />
+              <X size={16} className="text-text-sub" />
             </button>
           </div>
         </div>
 
         {/* body */}
-        <div className="overflow-y-auto flex-1 bg-white">
+        <div className="overflow-y-auto flex-1 bg-layout-card">
           {!notifLoaded ? (
             <div className="px-4 py-6 space-y-3">
               {[1, 2, 3].map((i) => (
                 <div key={i} className="flex gap-3 animate-pulse">
-                  <div className="h-9 w-9 rounded-full bg-[#f1f3f1] shrink-0" />
+                  <div className="h-9 w-9 rounded-full bg-surface shrink-0" />
                   <div className="flex-1 space-y-2">
-                    <div className="h-3 bg-[#f1f3f1] rounded w-3/4" />
-                    <div className="h-2.5 bg-[#f1f3f1] rounded w-1/3" />
+                    <div className="h-3 bg-surface rounded w-3/4" />
+                    <div className="h-2.5 bg-surface rounded w-1/3" />
                   </div>
                 </div>
               ))}
             </div>
           ) : notifications.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-14 px-6 text-center h-full min-h-[250px]">
-              <div className="h-12 w-12 rounded-full bg-[#e6f5f0] flex items-center justify-center mb-3">
-                <Bell size={20} className="text-[#0f6e56]" />
+              <div className="h-12 w-12 rounded-full bg-primary-light flex items-center justify-center mb-3">
+                <Bell size={20} className="text-primary-ink" />
               </div>
-              <p className="text-[13px] font-semibold text-[#141a14]">You're all caught up</p>
-              <p className="text-[12px] text-[#9ea89e] mt-1">No notifications yet.</p>
+              <p className="text-[13px] font-semibold text-text-main">You're all caught up</p>
+              <p className="text-[12px] text-text-dim mt-1">No notifications yet.</p>
             </div>
           ) : (
             groupKeys.map((label) => (
               <div key={label}>
-                <div className="px-4 py-2 bg-[#f7f8f7] border-b border-[#f1f3f1] sticky top-0 z-10">
-                  <span className="text-[10px] font-semibold tracking-wider text-[#9ea89e]">
+                <div className="px-4 py-2 bg-layout-page border-b border-border sticky top-0 z-10">
+                  <span className="text-[11px] font-semibold tracking-wider text-text-dim">
                     {label}
                   </span>
                 </div>
@@ -310,24 +310,24 @@ export default function NotificationBell() {
 
         {/* footer */}
         {notifications.length > 0 && (
-          <div className="shrink-0 border-t border-[#eef0ee] px-4 py-3 bg-[#fafcfa] pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+          <div className="shrink-0 border-t border-border px-4 py-3 bg-surface pb-[max(0.75rem,env(safe-area-inset-bottom))]">
             {unreadCount > 0 ? (
               <div className="flex items-center justify-center gap-2">
-                <div className="h-5 w-5 rounded-full bg-[#0f6e56] flex items-center justify-center">
+                <div className="h-5 w-5 rounded-full bg-primary flex items-center justify-center">
                   <CheckCheck size={11} className="text-white" />
                 </div>
-                <p className="text-[12px] text-[#4a544a]">
+                <p className="text-[12px] text-text-sub">
                   You have{' '}
-                  <span className="font-semibold text-[#0f6e56]">{unreadCount}</span>{' '}
+                  <span className="font-semibold text-primary-ink">{unreadCount}</span>{' '}
                   unread notification{unreadCount !== 1 ? 's' : ''}
                 </p>
               </div>
             ) : (
               <div className="flex items-center justify-center gap-2">
-                <div className="h-5 w-5 rounded-full bg-[#0f6e56] flex items-center justify-center">
+                <div className="h-5 w-5 rounded-full bg-primary flex items-center justify-center">
                   <CheckCheck size={11} className="text-white" />
                 </div>
-                <p className="text-[12px] text-[#4a544a]">All caught up</p>
+                <p className="text-[12px] text-text-sub">All caught up</p>
               </div>
             )}
           </div>
@@ -344,14 +344,14 @@ export default function NotificationBell() {
         onClick={() => setOpen((o) => !o)}
         className={`relative flex h-10 w-10 items-center justify-center rounded-lg border transition-colors ${
           open
-            ? 'border-[#b3e0d1] bg-[#e6f5f0]'
-            : 'border-[#e8eae8] bg-[#f7f8f7] hover:bg-[#eef0ee]'
+            ? 'border-primary/25 bg-primary-light'
+            : 'border-border bg-layout-page hover:bg-surface'
         }`}
       >
-        <Bell size={17} className={open ? 'text-[#0f6e56]' : 'text-[#4a544a]'} />
+        <Bell size={17} className={open ? 'text-primary-ink' : 'text-text-sub'} />
 
         {unreadCount > 0 && (
-          <span className="absolute -right-1.5 -top-1.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#0f6e56] px-1 text-[10px] font-semibold text-white border-2 border-white shadow-sm">
+          <span className="absolute -right-1.5 -top-1.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-primary px-1 text-[11px] font-semibold text-white border-2 border-white shadow-sm">
             {unreadCount > 99 ? '99+' : unreadCount}
           </span>
         )}
@@ -360,7 +360,7 @@ export default function NotificationBell() {
       {/* ── Desktop Dropdown ── */}
       {open && !isMobile && (
         <div
-          className="absolute right-0 top-[calc(100%+8px)] z-[200] w-[380px] rounded-2xl border border-[#e8eae8] bg-white shadow-xl shadow-black/[0.08] overflow-hidden flex flex-col"
+          className="absolute right-0 top-[calc(100%+8px)] z-[200] w-[380px] rounded-2xl border border-border bg-layout-card shadow-xl shadow-black/[0.08] overflow-hidden flex flex-col"
           style={{ maxHeight: '520px' }}
         >
           {renderContents()}
@@ -369,7 +369,7 @@ export default function NotificationBell() {
 
       {/* ── Mobile Page Takeover ── */}
       {open && isMobile && typeof document !== 'undefined' && createPortal(
-        <div className="fixed inset-0 z-[300] bg-white flex flex-col animate-in slide-in-from-bottom-8 duration-300 pt-[max(0px,env(safe-area-inset-top))]">
+        <div className="fixed inset-0 z-[300] bg-layout-card flex flex-col animate-in slide-in-from-bottom-8 duration-300 pt-[max(0px,env(safe-area-inset-top))]">
           {renderContents()}
         </div>,
         document.body

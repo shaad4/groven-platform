@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { authApi } from '../api/auth.api'
-import groveLogo from '../assets/Grove_transparent_logo(Green).png'
+import { ArrowLeft, ArrowRight, Check, CheckCircle2, Eye, EyeOff, LockKeyhole } from 'lucide-react'
+import AuthShell from '../components/layout/AuthShell'
 import { getSubdomain } from '../utils/domain'
-import { appUrl } from '../utils/urls'
 
 export default function ResetPasswordPage() {
   const [searchParams] = useSearchParams()
@@ -12,6 +12,7 @@ export default function ResetPasswordPage() {
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
   const [success, setSuccess] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const subdomain = getSubdomain()
@@ -61,30 +62,12 @@ export default function ResetPasswordPage() {
     return {
       label: 'Strong',
       width: '100%',
-      color: 'bg-[#0f6e56]',
+      color: 'bg-primary',
       checks,
     }
   }
 
   const strength = getStrength(password)
-
-  const ValidationItem = ({ valid, text }) => (
-    <div className="flex items-center gap-2">
-      <div
-        className={`w-2 h-2 rounded-full ${
-          valid ? 'bg-[#0f6e56]' : 'bg-[#d1d5db]'
-        }`}
-      />
-
-      <span
-        className={`text-[12px] ${
-          valid ? 'text-[#0f6e56]' : 'text-[#9ca3af]'
-        }`}
-      >
-        {text}
-      </span>
-    </div>
-  )
 
   // ─────────────────────────────────────────────────────────
   // SUBMIT
@@ -140,210 +123,22 @@ export default function ResetPasswordPage() {
     }
   }
 
-  // ─────────────────────────────────────────────────────────
-  // SUCCESS SCREEN
-  // ─────────────────────────────────────────────────────────
-  if (success) {
-    return (
-      <div className="min-h-screen bg-[#f6f7f6] flex items-center justify-center px-4 py-10">
-        <div className="w-full max-w-[520px] bg-white border border-[#e8eae8] rounded-[24px] shadow-[0px_8px_20px_rgba(0,0,0,0.07)] p-11">
-
-          {/* Logo */}
-          <a href={appUrl(null, '/')} className="inline-block cursor-pointer outline-none">
-            <img
-              src={groveLogo}
-              alt="Groven"
-              className="h-8 w-auto"
-            />
-          </a>
-
-          {/* Success Icon */}
-          <div className="pt-10 flex flex-col items-center text-center">
-            <div className="w-[72px] h-[72px] rounded-full bg-[#0f6e56] flex items-center justify-center">
-              <svg
-                className="w-8 h-8 text-white"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2.5}
-                  d="M4.5 12.75l6 6 9-13.5"
-                />
-              </svg>
-            </div>
-
-            <h1 className="mt-5 text-[28px] leading-[34px] font-medium text-[#0a2e24]">
-              Password reset!
-            </h1>
-
-            <p className="mt-2 max-w-[320px] text-[15px] leading-[22px] text-[#9ea89e]">
-              Your password has been successfully reset.
-              You can now sign in with your new password.
-            </p>
-          </div>
-
-          <Link
-            to={isClientPortal ? "/client-login" : "/login"}
-            className="mt-8 flex items-center justify-center w-full h-[48px] rounded-xl bg-[#0f6e56] hover:bg-[#0c5c48] text-white text-[15px] font-medium transition"
-          >
-            Back to sign in
-          </Link>
-        </div>
-      </div>
-    )
-  }
-
-  // ─────────────────────────────────────────────────────────
-  // RESET PASSWORD SCREEN
-  // ─────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-[#f6f7f6] flex items-center justify-center px-4 py-10">
-      <div className="w-full max-w-[520px] bg-white border border-[#e8eae8] rounded-[24px] shadow-[0px_8px_20px_rgba(0,0,0,0.07)] p-11">
-
-        {/* Logo */}
-        <a href={appUrl(null, '/')} className="inline-block cursor-pointer outline-none">
-          <img
-            src={groveLogo}
-            alt="Groven"
-            className="h-8 w-auto"
-          />
-        </a>
-
-        {/* Heading */}
-        <div className="pt-10">
-          <h1 className="text-[28px] leading-[34px] font-medium text-[#0a2e24]">
-            Set new password
-          </h1>
-
-          <p className="mt-1 max-w-[360px] text-[15px] leading-[22px] text-[#9ea89e]">
-            Your new password must be different from previously used passwords.
-          </p>
+    <AuthShell centered tenantAware>
+      <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary-light text-primary-ink">{success ? <CheckCircle2 size={24} /> : <LockKeyhole size={23} />}</div>
+      <h1 className="text-[30px] font-medium leading-tight tracking-[-0.04em]">{success ? 'Password updated' : 'Set a new password'}</h1>
+      <p className="mt-3 text-sm leading-7 text-text-sub">{success ? 'Your password has been updated. Sign in to get back to your workspace.' : 'Choose a strong password to keep your workspace secure.'}</p>
+      {!success && <form onSubmit={handleSubmit} className="mt-7 space-y-5">
+        {error && <p role="alert" className="rounded-xl bg-status-danger-bg p-3 text-sm text-status-danger-text">{error}</p>}
+        {!token && <p role="alert" className="rounded-xl bg-status-review-bg p-3 text-sm text-status-review-text">This link is missing its reset token. <Link to="/forgot-password" className="font-semibold underline">Request a new link</Link>.</p>}
+        <div><label htmlFor="reset-password" className="mb-2 flex items-center gap-2 text-xs font-semibold text-text-sub"><LockKeyhole size={14} />New password</label><div className="relative"><input id="reset-password" type={showPassword ? 'text' : 'password'} value={password} onChange={event => setPassword(event.target.value)} autoComplete="new-password" required placeholder="Create a secure password" className="h-12 w-full rounded-xl border border-border bg-layout-card px-4 pr-12 text-sm text-text-main placeholder:text-text-dim outline-none focus:border-primary focus:ring-4 focus:ring-primary/10" /><button type="button" aria-label={showPassword ? 'Hide password' : 'Show password'} aria-pressed={showPassword} onClick={() => setShowPassword(value => !value)} className="absolute right-1 top-1 flex h-10 w-10 items-center justify-center rounded-lg text-text-dim">{showPassword ? <EyeOff size={17} /> : <Eye size={17} />}</button></div>
+          <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-border"><div className={`h-full rounded-full transition-all ${strength.color}`} style={{ width: strength.width }} /></div>
+          <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2">{[['length', '8+ characters'], ['uppercase', 'An uppercase letter'], ['lowercase', 'A lowercase letter'], ['number', 'A number'], ['special', 'A special character']].map(([key, label]) => <span key={key} className={`flex items-center gap-1.5 text-[10px] ${strength.checks[key] ? 'text-primary-ink' : 'text-text-dim'}`}><Check size={12} className={strength.checks[key] ? '' : 'opacity-30'} />{label}</span>)}</div>
         </div>
-
-        {/* Error */}
-        {error && (
-          <div className="mt-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-            {error}
-          </div>
-        )}
-
-        {/* Form */}
-        <form
-          onSubmit={handleSubmit}
-          noValidate
-          className="pt-6 space-y-5"
-        >
-
-          {/* Password */}
-          <div>
-            <label className="block text-[13px] font-medium text-[#4a544a] mb-1.5">
-              New password
-            </label>
-
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter new password"
-              autoComplete="new-password"
-              required
-              autoFocus
-              className="w-full h-[48px] rounded-xl border border-[#e8eae8] px-4 text-[14px] text-[#141a14] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#0f6e56] focus:border-transparent transition"
-            />
-
-            {/* Strength UI */}
-            {password && (
-              <div className="mt-3">
-
-                {/* Bar */}
-                <div className="h-1.5 w-full bg-[#e8eae8] rounded-full overflow-hidden">
-                  <div
-                    className={`h-full rounded-full transition-all duration-300 ${strength.color}`}
-                    style={{ width: strength.width }}
-                  />
-                </div>
-
-                {/* Strength Label */}
-                <p className="mt-2 text-[12px] font-medium text-[#4a544a]">
-                  Password strength: {strength.label}
-                </p>
-
-                {/* Validation Rules */}
-                <div className="mt-3 space-y-1.5">
-
-                  <ValidationItem
-                    valid={strength.checks.length}
-                    text="At least 8 characters"
-                  />
-
-                  <ValidationItem
-                    valid={strength.checks.uppercase}
-                    text="One uppercase letter"
-                  />
-
-                  <ValidationItem
-                    valid={strength.checks.lowercase}
-                    text="One lowercase letter"
-                  />
-
-                  <ValidationItem
-                    valid={strength.checks.number}
-                    text="One number"
-                  />
-
-                  <ValidationItem
-                    valid={strength.checks.special}
-                    text="One special character"
-                  />
-
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Confirm Password */}
-          <div>
-            <label className="block text-[13px] font-medium text-[#4a544a] mb-1.5">
-              Confirm password
-            </label>
-
-            <input
-              type="password"
-              value={confirm}
-              onChange={(e) => setConfirm(e.target.value)}
-              placeholder="Confirm new password"
-              autoComplete="new-password"
-              required
-              className="w-full h-[48px] rounded-xl border border-[#e8eae8] px-4 text-[14px] text-[#141a14] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#0f6e56] focus:border-transparent transition"
-            />
-          </div>
-
-          {/* Button */}
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full h-[48px] rounded-xl bg-[#0f6e56] hover:bg-[#0c5c48] text-white text-[15px] font-medium transition disabled:opacity-60 disabled:cursor-not-allowed"
-          >
-            {loading ? 'Resetting...' : 'Reset password'}
-          </button>
-        </form>
-
-        {/* Footer */}
-        <div className="pt-5 text-center">
-          <p className="text-[13px] text-[#9ea89e]">
-            Remember your password?{' '}
-            <Link
-              to={isClientPortal ? "/client-login" : "/login"}
-              className="font-medium text-[#0f6e56] hover:underline"
-            >
-              Back to sign in
-            </Link>
-          </p>
-        </div>
-      </div>
-    </div>
+        <div><label htmlFor="reset-confirm" className="mb-2 flex items-center gap-2 text-xs font-semibold text-text-sub"><LockKeyhole size={14} />Confirm password</label><input id="reset-confirm" type={showPassword ? 'text' : 'password'} value={confirm} onChange={event => setConfirm(event.target.value)} autoComplete="new-password" required placeholder="Enter your new password again" className="h-12 w-full rounded-xl border border-border bg-layout-card px-4 text-sm text-text-main placeholder:text-text-dim outline-none focus:border-primary focus:ring-4 focus:ring-primary/10" /></div>
+        <button type="submit" disabled={loading || !token} className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary text-sm font-semibold text-on-primary transition-colors hover:bg-primary-dark disabled:opacity-60">{loading ? 'Updating password…' : <>Update password <ArrowRight size={16} /></>}</button>
+      </form>}
+      <Link to={isClientPortal ? '/client-login' : '/login'} className={success ? 'mt-7 flex h-12 items-center justify-center gap-2 rounded-xl bg-primary text-sm font-semibold text-on-primary hover:bg-primary-dark' : 'mt-7 flex min-h-10 items-center justify-center gap-2 text-xs font-medium text-text-sub hover:text-primary-ink'}>{success ? <>Continue to sign in <ArrowRight size={15} /></> : <><ArrowLeft size={14} />Back to sign in</>}</Link>
+    </AuthShell>
   )
 }

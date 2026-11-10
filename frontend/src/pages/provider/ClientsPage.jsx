@@ -2,9 +2,9 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Search, Plus, MoreVertical, ChevronRight,
-  Mail, RotateCcw, Trash2, PowerOff, Power,
-  Send, AlertTriangle, Users, Loader2,
-  LayoutGrid, List, Clock, Activity,
+  Mail, Trash2, PowerOff, Power,
+  Send, Users, Loader2,
+  LayoutGrid, List,
   Sparkles,
 } from 'lucide-react'
 import ProviderLayout from '../../components/layout/ProviderLayout'
@@ -18,22 +18,22 @@ import { openUpgradeModal } from '../../features/billing/billingSlice'
 import { getWorkspace } from '../../api/settings.api'
 import { getTagColor, getAvatarColor, getInitials, timeAgo } from '../../utils/clientHelpers'
 
-// STATUS CONFIG 
+// STATUS CONFIG
 const STATUS_CONFIG = {
   active: {
     label: 'Active',
     dot: 'bg-[#1d9e75]',
-    pill: 'bg-[#e6f5f0] text-[#085041]',
+    pill: 'bg-primary-light text-primary-ink',
   },
   pending: {
     label: 'Awaiting invite',
     dot: 'bg-[#f59e0b]',
-    pill: 'bg-[#fef3e2] text-[#92500a]',
+    pill: 'bg-status-review-bg text-status-review-text',
   },
   deactivated: {
     label: 'Deactivated',
-    dot: 'bg-[#9ea89e]',
-    pill: 'bg-[#f3f4f3] text-[#4a544a]',
+    dot: 'bg-text-dim',
+    pill: 'bg-surface text-text-sub',
   },
 }
 
@@ -43,7 +43,7 @@ function getClientStatus(client) {
   return 'active'
 }
 
-// TAG CHIP 
+// TAG CHIP
 function TagChip({ name }) {
   const c = getTagColor(name)
   return (
@@ -57,10 +57,10 @@ function TagChip({ name }) {
   )
 }
 
-// AI INSIGHT BADGE 
+// AI INSIGHT BADGE
 const INSIGHT_META = {
-  gone_quiet:  { label: 'Gone quiet',  classes: 'bg-amber-50 text-amber-700' },
-  high_volume: { label: 'High volume', classes: 'bg-violet-50 text-violet-700' },
+  gone_quiet:  { label: 'Gone quiet',  classes: 'bg-status-review-bg text-status-review-text' },
+  high_volume: { label: 'High volume', classes: 'bg-status-progress-bg text-status-progress-text' },
 }
 
 function InsightBadge({ insight }) {
@@ -74,7 +74,7 @@ function InsightBadge({ insight }) {
   )
 }
 
-// ACTION MENU 
+// ACTION MENU
 function ActionMenu({ client, onEdit, onDeactivate, onReactivate, onDelete, onResend }) {
   const [open, setOpen] = useState(false)
   const ref = useRef(null)
@@ -89,8 +89,8 @@ function ActionMenu({ client, onEdit, onDeactivate, onReactivate, onDelete, onRe
   const Item = ({ icon: Icon, label, onClick, danger = false, className = '' }) => (
     <button
       onClick={(e) => { e.stopPropagation(); setOpen(false); onClick() }}
-      className={`flex w-full items-center gap-2.5 px-3 py-2 text-[13px] transition-colors hover:bg-[#f7f8f7] ${
-        danger ? 'text-red-500 hover:bg-red-50' : 'text-[#141a14]'
+      className={`flex w-full items-center gap-2.5 px-3 py-2 text-[13px] transition-colors hover:bg-surface ${
+        danger ? 'text-status-danger-text hover:bg-status-danger-bg' : 'text-text-main'
       } ${className}`}
     >
       <Icon size={14} className="shrink-0 opacity-70" />
@@ -102,13 +102,13 @@ function ActionMenu({ client, onEdit, onDeactivate, onReactivate, onDelete, onRe
     <div ref={ref} className="relative">
       <button
         onClick={(e) => { e.stopPropagation(); setOpen(o => !o) }}
-        className="flex h-8 w-8 items-center justify-center rounded-lg text-[#9ea89e] hover:bg-[#f7f8f7] hover:text-[#4a544a] transition-colors"
+        className="flex h-8 w-8 items-center justify-center rounded-lg text-text-dim hover:bg-surface hover:text-text-sub transition-colors"
       >
         <MoreVertical size={15} />
       </button>
 
       {open && (
-        <div className="absolute right-0 top-9 z-30 w-48 rounded-xl border border-[#e8eae8] bg-white py-1 shadow-xl shadow-black/10 overflow-hidden">
+        <div className="absolute right-0 top-9 z-30 w-48 rounded-xl border border-border bg-layout-card py-1 shadow-xl shadow-black/10 overflow-hidden">
           <Item icon={Mail} label="Edit details" onClick={onEdit} />
 
           {status === 'pending' && (
@@ -123,7 +123,7 @@ function ActionMenu({ client, onEdit, onDeactivate, onReactivate, onDelete, onRe
             <Item icon={Power} label="Reactivate" onClick={onReactivate} />
           )}
 
-          <div className="my-1 border-t border-[#f1f3f1]" />
+          <div className="my-1 border-t border-border" />
           <Item icon={Trash2} label="Delete client" onClick={onDelete} danger />
         </div>
       )}
@@ -144,10 +144,13 @@ function ClientCard({ client, onEdit, onDeactivate, onReactivate, onDelete, onRe
 
   return (
     <div
-      className={`group relative flex flex-col rounded-2xl border bg-white transition-all duration-200 hover:shadow-md hover:shadow-black/[0.06] hover:-translate-y-[1px] cursor-pointer overflow-hidden
-        ${isDeactivated ? 'border-[#e8eae8] opacity-75' : 'border-[#e8eae8]'}
+      className={`group relative flex flex-col rounded-2xl border bg-layout-card transition-all duration-200 hover:border-primary/35 hover:shadow-soft cursor-pointer overflow-hidden
+        ${isDeactivated ? 'border-border opacity-75' : 'border-border'}
       `}
       onClick={() => !isPending && onClick()}
+      tabIndex={isPending ? undefined : 0} role={isPending ? undefined : 'link'}
+      aria-label={isPending ? undefined : `Open client: ${client.display_name || client.client_name}`}
+      onKeyDown={event => { if (!isPending && event.target === event.currentTarget && event.key === 'Enter') onClick() }}
     >
       {/* Top section */}
       <div className="p-5">
@@ -165,10 +168,10 @@ function ClientCard({ client, onEdit, onDeactivate, onReactivate, onDelete, onRe
               ) : initials}
             </div>
             <div className="min-w-0">
-              <p className="truncate text-[14px] font-semibold text-[#141a14]">
+              <p className="truncate text-[14px] font-semibold text-text-main">
                 {client.display_name || client.client_name || 'Unknown'}
               </p>
-              <p className="truncate text-[12px] text-[#9ea89e]">
+              <p className="truncate text-[12px] text-text-dim">
                 {client.business_type || client.email || client.client_email || '—'}
               </p>
             </div>
@@ -195,7 +198,7 @@ function ClientCard({ client, onEdit, onDeactivate, onReactivate, onDelete, onRe
           <div className="mt-3 flex flex-wrap gap-1.5">
             {tags.slice(0, 3).map(tag => <TagChip key={tag} name={tag} />)}
             {tags.length > 3 && (
-              <span className="text-[11px] text-[#9ea89e]">+{tags.length - 3}</span>
+              <span className="text-[11px] text-text-dim">+{tags.length - 3}</span>
             )}
             <InsightBadge insight={client.ai_insight} />
           </div>
@@ -204,54 +207,54 @@ function ClientCard({ client, onEdit, onDeactivate, onReactivate, onDelete, onRe
 
       {/* Stats row */}
       {!isPending ? (
-        <div className="border-t border-[#f1f3f1] grid grid-cols-2">
-          <div className="px-5 py-3 border-r border-[#f1f3f1]">
-            <p className="text-[22px] font-semibold text-[#141a14]">{client.open_request_count ?? 0}</p>
-            <p className="text-[11px] text-[#9ea89e]">Open Requests</p>
+        <div className="border-t border-border grid grid-cols-2">
+          <div className="px-5 py-3 border-r border-border">
+            <p className="text-[22px] font-semibold text-text-main">{client.open_request_count ?? 0}</p>
+            <p className="text-[11px] text-text-dim">Open Requests</p>
           </div>
           <div className="px-5 py-3">
-            <p className="text-[22px] font-semibold text-[#141a14]">{client.delivered_count ?? 0}</p>
-            <p className="text-[11px] text-[#9ea89e]">Delivered</p>
+            <p className="text-[22px] font-semibold text-text-main">{client.delivered_count ?? 0}</p>
+            <p className="text-[11px] text-text-dim">Delivered</p>
           </div>
         </div>
       ) : (
-        <div className="border-t border-[#f1f3f1] px-5 py-4">
-          <p className="text-[12px] text-[#9ea89e] italic">No data available yet · Awaiting client login</p>
+        <div className="border-t border-border px-5 py-4">
+          <p className="text-[12px] text-text-dim italic">No data available yet · Awaiting client login</p>
         </div>
       )}
 
       {/* Footer */}
-      <div className="border-t border-[#f1f3f1] px-5 py-3 flex items-center justify-between">
+      <div className="border-t border-border px-5 py-3 flex items-center justify-between">
         {isPending ? (
           <>
-            <span className="text-[12px] text-[#9ea89e]">Never logged in</span>
+            <span className="text-[12px] text-text-dim">Never logged in</span>
             <button
               onClick={(e) => { e.stopPropagation(); onResend() }}
-              className="text-[12px] font-medium text-[#0f6e56] hover:text-[#085041] transition-colors flex items-center gap-1"
+              className="text-[12px] font-medium text-primary-ink hover:text-primary-ink transition-colors flex items-center gap-1"
             >
               Resend invite <ChevronRight size={13} />
             </button>
           </>
         ) : isDeactivated ? (
           <>
-            <span className="text-[12px] text-[#9ea89e]">
+            <span className="text-[12px] text-text-dim">
               {lastActive ? `Active ${lastActive}` : 'Never active'}
             </span>
             <button
               onClick={(e) => { e.stopPropagation(); onReactivate() }}
-              className="text-[12px] font-medium text-[#0f6e56] hover:text-[#085041] transition-colors flex items-center gap-1"
+              className="text-[12px] font-medium text-primary-ink hover:text-primary-ink transition-colors flex items-center gap-1"
             >
               Reactivate <ChevronRight size={13} />
             </button>
           </>
         ) : (
           <>
-            <span className="text-[12px] text-[#9ea89e]">
+            <span className="text-[12px] text-text-dim">
               {lastActive ? `Active ${lastActive}` : 'Never logged in'}
             </span>
             <button
               onClick={(e) => { e.stopPropagation(); onClick() }}
-              className="text-[12px] font-medium text-[#0f6e56] hover:text-[#085041] transition-colors flex items-center gap-1"
+              className="text-[12px] font-medium text-primary-ink hover:text-primary-ink transition-colors flex items-center gap-1"
             >
               View client <ChevronRight size={13} />
             </button>
@@ -274,8 +277,11 @@ function ClientRow({ client, onEdit, onDeactivate, onReactivate, onDelete, onRes
 
   return (
     <div
-      className="flex items-center gap-4 border-b border-[#f1f3f1] px-5 py-4 hover:bg-[#fafafa] transition-colors cursor-pointer last:border-0"
+      className="flex items-center gap-4 border-b border-border px-5 py-4 hover:bg-surface transition-colors cursor-pointer last:border-0"
       onClick={() => !isPending && onClick()}
+      tabIndex={isPending ? undefined : 0} role={isPending ? undefined : 'link'}
+      aria-label={isPending ? undefined : `Open client: ${client.display_name || client.client_name}`}
+      onKeyDown={event => { if (!isPending && event.target === event.currentTarget && event.key === 'Enter') onClick() }}
     >
       <div className={`h-9 w-9 shrink-0 rounded-full overflow-hidden flex items-center justify-center text-[12px] font-semibold ${avatar.bg} ${avatar.text}`}>
         {isPending ? (
@@ -290,26 +296,26 @@ function ClientRow({ client, onEdit, onDeactivate, onReactivate, onDelete, onRes
       </div>
 
       <div className="flex-1 min-w-0">
-        <p className="text-[14px] font-medium text-[#141a14] truncate">
+        <p className="text-[14px] font-medium text-text-main truncate">
           {client.display_name || client.client_name || 'Unknown'}
         </p>
-        <p className="text-[12px] text-[#9ea89e] truncate">
+        <p className="text-[12px] text-text-dim truncate">
           {client.email || client.client_email || '—'}
         </p>
       </div>
 
       <div className="hidden md:flex items-center gap-1.5 w-32">
         {tags.slice(0, 2).map(tag => <TagChip key={tag} name={tag} />)}
-        {tags.length > 2 && <span className="text-[11px] text-[#9ea89e]">+{tags.length - 2}</span>}
+        {tags.length > 2 && <span className="text-[11px] text-text-dim">+{tags.length - 2}</span>}
         <InsightBadge insight={client.ai_insight} />
       </div>
 
       <div className="hidden sm:block w-24 text-right">
-        <p className="text-[13px] font-medium text-[#141a14]">{client.open_request_count ?? 0} open</p>
+        <p className="text-[13px] font-medium text-text-main">{client.open_request_count ?? 0} open</p>
       </div>
 
       <div className="hidden md:block w-28 text-right">
-        <p className="text-[12px] text-[#9ea89e]">
+        <p className="text-[12px] text-text-dim">
           {lastActive ? `Active ${lastActive}` : isPending ? 'Pending' : '—'}
         </p>
       </div>
@@ -342,8 +348,8 @@ const FILTERS = [
 // ─── TOAST ────────────────────────────────────────────────────
 function Toast({ message, type = 'success' }) {
   return (
-    <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2.5 rounded-xl px-5 py-3 text-[13px] font-medium text-white shadow-xl shadow-black/20 transition-all
-      ${type === 'success' ? 'bg-[#0f6e56]' : 'bg-red-500'}
+    <div className={`fixed bottom-[calc(92px+env(safe-area-inset-bottom))] lg:bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2.5 rounded-xl px-5 py-3 text-[13px] font-medium text-on-primary shadow-xl shadow-black/20 transition-all
+      ${type === 'success' ? 'bg-primary' : 'bg-red-600'}
     `}>
       {message}
     </div>
@@ -483,13 +489,12 @@ export default function ClientsPage() {
           <ProviderTopbar
             title="Clients"
             liveIndicator
-            onAddClient={() => setShowAdd(true)}
             onAddClient={handleAddClientClick}
             showAddBtn
           />
         }
       >
-        <div className="p-6">
+        <div className="mx-auto max-w-[1600px] p-4 sm:p-6 lg:p-8">
           {/* Scrollbar hiding styles for horizontal tabs navigation */}
           <style>{`
             .no-scrollbar::-webkit-scrollbar {
@@ -502,24 +507,24 @@ export default function ClientsPage() {
           `}</style>
 
           {/* ── Sticky Filter + Search bar ── */}
-          <div className="sticky top-0 z-20 -mx-6 -mt-6 px-6 py-4 mb-6 bg-[#f7f8f7]/90 backdrop-blur-md border-b border-[#e8eae8] flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between transition-all duration-200">
+          <div className="sticky top-0 z-20 -mx-4 -mt-4 px-4 py-4 mb-6 sm:-mx-6 sm:-mt-6 sm:px-6 lg:-mx-8 lg:-mt-8 lg:px-8 bg-surface/90 backdrop-blur-md border-b border-border flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between transition-all duration-200">
 
             {/* Filter tabs */}
-            <div className="flex items-center gap-1 rounded-xl bg-[#f0f2f0] p-1 overflow-x-auto no-scrollbar py-1 shrink-0">
+            <div className="flex items-center gap-1 rounded-xl bg-surface p-1 overflow-x-auto no-scrollbar py-1 shrink-0">
               {FILTERS.map(({ key, label }) => (
                 <button
                   key={key}
                   onClick={() => setFilter(key)}
                   className={`shrink-0 flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[12px] font-medium transition-all ${
                     filter === key
-                      ? 'bg-white text-[#141a14] shadow-sm'
-                      : 'text-[#4a544a] hover:text-[#141a14]'
+                      ? 'bg-layout-card text-text-main shadow-sm'
+                      : 'text-text-sub hover:text-text-main'
                   }`}
                 >
                   {label}
                   {counts[key] > 0 && (
-                    <span className={`rounded-full px-1.5 py-0.5 text-[10px] ${
-                      filter === key ? 'bg-[#e6f5f0] text-[#085041]' : 'bg-white/60 text-[#9ea89e]'
+                    <span className={`rounded-full px-1.5 py-0.5 text-[11px] ${
+                      filter === key ? 'bg-primary-light text-primary-ink' : 'bg-layout-card/60 text-text-dim'
                     }`}>
                       {counts[key]}
                     </span>
@@ -532,29 +537,29 @@ export default function ClientsPage() {
             <div className="flex items-center justify-between sm:justify-start gap-2 w-full sm:w-auto">
               {/* Search */}
               <div className="relative flex-1 sm:flex-initial">
-                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9ea89e]" />
+                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-dim" />
                 <input
                   value={search}
                   onChange={e => setSearch(e.target.value)}
-                  placeholder="Search clients..."
-                  className="h-9 w-full sm:w-56 rounded-xl border border-[#e8eae8] bg-white pl-9 pr-4 text-[13px] outline-none transition-all placeholder:text-[#9ea89e] focus:border-[#0f6e56] focus:ring-4 focus:ring-[#0f6e56]/10"
+                  aria-label="Search clients" placeholder="Search clients..."
+                  className="h-9 w-full sm:w-56 rounded-xl border border-border bg-layout-card pl-9 pr-4 text-[13px] outline-none transition-all placeholder:text-text-dim focus:border-primary focus:ring-4 focus:ring-primary/10"
                 />
               </div>
 
               {/* View toggle */}
-              <div className="flex items-center rounded-xl border border-[#e8eae8] bg-white overflow-hidden shrink-0">
+              <div className="flex items-center rounded-xl border border-border bg-layout-card overflow-hidden shrink-0">
                 <button
-                  onClick={() => setViewMode('grid')}
+                  onClick={() => setViewMode('grid')} aria-label="Grid view" aria-pressed={viewMode === 'grid'}
                   className={`flex h-9 w-9 items-center justify-center transition-colors ${
-                    viewMode === 'grid' ? 'bg-[#e6f5f0] text-[#0f6e56]' : 'text-[#9ea89e] hover:text-[#4a544a]'
+                    viewMode === 'grid' ? 'bg-primary-light text-primary-ink' : 'text-text-dim hover:text-text-sub'
                   }`}
                 >
                   <LayoutGrid size={15} />
                 </button>
                 <button
-                  onClick={() => setViewMode('list')}
-                  className={`flex h-9 w-9 items-center justify-center transition-colors border-l border-[#e8eae8] ${
-                    viewMode === 'list' ? 'bg-[#e6f5f0] text-[#0f6e56]' : 'text-[#9ea89e] hover:text-[#4a544a]'
+                  onClick={() => setViewMode('list')} aria-label="List view" aria-pressed={viewMode === 'list'}
+                  className={`flex h-9 w-9 items-center justify-center transition-colors border-l border-border ${
+                    viewMode === 'list' ? 'bg-primary-light text-primary-ink' : 'text-text-dim hover:text-text-sub'
                   }`}
                 >
                   <List size={15} />
@@ -565,27 +570,27 @@ export default function ClientsPage() {
 
           {/* ── Content ── */}
           {loading ? (
-            <div className={viewMode === 'grid' ? 'grid gap-4 sm:grid-cols-2 lg:grid-cols-3' : 'rounded-2xl border border-[#e8eae8] bg-white overflow-hidden'}>
+            <div className={viewMode === 'grid' ? 'grid gap-4 sm:grid-cols-2 xl:grid-cols-3' : 'rounded-2xl border border-border bg-layout-card overflow-hidden'}>
               {[1, 2, 3, 4, 5, 6].map(i => (
-                <div key={i} className={`animate-pulse bg-white border border-[#e8eae8] rounded-2xl ${viewMode === 'grid' ? 'h-[220px]' : 'h-[72px]'}`} />
+                <div key={i} className={`animate-pulse bg-layout-card border border-border rounded-2xl ${viewMode === 'grid' ? 'h-[220px]' : 'h-[72px]'}`} />
               ))}
             </div>
 
           ) : filtered.length === 0 ? (
-            <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-[#e8eae8] bg-white py-16 text-center">
-              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#f0f2f0]">
-                <Users size={22} className="text-[#9ea89e]" />
+            <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-layout-card py-16 text-center">
+              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-surface">
+                <Users size={22} className="text-text-dim" />
               </div>
-              <p className="mt-4 text-[15px] font-medium text-[#141a14]">
+              <p className="mt-4 text-[15px] font-medium text-text-main">
                 {search ? 'No clients match your search' : filter !== 'all' ? `No ${filter} clients` : 'No clients yet'}
               </p>
-              <p className="mt-1.5 text-[13px] text-[#9ea89e]">
+              <p className="mt-1.5 text-[13px] text-text-dim">
                 {search ? 'Try a different search term' : filter !== 'all' ? 'Try switching to "All" filter' : 'Add your first client to get started'}
               </p>
               {!search && filter === 'all' && (
                 <button
                   onClick={handleAddClientClick}
-                  className="mt-6 flex items-center gap-2 rounded-xl bg-[#0f6e56] px-5 py-2.5 text-[13px] font-medium text-white hover:bg-[#085041] transition-colors"
+                  className="mt-6 flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-[13px] font-medium text-on-primary hover:bg-primary-dark transition-colors"
                 >
                   <Plus size={15} />
                   Add your first client
@@ -594,12 +599,12 @@ export default function ClientsPage() {
             </div>
 
           ) : viewMode === 'grid' ? (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
               {filtered.map(client => (
                 <div key={client.id} className="relative">
                   {actionLoading === client.id && (
-                    <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-white/70 backdrop-blur-sm">
-                      <Loader2 size={20} className="animate-spin text-[#0f6e56]" />
+                    <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-layout-card/70 backdrop-blur-sm">
+                      <Loader2 size={20} className="animate-spin text-primary-ink" />
                     </div>
                   )}
                   <ClientCard
@@ -616,17 +621,17 @@ export default function ClientsPage() {
 
               {/* Upgrade card if at limit */}
               {clientCount >= clientLimit && !isPro && (
-                <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-[#d1e8df] bg-[#f7fbf9] p-8 text-center">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#e6f5f0]">
+                <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-primary-light bg-primary-light p-8 text-center dark:bg-layout-card dark:border-border">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary-light">
                     <span className="text-xl">🔒</span>
                   </div>
-                  <p className="mt-3 text-[14px] font-semibold text-[#141a14]">Client limit reached</p>
-                  <p className="mt-1.5 text-[12px] text-[#9ea89e]">
+                  <p className="mt-3 text-[14px] font-semibold text-text-main">Client limit reached</p>
+                  <p className="mt-1.5 text-[12px] text-text-dim">
                     Upgrade to Pro to add unlimited clients and access advanced collaboration tools.
                   </p>
                   <button
                     onClick={handleUpgrade}
-                    className="mt-5 flex items-center gap-2 rounded-xl bg-[#0f6e56] px-5 py-2.5 text-[13px] font-medium text-white hover:bg-[#085041] transition-colors"
+                    className="mt-5 flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-[13px] font-medium text-on-primary hover:bg-primary-dark transition-colors"
                   >
                     Upgrade to Pro
                    <ChevronRight size={14} />
@@ -636,21 +641,21 @@ export default function ClientsPage() {
             </div>
 
           ) : (
-            <div className="rounded-2xl border border-[#e8eae8] bg-white overflow-hidden">
+            <div className="rounded-2xl border border-border bg-layout-card overflow-hidden">
               {/* List header */}
-              <div className="hidden md:grid grid-cols-[1fr_160px_80px_120px_100px_80px] items-center gap-4 border-b border-[#f1f3f1] px-5 py-3">
-                <p className="text-[11px] font-semibold uppercase tracking-wide text-[#9ea89e]">Client</p>
-                <p className="text-[11px] font-semibold uppercase tracking-wide text-[#9ea89e]">Tags</p>
-                <p className="text-[11px] font-semibold uppercase tracking-wide text-[#9ea89e] text-right">Open</p>
-                <p className="text-[11px] font-semibold uppercase tracking-wide text-[#9ea89e] text-right">Last active</p>
-                <p className="text-[11px] font-semibold uppercase tracking-wide text-[#9ea89e]">Status</p>
-                <p className="text-[11px] font-semibold uppercase tracking-wide text-[#9ea89e]" />
+              <div className="hidden md:grid grid-cols-[1fr_160px_80px_120px_100px_80px] items-center gap-4 border-b border-border px-5 py-3">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-text-dim">Client</p>
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-text-dim">Tags</p>
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-text-dim text-right">Open</p>
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-text-dim text-right">Last active</p>
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-text-dim">Status</p>
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-text-dim" />
               </div>
               {filtered.map(client => (
                 <div key={client.id} className="relative">
                   {actionLoading === client.id && (
-                    <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/70 backdrop-blur-sm">
-                      <Loader2 size={18} className="animate-spin text-[#0f6e56]" />
+                    <div className="absolute inset-0 z-10 flex items-center justify-center bg-layout-card/70 backdrop-blur-sm">
+                      <Loader2 size={18} className="animate-spin text-primary-ink" />
                     </div>
                   )}
                   <ClientRow

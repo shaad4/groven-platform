@@ -9,7 +9,6 @@ from django.conf import settings
 from django.core.cache import cache
 from django.db import transaction
 from django.db.models import F
-from django.utils import timezone
 
 from apps.common.logger import logger
 from apps.notifications.models import Notification

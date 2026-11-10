@@ -10,6 +10,7 @@ import {
 } from 'lucide-react'
 import requestsApi from '../../api/requests.api'
 import { useTenantBranding } from '../../context/TenantBrandingContext'
+import { useDialogFocus } from '../../hooks/useDialogFocus'
 
 // ─── CONFIGURATION CONSTANTS ──────────────────────────────────
 const MAX_FILE_SIZE = 50 * 1024 * 1024 // 50MB
@@ -29,34 +30,40 @@ const ALLOWED_TYPES = [
 
 // ─── BACKDROP ─────────────────────────────────────────────────
 function Backdrop({ children, onClose }) {
+  const dialogRef = useDialogFocus(true, onClose)
   const { colors } = useTenantBranding()
   const { accent, accentDark, accentSoft } = colors
   return (
     <div
+      ref={dialogRef}
+      role="dialog"
+      aria-modal="true"
+      aria-label="New request"
+      tabIndex={-1}
       className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center sm:p-4 bg-sidebar/40 backdrop-blur-sm transition-opacity"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       <style>{`
         .new-request-modal-container ::selection {
           background-color: ${accentSoft} !important;
-          color: ${accentDark} !important;
+          color: var(--primary-text) !important;
         }
         .drag-drop-zone:hover {
           border-color: ${accent}80 !important;
         }
         .drag-drop-zone:hover .upload-icon-container {
           background-color: ${accentSoft} !important;
-          color: ${accent} !important;
+          color: var(--primary-text) !important;
         }
         .file-item-remove:hover {
-          background-color: #FEE2E2 !important;
-          color: #EF4444 !important;
+          background-color: var(--danger-bg) !important;
+          color: var(--danger-text) !important;
         }
-        .gradient-btn:hover:not(:disabled) {
+        .request-submit:hover:not(:disabled) {
           background: ${accentDark} !important;
         }
         .cancel-btn:hover {
-          background-color: #FAFBFA !important;
+          background-color: var(--surface) !important;
         }
         .input-field:hover:not(:focus) {
           border-color: rgba(0, 0, 0, 0.15) !important;
@@ -68,11 +75,11 @@ function Backdrop({ children, onClose }) {
 }
 
 // ─── FIELD WRAPPER ────────────────────────────────────────────
-function Field({ label, optional, hint, children }) {
+function Field({ label, htmlFor, optional, hint, children }) {
   return (
     <div>
       <div className="mb-2 flex items-center gap-1.5">
-        <label className="text-sm font-semibold text-text-main">{label}</label>
+        <label htmlFor={htmlFor} className="text-sm font-semibold text-text-main">{label}</label>
         {optional && <span className="text-xs text-text-dim font-medium">(optional)</span>}
       </div>
       {hint && <p className="mb-2.5 text-xs text-text-dim">{hint}</p>}
@@ -84,7 +91,7 @@ function Field({ label, optional, hint, children }) {
 // ─── MAIN MODAL ───────────────────────────────────────────────
 export default function NewRequestModal({ providerName, onClose, onSuccess }) {
   const { colors } = useTenantBranding()
-  const { accent, accentDark, accentSoft, bg1 } = colors
+  const { accent, accentSoft } = colors
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [files, setFiles] = useState([])
@@ -182,7 +189,7 @@ export default function NewRequestModal({ providerName, onClose, onSuccess }) {
   const removeFile = (index) => {
     const updatedFiles = files.filter((_, i) => i !== index)
     setFiles(updatedFiles)
-    
+
     // Re-evaluate file errors upon removal
     const totalSize = updatedFiles.reduce((sum, file) => sum + file.size, 0)
     if (updatedFiles.length <= MAX_FILES && totalSize <= MAX_TOTAL_SIZE) {
@@ -227,12 +234,13 @@ export default function NewRequestModal({ providerName, onClose, onSuccess }) {
     }
   }
 
-    //  LIMIT REACHED SCREEN 
+    //  LIMIT REACHED SCREEN
   if (limitReached) {
     return (
       <Backdrop onClose={onClose}>
-        <div className="relative w-full sm:max-w-[420px] h-[100dvh] sm:h-auto bg-white sm:rounded-3xl p-6 sm:p-8 shadow-2xl flex flex-col justify-center animate-in zoom-in-95 duration-200">
+        <div className="relative w-full sm:max-w-[420px] h-[100dvh] sm:h-auto bg-layout-card sm:rounded-3xl p-6 sm:p-8 shadow-2xl flex flex-col justify-center animate-in zoom-in-95 duration-200">
           <button
+            aria-label="Close new request"
             onClick={onClose}
             className="absolute right-5 top-5 flex h-10 w-10 items-center justify-center rounded-full bg-surface hover:bg-border/50 transition-colors"
           >
@@ -253,8 +261,8 @@ export default function NewRequestModal({ providerName, onClose, onSuccess }) {
 
             <button
               onClick={onClose}
-              className="gradient-btn w-full rounded-xl py-4 text-sm font-semibold text-white active:scale-[0.98] transition-all shadow-sm"
-              style={{ background: `linear-gradient(135deg, ${accent}, ${accentDark})` }}
+              className="request-submit w-full rounded-xl py-4 text-sm font-semibold text-white active:scale-[0.98] transition-all shadow-sm"
+              style={{ background: accent }}
             >
               Close
             </button>
@@ -269,8 +277,9 @@ export default function NewRequestModal({ providerName, onClose, onSuccess }) {
   if (created) {
     return (
       <Backdrop onClose={onClose}>
-        <div className="relative w-full sm:max-w-[420px] h-[100dvh] sm:h-auto bg-white sm:rounded-3xl p-6 sm:p-8 shadow-2xl flex flex-col justify-center animate-in zoom-in-95 duration-200">
+        <div className="relative w-full sm:max-w-[420px] h-[100dvh] sm:h-auto bg-layout-card sm:rounded-3xl p-6 sm:p-8 shadow-2xl flex flex-col justify-center animate-in zoom-in-95 duration-200">
           <button
+            aria-label="Close new request"
             onClick={onClose}
             className="absolute right-5 top-5 flex h-10 w-10 items-center justify-center rounded-full bg-surface hover:bg-border/50 transition-colors"
           >
@@ -295,8 +304,8 @@ export default function NewRequestModal({ providerName, onClose, onSuccess }) {
 
             <button
               onClick={() => { onSuccess?.(created); onClose() }}
-              className="gradient-btn w-full rounded-xl py-4 text-sm font-semibold text-white active:scale-[0.98] transition-all shadow-sm"
-              style={{ background: `linear-gradient(135deg, ${accent}, ${accentDark})` }}
+              className="request-submit w-full rounded-xl py-4 text-sm font-semibold text-white active:scale-[0.98] transition-all shadow-sm"
+              style={{ background: accent }}
             >
               View My Request
             </button>
@@ -309,29 +318,26 @@ export default function NewRequestModal({ providerName, onClose, onSuccess }) {
   // ── FORM SCREEN ───────────────────────────────────────────
   return (
     <Backdrop onClose={onClose}>
-      <div className="new-request-modal-container flex flex-col sm:flex-row w-full h-[100dvh] sm:h-auto sm:max-h-[85vh] sm:max-w-4xl bg-white sm:rounded-3xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom-full sm:slide-in-from-bottom-8 duration-300">        
-        
+      <div className="new-request-modal-container flex flex-col sm:flex-row w-full h-[100dvh] sm:h-auto sm:max-h-[85vh] sm:max-w-4xl bg-layout-card sm:rounded-3xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom-full sm:slide-in-from-bottom-8 duration-300">
+
         {/* MOBILE HEADER (Only visible on small screens) */}
-        <div className="sm:hidden shrink-0 flex items-center justify-between px-5 py-4 border-b border-border/50 bg-white/95 backdrop-blur-md sticky top-0 z-20">
+        <div className="sm:hidden shrink-0 flex items-center justify-between px-5 py-4 border-b border-border/50 bg-layout-card/95 backdrop-blur-md sticky top-0 z-20">
           <span className="text-base font-bold text-text-main tracking-tight">New Request</span>
           <button
+            aria-label="Close new request"
             onClick={onClose}
-            className="flex h-8 w-8 items-center justify-center rounded-full bg-surface text-text-dim hover:text-text-main transition-colors"
+            className="flex h-11 w-11 items-center justify-center rounded-full bg-surface text-text-dim hover:text-text-main transition-colors"
           >
             <X size={18} />
           </button>
         </div>
 
         {/* LEFT PANEL (Desktop Only) */}
-        <div className="hidden sm:flex w-[320px] shrink-0 flex-col relative overflow-hidden bg-surface p-8 border-r border-border/50">          
-          <div
-            className="absolute -top-24 -left-24 w-64 h-64 rounded-full blur-3xl"
-            style={{ background: accentSoft }}
-          />
+        <div className="hidden sm:flex w-[320px] shrink-0 flex-col relative overflow-hidden bg-surface p-8 border-r border-border/50">
 
           <div className="relative z-10 flex h-full flex-col">
             <div
-              className="mb-4 inline-flex items-center gap-2 rounded-md border border-border/60 bg-white px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider shadow-sm"
+              className="mb-4 inline-flex items-center gap-2 rounded-md border border-border/60 bg-layout-card px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider shadow-sm"
               style={{ color: accent }}
             >
               <div className="h-1.5 w-1.5 rounded-full" style={{ background: accent }} />
@@ -347,9 +353,9 @@ export default function NewRequestModal({ providerName, onClose, onSuccess }) {
             </p>
 
             {/* Counter/Preview Card */}
-            <div className="mt-10 rounded-2xl border border-border/60 bg-white p-5 shadow-sm">
+            <div className="mt-10 rounded-2xl border border-border/60 bg-layout-card p-5 shadow-sm">
               <div className="rounded-xl bg-surface/50 px-4 py-3 border border-border/40">
-                <p className="text-[10px] uppercase font-bold tracking-wider text-text-dim">
+                <p className="text-[11px] uppercase font-bold tracking-wider text-text-dim">
                   Routing To
                 </p>
                 <p className="mt-1 break-all text-sm font-semibold" style={{ color: accent }}>
@@ -383,10 +389,11 @@ export default function NewRequestModal({ providerName, onClose, onSuccess }) {
 
         {/* RIGHT PANEL (Form Area) */}
         {/* ADDED min-h-0 so the layout correctly constrains children inside max-h boundaries */}
-        <div className="flex-1 flex flex-col min-w-0 min-h-0 bg-white relative">          
-          
+        <div className="flex-1 flex flex-col min-w-0 min-h-0 bg-layout-card relative">
+
           {/* Desktop Close Button */}
           <button
+            aria-label="Close new request"
             onClick={onClose}
             className="hidden sm:flex absolute right-6 top-6 z-20 h-10 w-10 items-center justify-center rounded-full bg-surface hover:bg-border/50 transition-colors"
           >
@@ -397,9 +404,9 @@ export default function NewRequestModal({ providerName, onClose, onSuccess }) {
           {/* ADDED min-h-0 here as well to force the overflow to trigger on this specific div */}
           <div className="flex-1 overflow-y-auto min-h-0 px-5 py-6 sm:px-10 sm:py-10">
             <div className="max-w-2xl mx-auto space-y-8">
-              
+
               {/* Request Title Input */}
-              <Field label="What do you need help with?">
+              <Field htmlFor="request-title" label="What do you need help with?">
                 <input
                   type="text"
                   value={title}
@@ -410,6 +417,7 @@ export default function NewRequestModal({ providerName, onClose, onSuccess }) {
                       title: validateTitle(e.target.value),
                     }))
                   }}
+                  id="request-title"
                   placeholder="e.g. I need a new homepage banner"
                   className={`input-field h-12 w-full rounded-xl border bg-surface/30 px-4 text-sm outline-none transition-all shadow-sm ${
                     errors.title
@@ -420,7 +428,7 @@ export default function NewRequestModal({ providerName, onClose, onSuccess }) {
                     if (!errors.title) {
                       e.target.style.borderColor = accent
                       e.target.style.boxShadow = `0 0 0 4px ${accentSoft}`
-                      e.target.style.background = '#fff'
+                      e.target.style.background = 'var(--card)'
                     }
                   }}
                   onBlur={e => {
@@ -438,7 +446,7 @@ export default function NewRequestModal({ providerName, onClose, onSuccess }) {
               </Field>
 
               {/* Request Description Input */}
-              <Field label="The Details">
+              <Field htmlFor="request-description" label="The details">
                 <textarea
                   value={description}
                   onChange={(e) => {
@@ -449,6 +457,7 @@ export default function NewRequestModal({ providerName, onClose, onSuccess }) {
                     }))
                   }}
                   rows={6}
+                  id="request-description"
                   placeholder="Add parameters, criteria, references, links, or goals..."
                   className={`input-field w-full resize-none rounded-xl border bg-surface/30 px-4 py-3 text-sm outline-none transition-all shadow-sm placeholder:text-text-dim ${
                     errors.description
@@ -459,7 +468,7 @@ export default function NewRequestModal({ providerName, onClose, onSuccess }) {
                     if (!errors.description) {
                       e.target.style.borderColor = accent
                       e.target.style.boxShadow = `0 0 0 4px ${accentSoft}`
-                      e.target.style.background = '#fff'
+                      e.target.style.background = 'var(--card)'
                     }
                   }}
                   onBlur={e => {
@@ -527,7 +536,7 @@ export default function NewRequestModal({ providerName, onClose, onSuccess }) {
                     {files.map((file, index) => (
                       <div
                         key={index}
-                        className="flex items-center gap-3 rounded-xl border border-border/60 bg-white px-4 py-3 shadow-sm"
+                        className="flex items-center gap-3 rounded-xl border border-border/60 bg-layout-card px-4 py-3 shadow-sm"
                       >
                         <div className="h-8 w-8 rounded-lg bg-surface flex items-center justify-center shrink-0">
                           <FileText size={16} className="text-text-dim" />
@@ -567,7 +576,7 @@ export default function NewRequestModal({ providerName, onClose, onSuccess }) {
           </div>
 
           {/* FOOTER ACTIONS ROW (Always sticky at the bottom) */}
-          <div className="shrink-0 border-t border-border/50 bg-white px-5 py-4 sm:px-10 sm:py-6 flex flex-col-reverse sm:flex-row gap-3 sm:justify-end z-20 pb-[max(1rem,env(safe-area-inset-bottom))]">
+          <div className="shrink-0 border-t border-border/50 bg-layout-card px-5 py-4 sm:px-10 sm:py-6 flex flex-col-reverse sm:flex-row gap-3 sm:justify-end z-20 pb-[max(1rem,env(safe-area-inset-bottom))]">
             <button
               type="button"
               onClick={onClose}
@@ -579,8 +588,8 @@ export default function NewRequestModal({ providerName, onClose, onSuccess }) {
             <button
               onClick={handleSubmit}
               disabled={submitting || !title.trim() || !description.trim() || !!errors.title || !!errors.description || !!errors.files}
-              className="gradient-btn flex h-12 w-full sm:w-auto items-center justify-center gap-2 rounded-xl px-8 text-sm font-bold text-white transition-all active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 shadow-sm"
-              style={{ background: `linear-gradient(135deg, ${accent}, ${accentDark})` }}
+              className="request-submit flex h-12 w-full sm:w-auto items-center justify-center gap-2 rounded-xl px-8 text-sm font-bold text-white transition-all active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 shadow-sm"
+              style={{ background: accent }}
             >
               {submitting ? (
                 <Loader2 size={18} className="animate-spin" />

@@ -1,603 +1,124 @@
-import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
-import {
-  ArrowRight,
-  Check,
-  Menu,
-  X,
-  Sparkles,
-  ShieldCheck,
-  LayoutDashboard,
-  Users,
-  FolderKanban,
-  Zap,
-} from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
+import { motion, useReducedMotion } from 'framer-motion'
+import { ArrowDown, ArrowRight, ArrowUpRight, Check, ChevronDown, FileText, LockKeyhole, Menu, MessageSquare, Paperclip, X } from 'lucide-react'
 import { getPlanPricing } from '../api/plans.api'
+import ThemeToggle from '../components/ui/ThemeToggle'
+import BrandMark from '../components/marketing/BrandMark'
+import AppearanceMenu from '../components/marketing/AppearanceMenu'
+import RequestWorkflow from '../components/marketing/RequestWorkflow'
 
-import groveLogo from "../assets/Grove_transparent_logo(Green).png";
+const primaryLink = 'inline-flex min-h-12 items-center justify-center gap-2 rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-on-primary transition-colors hover:bg-primary-dark'
+const secondaryLink = 'inline-flex min-h-12 items-center justify-center gap-2 rounded-lg border border-border bg-layout-card px-5 py-3 text-sm font-medium text-text-main transition-colors hover:bg-surface'
 
-const fadeUp = {
-  hidden: {
-    opacity: 0,
-    y: 30,
-  },
-  show: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: 0.7,
-    },
-  },
-};
+function Reveal({ children, className = '', delay = 0 }) {
+  const reducedMotion = useReducedMotion()
+  return <motion.div initial={reducedMotion ? false : { opacity: 0, y: 8 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-30px' }} transition={{ duration: 0.22, delay }} className={className}>{children}</motion.div>
+}
+
+const features = [
+  { number: '01', icon: FileText, title: 'Start with the brief.', text: 'Clients submit requests with the context and files you need. Your team can categorize the work and track its status.', detail: 'Brief · Attachments · Status' },
+  { number: '02', icon: MessageSquare, title: 'Keep the conversation attached.', text: 'Ask a question, share an update, or discuss a revision inside the request. Everyone can follow the same conversation.', detail: 'Messages · Notifications · Feedback' },
+  { number: '03', icon: Paperclip, title: 'Deliver with a record.', text: 'Share the finished files and send work for review. Keep approvals and previous feedback alongside the original request.', detail: 'Delivery · Review · Approval' },
+]
+
+const faqs = [
+  ['Who is Groven for?', 'Groven is built for agencies, independent studios, and service teams that manage ongoing client work.'],
+  ['What does my client see?', 'Clients enter your branded portal to submit requests, share files, follow progress, and review deliveries. They see their own work and conversations.'],
+  ['Can I start with the Free plan?', 'Yes. Start on the Free plan and move to Pro when you need more capacity or request-writing tools. Current plan limits are listed above.'],
+  ['Can I manage my subscription later?', 'Yes. You can manage your subscription from Settings → Plan & billing. Payments and billing are handled through Stripe.'],
+]
 
 export default function LandingPage() {
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [navbarBg, setNavbarBg] = useState(false);
-  const [pricing, setPricing] = useState({ free: {}, pro: {} })
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [pricing, setPricing] = useState(null)
+  const [pricingFailed, setPricingFailed] = useState(false)
 
   useEffect(() => {
-    getPlanPricing().then(res => setPricing(res.data.data)).catch(() => {})
+    let active = true
+    getPlanPricing().then(res => { if (active) setPricing(res.data.data) }).catch(() => { if (active) setPricingFailed(true) })
+    return () => { active = false }
   }, [])
 
   useEffect(() => {
-    const handleScroll = () => {
-      setNavbarBg(window.scrollY > 20);
-    };
+    if (!menuOpen) return undefined
+    const close = event => { if (event.key === 'Escape') setMenuOpen(false) }
+    window.addEventListener('keydown', close)
+    return () => window.removeEventListener('keydown', close)
+  }, [menuOpen])
 
-    window.addEventListener("scroll", handleScroll);
-
-    return () =>
-      window.removeEventListener("scroll", handleScroll);
-  }, []);
+  const free = pricing?.free
+  const pro = pricing?.pro
+  const priceLabel = plan => plan?.price_monthly != null ? `$${Number(plan.price_monthly)}` : pricingFailed ? '—' : '…'
+  const limitLabel = (value, noun) => value == null ? '—' : value === -1 ? `Unlimited ${noun}` : `Up to ${value} ${noun}`
+  const planRows = [
+    ['Clients', limitLabel(free?.client_limit, 'clients'), limitLabel(pro?.client_limit, 'clients')],
+    ['Active requests', limitLabel(free?.request_limit, 'requests'), limitLabel(pro?.request_limit, 'requests')],
+    ['Requests, files & chat', true, true],
+    ['Summaries & message suggestions', false, true],
+    ['Priority support', false, true],
+  ]
 
   return (
-    <div className="bg-[#f4f8f6] text-[#111111] overflow-x-hidden">
-      {/* BACKGROUND */}
-      <div className="fixed inset-0 -z-20 overflow-hidden">
-        <div className="absolute top-[-200px] left-[-150px] w-[500px] h-[500px] rounded-full bg-[#109875]/15 blur-3xl" />
-
-        <div className="absolute bottom-[-250px] right-[-150px] w-[500px] h-[500px] rounded-full bg-[#62d5ba]/20 blur-3xl" />
-
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff10_1px,transparent_1px),linear-gradient(to_bottom,#ffffff10_1px,transparent_1px)] bg-[size:80px_80px]" />
-      </div>
-
-      {/* NAVBAR */}
-      <motion.header
-        initial={{ y: -60 }}
-        animate={{ y: 0 }}
-        className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${
-          navbarBg
-            ? "backdrop-blur-2xl bg-white/50 border-b border-white/30"
-            : "bg-transparent"
-        }`}
-      >
-        <div className="max-w-6xl mx-auto px-5 h-20 flex items-center justify-between">
-          {/* LOGO */}
-          <Link
-            to="/"
-            className="flex items-center"
-          >
-            <img
-              src={groveLogo}
-              alt="Groven"
-              className="h-8 object-contain"
-            />
-          </Link>
-
-          {/* DESKTOP NAV */}
-          <nav className="hidden md:flex items-center gap-10 text-sm font-medium text-neutral-600">
-            <a
-              href="#features"
-              className="hover:text-[#109875] transition"
-            >
-              Features
-            </a>
-
-            <a
-              href="#dashboard"
-              className="hover:text-[#109875] transition"
-            >
-              Dashboard
-            </a>
-
-            <Link to="/upgrade" className="hover:text-[#109875] transition">Pricing</Link>
-          </nav>
-
-          {/* ACTIONS */}
-          <div className="hidden md:flex items-center gap-4">
-            <Link
-              to="/login"
-              className="text-sm font-medium text-neutral-600 hover:text-black"
-            >
-              Login
-            </Link>
-
-            <Link
-              to="/signup"
-              className="bg-[#109875] hover:bg-[#0d8666] transition text-white px-5 py-3 rounded-full text-sm font-semibold shadow-lg shadow-[#109875]/20"
-            >
-              Get Started
-            </Link>
-          </div>
-
-          {/* MOBILE */}
-          <button
-            onClick={() => setMenuOpen(!menuOpen)}
-            className="md:hidden"
-          >
-            {menuOpen ? <X /> : <Menu />}
-          </button>
+    <div className="overflow-x-clip bg-layout-page text-text-main">
+      <a href="#main-content" className="sr-only z-[100] rounded-lg bg-layout-card p-3 focus:not-sr-only focus:fixed focus:left-4 focus:top-4">Skip to content</a>
+      <header className="sticky top-0 z-50 border-b border-border bg-layout-page/95 backdrop-blur-xl">
+        <div className="mx-auto flex h-20 max-w-[1280px] items-center justify-between gap-4 px-5 sm:px-8">
+          <BrandMark />
+          <nav aria-label="Main navigation" className="hidden items-center gap-8 text-[13px] font-medium text-text-sub md:flex"><a href="#features" className="transition-colors hover:text-primary-ink">How it works</a><a href="#experience" className="transition-colors hover:text-primary-ink">Client portal</a><a href="#pricing" className="transition-colors hover:text-primary-ink">Pricing</a></nav>
+          <div className="flex items-center gap-2 sm:gap-4"><Link to="/login" className="hidden text-[13px] font-medium text-text-sub hover:text-primary-ink sm:block">Sign in</Link><Link to="/signup" className="hidden items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-xs font-semibold text-on-primary transition-colors hover:bg-primary-dark md:inline-flex">Get started <ArrowUpRight size={14} /></Link><AppearanceMenu className="hidden md:block" /><button type="button" aria-label={menuOpen ? 'Close navigation' : 'Open navigation'} aria-expanded={menuOpen} aria-controls="mobile-navigation" onClick={() => setMenuOpen(open => !open)} className="flex h-11 w-11 items-center justify-center rounded-lg text-text-main md:hidden">{menuOpen ? <X size={20} /> : <Menu size={20} />}</button></div>
         </div>
+        {menuOpen && <nav id="mobile-navigation" aria-label="Mobile navigation" className="border-t border-border bg-layout-card px-5 py-5 md:hidden"><div className="mx-auto flex max-w-lg flex-col gap-1">{[['#features', 'How it works'], ['#experience', 'Client portal'], ['#pricing', 'Pricing']].map(([href, label]) => <a key={href} href={href} onClick={() => setMenuOpen(false)} className="rounded-lg px-3 py-3 text-sm font-medium hover:bg-surface">{label}</a>)}<Link to="/login" className="rounded-lg px-3 py-3 text-sm font-medium">Sign in</Link><Link to="/signup" className={`${primaryLink} mt-3`}>Create your workspace <ArrowRight size={16} /></Link><div className="mt-4 border-t border-border pt-4"><p className="mb-3 text-xs font-medium text-text-sub">Appearance</p><div onClick={event => { if (event.target.closest('button')) setMenuOpen(false) }}><ThemeToggle /></div></div></div></nav>}
+      </header>
 
-        {/* MOBILE MENU */}
-        {menuOpen && (
-          <div className="md:hidden px-5 pb-5">
-            <div className="bg-white/60 backdrop-blur-2xl border border-white/30 rounded-3xl p-6 shadow-xl">
-              <div className="space-y-5">
-                <a
-                  href="#features"
-                  className="block font-medium"
-                >
-                  Features
-                </a>
-
-                <a
-                  href="#dashboard"
-                  className="block font-medium"
-                >
-                  Dashboard
-                </a>
-
-                <Link to="/upgrade" className="block font-medium" onClick={() => setMenuOpen(false)}>Pricing</Link>
-
-                <Link
-                  to="/login"
-                  className="block font-medium"
-                >
-                  Login
-                </Link>
-
-                <Link
-                  to="/signup"
-                  className="block bg-[#109875] text-white rounded-2xl py-3 text-center font-semibold"
-                >
-                  Get Started
-                </Link>
-              </div>
-            </div>
+      <main id="main-content">
+        <section className="px-5 pb-14 pt-10 sm:px-8 sm:pb-20 sm:pt-16 lg:py-20">
+          <div className="mx-auto grid max-w-[1216px] gap-10 lg:grid-cols-[0.85fr_1.15fr] lg:items-center lg:gap-14 xl:gap-20">
+            <Reveal className="pb-1 lg:pb-10">
+              <p className="mb-6 text-xs text-text-sub">For studios, agencies & service teams</p>
+              <h1 className="max-w-[510px] text-[43px] font-medium leading-[1.06] tracking-[-0.055em] sm:text-[58px] lg:text-[60px] xl:text-[66px]">From client brief to approved work.</h1>
+              <p className="mt-6 max-w-[400px] text-[15px] leading-7 text-text-sub">A shared workspace for requests, conversations, and deliveries. Give your team the context and your clients a clear next step.</p>
+              <div className="mt-7 flex flex-wrap items-center gap-x-5 gap-y-3"><Link to="/signup" className={primaryLink}>Create your workspace <ArrowRight size={16} /></Link><a href="#workspace-preview" className="inline-flex min-h-11 items-center gap-2 text-xs font-medium text-text-sub hover:text-text-main">Follow a request <ArrowDown size={14} /></a></div>
+              <p className="mt-3 text-[11px] text-text-dim">Start with the Free plan.</p>
+            </Reveal>
+            <Reveal className="min-w-0" delay={0.08}><div id="workspace-preview" className="scroll-mt-28"><RequestWorkflow /></div></Reveal>
           </div>
-        )}
-      </motion.header>
+        </section>
 
-      {/* HERO */}
-      <section className="relative pt-36 md:pt-44 pb-24 px-5">
-        <div className="max-w-6xl mx-auto">
-          <motion.div
-            variants={fadeUp}
-            initial="hidden"
-            animate="show"
-            className="text-center"
-          >
-            {/* BADGE */}
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/30 bg-white/50 backdrop-blur-xl shadow-sm text-sm font-medium text-[#109875]">
-              <Sparkles size={16} />
-              AI Powered Client Management
-            </div>
-
-            {/* TITLE */}
-            <h1 className="mt-8 text-4xl sm:text-5xl lg:text-7xl font-black tracking-tight leading-[0.95] max-w-5xl mx-auto">
-              Client Management
-              <br />
-
-              <span className="bg-gradient-to-r from-[#109875] to-[#43c5a6] bg-clip-text text-transparent">
-                Without The Chaos
-              </span>
-            </h1>
-
-            {/* SUBTEXT */}
-            <p className="mt-7 text-neutral-600 text-lg md:text-xl max-w-2xl mx-auto leading-8">
-              Groven helps agencies and service teams
-              manage onboarding, requests, approvals
-              and clients in one beautiful workspace.
-            </p>
-
-            {/* CTA */}
-            <div className="mt-10 flex flex-col sm:flex-row justify-center gap-4">
-              <Link
-                to="/signup"
-                className="bg-[#109875] hover:bg-[#0d8666] transition text-white px-7 py-4 rounded-full font-semibold shadow-xl shadow-[#109875]/20"
-              >
-                Start Free
-              </Link>
-
-              <a
-                href="#dashboard"
-                className="border border-white/40 bg-white/50 backdrop-blur-xl px-7 py-4 rounded-full font-semibold hover:border-[#109875] hover:text-[#109875] transition"
-              >
-                Explore Dashboard
-              </a>
-            </div>
-
-            {/* TRUST */}
-            <p className="mt-6 text-sm text-neutral-500">
-              Trusted by agencies, freelancers and
-              creative teams
-            </p>
-          </motion.div>
-
-          {/* DASHBOARD */}
-          <motion.div
-            id="dashboard"
-            variants={fadeUp}
-            initial="hidden"
-            whileInView="show"
-            viewport={{ once: true }}
-            className="mt-20"
-          >
-            <div className="relative rounded-[36px] overflow-hidden border border-white/40 bg-white/40 backdrop-blur-2xl shadow-[0_30px_80px_rgba(0,0,0,0.08)]">
-              {/* TOPBAR */}
-              <div className="h-14 border-b border-white/20 bg-white/40 backdrop-blur-xl flex items-center px-5">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-red-400" />
-                  <div className="w-3 h-3 rounded-full bg-yellow-400" />
-                  <div className="w-3 h-3 rounded-full bg-green-400" />
-                </div>
-              </div>
-
-              <div className="grid lg:grid-cols-[260px_1fr]">
-                {/* SIDEBAR */}
-                <div className="border-r border-white/20 bg-white/20 backdrop-blur-xl p-6">
-                  <div className="flex items-center gap-3 mb-10">
-                    <div className="w-12 h-12 rounded-2xl bg-[#109875] text-white flex items-center justify-center font-bold">
-                      G
-                    </div>
-
-                    <div>
-                      <h3 className="font-semibold">
-                        Groven Workspace
-                      </h3>
-
-                      <p className="text-sm text-neutral-500">
-                        Team Dashboard
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-3">
-                    {[
-                      {
-                        icon: LayoutDashboard,
-                        title: "Overview",
-                        active: true,
-                      },
-                      {
-                        icon: Users,
-                        title: "Clients",
-                      },
-                      {
-                        icon: FolderKanban,
-                        title: "Requests",
-                      },
-                    ].map((item) => (
-                      <div
-                        key={item.title}
-                        className={`flex items-center gap-3 px-4 py-3 rounded-2xl transition ${
-                          item.active
-                            ? "bg-white shadow-sm"
-                            : "hover:bg-white/40"
-                        }`}
-                      >
-                        <item.icon size={18} />
-
-                        <span className="font-medium text-sm">
-                          {item.title}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* CONTENT */}
-                <div className="p-6 lg:p-10">
-                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-5 mb-8">
-                    <div>
-                      <h2 className="text-3xl font-bold">
-                        Active Requests
-                      </h2>
-
-                      <p className="text-neutral-500 mt-2">
-                        Track work, clients and approvals
-                        visually.
-                      </p>
-                    </div>
-
-                    <button className="bg-[#109875] hover:bg-[#0d8666] text-white px-5 py-3 rounded-2xl text-sm font-semibold transition">
-                      New Request
-                    </button>
-                  </div>
-
-                  <div className="space-y-4">
-                    {[
-                      {
-                        title:
-                          "Website Redesign & Branding",
-                        client: "Pixel Studio",
-                        status: "In Progress",
-                      },
-                      {
-                        title:
-                          "Social Media Content Plan",
-                        client: "Nova Agency",
-                        status: "Review",
-                      },
-                      {
-                        title:
-                          "Client Portal Setup",
-                        client: "Flow Labs",
-                        status: "Completed",
-                      },
-                    ].map((item) => (
-                      <div
-                        key={item.title}
-                        className="bg-white/50 backdrop-blur-xl border border-white/30 rounded-3xl p-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4 hover:shadow-lg transition"
-                      >
-                        <div className="flex items-center gap-4">
-                          <div className="w-14 h-14 rounded-2xl bg-[#109875]/10 flex items-center justify-center">
-                            <Zap className="text-[#109875]" />
-                          </div>
-
-                          <div>
-                            <h3 className="font-semibold text-lg">
-                              {item.title}
-                            </h3>
-
-                            <p className="text-neutral-500 text-sm mt-1">
-                              {item.client}
-                            </p>
-                          </div>
-                        </div>
-
-                        <div className="px-4 py-2 rounded-full bg-[#109875]/10 text-[#109875] text-sm font-semibold w-fit">
-                          {item.status}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* FEATURES */}
-      <section
-        id="features"
-        className="py-24 px-5"
-      >
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center">
-            <p className="uppercase tracking-[4px] text-[#109875] font-bold text-sm">
-              Features
-            </p>
-
-            <h2 className="mt-5 text-4xl md:text-5xl font-black tracking-tight">
-              Everything your team needs
-            </h2>
+        <section id="features" className="scroll-mt-20 border-y border-border bg-layout-card px-5 py-14 sm:px-8 sm:py-20">
+          <div className="mx-auto max-w-[1216px]">
+            <div className="mb-8 flex flex-col justify-between gap-4 sm:mb-12 sm:flex-row sm:items-baseline"><h2 className="text-[28px] font-medium tracking-[-0.035em] sm:text-[34px]">One request. The whole record.</h2><p className="text-xs text-text-dim">From the first message to the final file</p></div>
+            <div className="border-t border-border">{features.map(({ number, icon: Icon, title, text, detail }) => <Reveal key={number} className="grid gap-4 border-b border-border py-7 sm:grid-cols-[40px_1fr] sm:gap-x-6 lg:grid-cols-[40px_1fr_1fr] lg:gap-x-10 lg:py-9"><span className="text-xs tabular-nums text-text-dim">{number}</span><div className="sm:col-start-2 lg:col-start-auto"><h3 className="text-xl font-medium tracking-tight sm:text-[23px]">{title}</h3><p className="mt-3 flex items-center gap-2 text-[11px] text-text-dim"><Icon size={13} />{detail}</p></div><p className="max-w-lg text-sm leading-7 text-text-sub sm:col-start-2 lg:col-start-auto">{text}</p></Reveal>)}</div>
           </div>
+        </section>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mt-16">
-            {[
-              {
-                icon: ShieldCheck,
-                title: "Secure Workspaces",
-                desc:
-                  "Dedicated tenant-based workspaces for every client.",
-              },
-              {
-                icon: FolderKanban,
-                title: "Request Tracking",
-                desc:
-                  "Manage requests visually with real-time updates.",
-              },
-              {
-                icon: Users,
-                title: "Client Portals",
-                desc:
-                  "Branded client experience with approvals and uploads.",
-              },
-              {
-                icon: Sparkles,
-                title: "AI Automation",
-                desc:
-                  "Automate repetitive workflows and onboarding tasks.",
-              },
-            ].map((item) => (
-              <motion.div
-                whileHover={{ y: -6 }}
-                key={item.title}
-                className="rounded-[28px] border border-white/30 bg-white/40 backdrop-blur-2xl p-7 shadow-sm"
-              >
-                <div className="w-14 h-14 rounded-2xl bg-[#109875]/10 flex items-center justify-center mb-6">
-                  <item.icon className="text-[#109875]" />
-                </div>
-
-                <h3 className="text-xl font-bold">
-                  {item.title}
-                </h3>
-
-                <p className="mt-4 text-neutral-500 leading-7 text-sm">
-                  {item.desc}
-                </p>
-              </motion.div>
-            ))}
+        <section id="experience" className="scroll-mt-20 px-5 py-16 sm:px-8 sm:py-24">
+          <div className="mx-auto max-w-[1216px]">
+            <Reveal className="mb-9 grid gap-5 lg:grid-cols-2 lg:gap-20"><div><p className="mb-4 text-xs text-text-dim">Your workspace / Their portal</p><h2 className="max-w-md text-[32px] font-medium leading-[1.15] tracking-[-0.04em] sm:text-[40px]">The same work.<br />The right view for each side.</h2></div><div className="lg:pt-7"><p className="max-w-lg text-sm leading-7 text-text-sub">Your team manages the client list and request queue. Each client gets a separate portal with your business name, logo, and colors, showing their own requests and conversations.</p><p className="mt-4 flex items-center gap-2 text-xs text-text-sub"><LockKeyhole size={14} />Clients see only their own work.</p></div></Reveal>
+            <Reveal className="grid overflow-hidden rounded-xl border border-border bg-layout-card md:grid-cols-2">
+              <div className="border-b border-border p-5 sm:p-7 md:border-b-0 md:border-r"><div className="mb-7 flex items-center justify-between gap-3 text-[11px]"><span className="font-medium">Your team</span><span className="text-text-dim">Provider workspace</span></div><p className="mb-1 text-xs text-text-dim">Requests</p><h3 className="text-xl font-medium tracking-tight">Across your clients</h3><div className="mt-6 divide-y divide-border border-y border-border">{[['North Coffee', 'Spring launch assets', 'In review'], ['Field Studio', 'Website updates', 'In progress'], ['North Coffee', 'Packaging artwork', 'Completed']].map(([client, request, status]) => <div key={request} className="flex items-center justify-between gap-3 py-4"><div className="min-w-0"><p className="truncate text-xs font-medium">{request}</p><p className="mt-1 text-[11px] text-text-dim">{client}</p></div><span className="shrink-0 text-[10px] text-text-sub">{status}</span></div>)}</div></div>
+              <div className="bg-surface/40 p-5 sm:p-7"><div className="mb-7 flex items-center justify-between gap-3 text-[11px]"><span className="font-medium">Your client</span><span className="text-text-dim">Branded client portal</span></div><div className="flex items-center justify-between gap-4 border-b border-border pb-4"><span className="text-lg font-semibold tracking-tight">studio north</span><span className="text-[10px] text-text-dim">North Coffee</span></div><p className="mt-5 text-xs text-text-dim">Ready for your feedback</p><h3 className="mt-1.5 text-xl font-medium tracking-tight">Spring launch assets</h3><p className="mt-3 max-w-sm text-xs leading-6 text-text-sub">Your latest delivery is ready to review. Open the files and share feedback with the team.</p><div className="mt-5 flex items-center gap-2.5 border-y border-border py-3.5 text-xs"><FileText size={16} className="text-text-dim" /><span className="min-w-0 break-words">spring-campaign-review.pdf</span></div><p className="mt-4 inline-flex items-center gap-2 text-xs font-medium text-primary-ink">Review this request <ArrowUpRight size={13} /></p></div>
+            </Reveal>
+            <p className="mt-3 text-[10px] leading-5 text-text-dim">Example provider and client views. Add your own branding in workspace settings.</p>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* PRICING */}
-      <section
-        id="pricing"
-        className="py-24 px-5"
-      >
-        <div className="max-w-5xl mx-auto text-center">
-          <p className="uppercase tracking-[4px] text-[#109875] font-bold text-sm">
-            Pricing
-          </p>
-
-          <h2 className="mt-5 text-4xl md:text-5xl font-black tracking-tight">
-            Simple pricing for growing teams
-          </h2>
-
-          <div className="grid lg:grid-cols-2 gap-8 mt-16">
-            {/* FREE */}
-            <div className="rounded-[32px] border border-white/30 bg-white/40 backdrop-blur-2xl p-10 text-left">
-              <h3 className="text-3xl font-bold">
-                Starter
-              </h3>
-
-              <p className="mt-3 text-neutral-500">
-                Best for freelancers and small teams.
-              </p>
-
-              <div className="mt-8">
-                <span className="text-6xl font-black">${Number(pricing.free.price_monthly ?? 0)}</span>
-
-                <span className="text-neutral-500">
-                  /month
-                </span>
-              </div>
-
-              <div className="mt-10 space-y-4">
-                {[
-                  "3 Clients",
-                  "Unlimited Requests",
-                  "Real-time Dashboard",
-                  "Basic Branding",
-                ].map((item) => (
-                  <div
-                    key={item}
-                    className="flex items-center gap-3"
-                  >
-                    <Check className="text-[#109875]" />
-
-                    <span>{item}</span>
-                  </div>
-                ))}
-              </div>
-
-              <Link
-                to="/signup"
-                className="mt-10 inline-flex bg-[#109875] text-white px-6 py-4 rounded-full font-semibold"
-              >
-                Start Free
-              </Link>
-            </div>
-
-            {/* PRO */}
-            <div className="rounded-[32px] border border-[#109875]/20 bg-[#061a15] text-white p-10 text-left relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-72 h-72 bg-[#109875]/20 rounded-full blur-3xl" />
-
-              <div className="relative">
-                <div className="inline-flex px-4 py-2 rounded-full bg-[#109875]/20 text-[#8ef0d4] text-sm font-semibold">
-                  Most Popular
-                </div>
-
-                <h3 className="text-3xl font-bold mt-6">
-                  Pro
-                </h3>
-
-                <p className="mt-3 text-neutral-300">
-                  Advanced features for agencies.
-                </p>
-
-                <div className="mt-8">
-                  <span className="text-6xl font-black">${Number(pricing.pro.price_monthly ?? 0)}</span>
-
-                  <span className="text-neutral-400">
-                    /month
-                  </span>
-                </div>
-
-                <div className="mt-10 space-y-4">
-                  {[`${pricing.free.client_limit ?? 3} Clients`, "Unlimited Requests", "Real-time Dashboard", "Basic Branding"].map((item) => (
-                    <div
-                      key={item}
-                      className="flex items-center gap-3"
-                    >
-                      <Check className="text-[#43c5a6]" />
-
-                      <span>{item}</span>
-                    </div>
-                  ))}
-                </div>
-
-                <Link
-                  to="/signup"
-                  className="mt-10 inline-flex bg-white text-[#061a15] px-6 py-4 rounded-full font-semibold"
-                >
-                  Upgrade Now
-                </Link>
-              </div>
-            </div>
+        <section id="pricing" className="scroll-mt-20 border-y border-border bg-layout-card px-5 py-16 sm:px-8 sm:py-20">
+          <div className="mx-auto grid max-w-[1216px] gap-9 lg:grid-cols-[0.7fr_1.3fr] lg:gap-20">
+            <Reveal><p className="mb-4 text-xs text-text-dim">Plans</p><h2 className="text-[32px] font-medium tracking-[-0.04em] sm:text-[40px]">Start with your<br />next client.</h2><p className="mt-5 max-w-xs text-sm leading-7 text-text-sub">Use Free for a smaller client list. Move to Pro when you need more capacity and writing tools.</p><Link to="/upgrade" className="mt-6 inline-flex min-h-11 items-center gap-2 text-xs font-medium text-primary-ink">Full plan details <ArrowUpRight size={14} /></Link></Reveal>
+            <Reveal className="min-w-0">
+              <table className="w-full table-fixed border-collapse text-left"><caption className="sr-only">Free and Pro plan comparison</caption><thead><tr className="border-b border-border"><th scope="col" className="w-[38%] pb-5 pr-3 align-bottom text-xs font-normal text-text-dim">Monthly billing</th>{[['Free', free], ['Pro', pro]].map(([label, plan]) => <th key={label} scope="col" className="pb-5 pl-3 align-top font-normal"><span className="text-xs font-medium">{label}</span><span className="mt-3 block text-3xl font-medium tracking-tight sm:text-4xl">{priceLabel(plan)}</span><span className="mt-1 block text-[10px] text-text-dim">per month</span></th>)}</tr></thead><tbody>{planRows.map(([label, freeValue, proValue]) => <tr key={label} className="border-b border-border"><th scope="row" className="py-4 pr-3 text-[11px] font-normal leading-5 text-text-sub sm:text-xs">{label}</th>{[freeValue, proValue].map((value, index) => <td key={index} className="py-4 pl-3 text-[11px] leading-5 sm:text-xs">{typeof value === 'boolean' ? value ? <><Check size={15} className="text-primary-ink" aria-hidden="true" /><span className="sr-only">Included</span></> : <span className="text-text-dim"><span aria-hidden="true">—</span><span className="sr-only">Not included</span></span> : value}</td>)}</tr>)}</tbody><tfoot><tr><td /><td className="pt-5 pl-3"><Link to="/signup" className="inline-flex min-h-11 w-full items-center justify-center rounded-lg border border-border px-2 text-[11px] font-medium hover:bg-surface sm:text-xs">Start Free</Link></td><td className="pt-5 pl-3"><Link to="/signup" className="inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-primary px-2 text-[11px] font-medium text-on-primary hover:bg-primary-dark sm:text-xs">Choose Pro</Link></td></tr></tfoot></table>
+              {pricingFailed && <p className="mt-4 text-xs leading-6 text-text-sub">Live pricing is temporarily unavailable. <Link to="/upgrade" className="text-primary-ink underline">Check current plan details</Link>.</p>}
+            </Reveal>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* CTA */}
-      <section className="pb-24 px-5">
-        <div className="max-w-5xl mx-auto rounded-[40px] overflow-hidden border border-white/30 bg-white/40 backdrop-blur-2xl px-8 py-16 md:p-20 text-center relative">
-          <div className="absolute top-0 left-0 w-72 h-72 bg-[#109875]/10 blur-3xl rounded-full" />
+        <section className="px-5 py-16 sm:px-8 sm:py-20"><div className="mx-auto grid max-w-[1216px] gap-8 lg:grid-cols-[0.7fr_1.3fr] lg:gap-20"><h2 className="text-[28px] font-medium tracking-[-0.035em]">Before you get started</h2><div className="divide-y divide-border border-y border-border">{faqs.map(([question, answer]) => <details key={question} className="group py-5"><summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-sm font-medium [&::-webkit-details-marker]:hidden">{question}<ChevronDown size={17} className="shrink-0 text-text-dim transition-transform group-open:rotate-180" /></summary><p className="mt-3 pr-7 text-sm leading-7 text-text-sub">{answer}</p></details>)}</div></div></section>
 
-          <div className="relative">
-            <h2 className="text-4xl md:text-6xl font-black tracking-tight leading-tight">
-              Ready to simplify
-              <br />
-              client management?
-            </h2>
+        <section className="px-5 pb-16 sm:px-8"><div className="mx-auto flex max-w-[1216px] flex-col items-start justify-between gap-6 border-t border-border pt-10 sm:flex-row sm:items-center"><div><h2 className="text-2xl font-medium tracking-[-0.035em]">Set up your client workspace.</h2><p className="mt-2 text-sm text-text-sub">Add your brand, invite a client, and take the first request.</p></div><Link to="/signup" className={`${secondaryLink} shrink-0`}>Create your workspace <ArrowRight size={16} /></Link></div></section>
+      </main>
 
-            <p className="mt-6 text-neutral-600 text-lg max-w-2xl mx-auto leading-8">
-              Streamline onboarding, requests and
-              collaboration with Groven.
-            </p>
-
-            <Link
-              to="/signup"
-              className="mt-10 inline-flex items-center gap-2 bg-[#109875] hover:bg-[#0d8666] transition text-white px-8 py-4 rounded-full font-semibold shadow-xl shadow-[#109875]/20"
-            >
-              Start Free Today
-              <ArrowRight size={18} />
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* FOOTER */}
-      <footer className="border-t border-white/20 bg-white/30 backdrop-blur-2xl">
-        <div className="max-w-6xl mx-auto px-5 py-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-          <div>
-            <Link to="/" className="inline-block cursor-pointer outline-none">
-              <img
-                src={groveLogo}
-                alt="Groven"
-                className="h-8 object-contain"
-              />
-            </Link>
-
-            <p className="mt-4 text-neutral-500 text-sm">
-              Modern client onboarding and request
-              management platform.
-            </p>
-          </div>
-
-          <div className="flex flex-wrap gap-6 text-sm text-neutral-500">
-            <a href="#features">Features</a>
-            <a href="#dashboard">Dashboard</a>
-            <a href="#pricing">Pricing</a>
-          </div>
-        </div>
-      </footer>
+      <footer className="border-t border-border px-5 py-9 sm:px-8"><div className="mx-auto flex max-w-[1216px] flex-col justify-between gap-6 sm:flex-row sm:items-center"><div><BrandMark /><p className="mt-3 text-xs text-text-dim">Client requests, files, and conversations.</p></div><nav aria-label="Footer navigation" className="flex flex-wrap gap-6 text-xs text-text-sub"><a href="#features" className="hover:text-primary-ink">How it works</a><a href="#pricing" className="hover:text-primary-ink">Pricing</a><Link to="/login" className="hover:text-primary-ink">Sign in</Link><Link to="/signup" className="hover:text-primary-ink">Get started</Link></nav></div><div className="mx-auto mt-8 max-w-[1216px] border-t border-border pt-6 text-[11px] text-text-dim">© {new Date().getFullYear()} Groven.</div></footer>
     </div>
-  );
+  )
 }

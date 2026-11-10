@@ -10,11 +10,11 @@ import { getInitials, getAvatarColor, joinedLabel } from '../../utils/adminDispl
 function StatCard({ label, value, delta }) {
   const positive = delta != null && delta >= 0
   return (
-    <div className="rounded-xl border border-[#E5E8E5] bg-white p-3 sm:p-5">
-      <span className="text-[11px] sm:text-[13px] text-[#7C867D]">{label}</span>
-      <p className="mt-1 sm:mt-2 text-xl sm:text-[28px] font-semibold text-[#10241C]">{value}</p>
+    <div className="rounded-xl border border-border bg-layout-card p-3 sm:p-5">
+      <span className="text-[11px] sm:text-[13px] text-text-sub">{label}</span>
+      <p className="mt-1 sm:mt-2 text-xl sm:text-[28px] font-semibold text-text-main">{value}</p>
       {delta != null && (
-        <div className={`mt-1 flex items-center gap-1 text-[10px] sm:text-[12px] font-medium ${positive ? 'text-[#1D9E75]' : 'text-[#C73A30]'}`}>
+        <div className={`mt-1 flex items-center gap-1 text-[11px] sm:text-[12px] font-medium ${positive ? 'text-primary-ink' : 'text-status-danger-text'}`}>
           {positive ? <TrendingUp size={11} /> : <TrendingDown size={11} />}
           {positive ? '+' : ''}{delta} vs last week
         </div>
@@ -49,7 +49,7 @@ export default function AdminDashboardPage() {
     return (
       <AdminLayout>
         <div className="flex h-full items-center justify-center">
-          <div className="h-7 w-7 rounded-full border-2 border-[#D8DCD8] border-t-[#1D9E75] animate-spin" />
+          <div className="h-7 w-7 rounded-full border-2 border-border border-t-[#1D9E75] animate-spin" />
         </div>
       </AdminLayout>
     )
@@ -59,7 +59,7 @@ export default function AdminDashboardPage() {
     return (
       <AdminLayout>
         <div className="flex h-full items-center justify-center">
-          <div className="rounded-xl border border-[#F3D2CE] bg-[#FDF1EF] px-5 py-4 text-[13px] text-[#C73A30]">
+          <div className="rounded-xl border border-status-danger-text/20 bg-status-danger-bg px-5 py-4 text-[13px] text-status-danger-text">
             {error}
           </div>
         </div>
@@ -91,22 +91,22 @@ export default function AdminDashboardPage() {
           />
           <StatCard label="Total users" value={stats?.total_users ?? 0} />
           <StatCard label="Total requests" value={stats?.total_requests ?? 0} />
-          <div className="rounded-xl border border-[#E5E8E5] bg-white p-3 sm:p-5">
-            <span className="text-[11px] sm:text-[13px] text-[#7C867D]">Free vs pro</span>
+          <div className="rounded-xl border border-border bg-layout-card p-3 sm:p-5">
+            <span className="text-[11px] sm:text-[13px] text-text-sub">Free vs pro</span>
             <div className="mt-1 sm:mt-2 flex items-baseline gap-2 sm:gap-3">
-              <span className="text-sm sm:text-[16px] font-semibold text-[#10241C]">Free: {freeCount}</span>
-              <span className="text-sm sm:text-[16px] font-semibold text-[#0F6E56]">Pro: {proCount}</span>
+              <span className="text-sm sm:text-[16px] font-semibold text-text-main">Free: {freeCount}</span>
+              <span className="text-sm sm:text-[16px] font-semibold text-primary-ink">Pro: {proCount}</span>
             </div>
-            <div className="mt-2 sm:mt-3 h-1.5 w-full overflow-hidden rounded-full bg-[#EEF1EE]">
-              <div className="h-full rounded-full bg-[#1D9E75]" style={{ width: `${proPct}%` }} />
+            <div className="mt-2 sm:mt-3 h-1.5 w-full overflow-hidden rounded-full bg-surface">
+              <div className="h-full rounded-full bg-primary" style={{ width: `${proPct}%` }} />
             </div>
           </div>
         </div>
 
         {/* Signups this week */}
-        <div className="mt-4 rounded-xl border border-[#E5E8E5] bg-white px-5 py-4">
-          <span className="text-[13px] text-[#7C867D]">
-            <span className="font-semibold text-[#10241C]">{stats?.signups_this_week ?? 0}</span> new tenant signups this week
+        <div className="mt-4 rounded-xl border border-border bg-layout-card px-5 py-4">
+          <span className="text-[13px] text-text-sub">
+            <span className="font-semibold text-text-main">{stats?.signups_this_week ?? 0}</span> new tenant signups this week
           </span>
         </div>
 
@@ -115,30 +115,30 @@ export default function AdminDashboardPage() {
           <div className="mt-8">
             <div className="mb-3 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <h2 className="text-[15px] font-semibold text-[#10241C]">At plan limit</h2>
+                <h2 className="text-[15px] font-semibold text-text-main">At plan limit</h2>
                 <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-[#E2483D] px-1 text-[11px] font-semibold text-white">
                   {stats.tenants_at_limit.length}
                 </span>
               </div>
               <button
                 onClick={() => navigate('/grove-admin/plans')}
-                className="flex items-center gap-1 text-[13px] font-medium text-[#0F6E56] hover:underline"
+                className="flex items-center gap-1 text-[13px] font-medium text-primary-ink hover:underline"
               >
                 View in Plans <ArrowUpRight size={13} />
               </button>
             </div>
 
-            <div className="overflow-hidden rounded-xl border border-[#E5E8E5] bg-white">
+            <div className="overflow-hidden rounded-xl border border-border bg-layout-card">
               {stats.tenants_at_limit.map((t, i) => (
                 <div
                   key={t.id}
                   className={`flex items-center justify-between px-5 py-4 ${
-                    i !== stats.tenants_at_limit.length - 1 ? 'border-b border-[#EEF1EE]' : ''
+                    i !== stats.tenants_at_limit.length - 1 ? 'border-b border-border' : ''
                   }`}
                 >
                   <div>
-                    <p className="text-[14px] font-medium text-[#10241C]">{t.name}</p>
-                    <p className="text-[12px] text-[#9BA39B]">{t.slug}.groven.in</p>
+                    <p className="text-[14px] font-medium text-text-main">{t.name}</p>
+                    <p className="text-[12px] text-text-dim">{t.slug}.groven.in</p>
                   </div>
                 </div>
               ))}
@@ -149,19 +149,19 @@ export default function AdminDashboardPage() {
         {/* Recent tenants */}
         <div className="mt-8">
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-[15px] font-semibold text-[#10241C]">Recent tenants</h2>
+            <h2 className="text-[15px] font-semibold text-text-main">Recent tenants</h2>
             <button
               onClick={() => navigate('/grove-admin/tenants')}
-              className="flex items-center gap-1 text-[13px] font-medium text-[#0F6E56] hover:underline"
+              className="flex items-center gap-1 text-[13px] font-medium text-primary-ink hover:underline"
             >
               View all <ArrowUpRight size={13} />
             </button>
           </div>
 
-          <div className="overflow-hidden rounded-xl border border-[#E5E8E5] bg-white">
+          <div className="overflow-hidden rounded-xl border border-border bg-layout-card">
             <table className="w-full text-left">
               <thead>
-                <tr className="border-b border-[#EEF1EE] text-[11px] uppercase tracking-wide text-[#9BA39B]">
+                <tr className="border-b border-border text-[11px] uppercase tracking-wide text-text-dim">
                   <th className="px-4 sm:px-5 py-3 font-medium">Tenant</th>
                   <th className="px-4 sm:px-5 py-3 font-medium">Plan</th>
                   <th className="px-5 py-3 font-medium hidden sm:table-cell">Joined</th>
@@ -171,7 +171,7 @@ export default function AdminDashboardPage() {
                 {stats?.recent_tenants?.map((t) => (
                   <tr
                     key={t.id}
-                    className="cursor-pointer border-b border-[#F3F5F3] last:border-0 hover:bg-[#FAFBFA]"
+                    className="cursor-pointer border-b border-border last:border-0 hover:bg-surface"
                     onClick={() => navigate('/grove-admin/tenants')}
                   >
                     <td className="px-4 sm:px-5 py-3.5">
@@ -183,13 +183,13 @@ export default function AdminDashboardPage() {
                           {getInitials(t.name)}
                         </div>
                         <div>
-                          <p className="text-[13px] font-medium text-[#10241C]">{t.name}</p>
-                          <p className="text-[12px] text-[#9BA39B]">{t.slug}.groven.in</p>
+                          <p className="text-[13px] font-medium text-text-main">{t.name}</p>
+                          <p className="text-[12px] text-text-dim">{t.slug}.groven.in</p>
                         </div>
                       </div>
                     </td>
                     <td className="px-4 sm:px-5 py-3.5"><PlanBadge plan={t.plan} /></td>
-                    <td className="px-5 py-3.5 text-[13px] text-[#7C867D] hidden sm:table-cell">{joinedLabel(t.joined_at)}</td>
+                    <td className="px-5 py-3.5 text-[13px] text-text-sub hidden sm:table-cell">{joinedLabel(t.joined_at)}</td>
                   </tr>
                 ))}
               </tbody>

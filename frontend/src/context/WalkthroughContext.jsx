@@ -1,7 +1,6 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, useState, useCallback } from 'react';
 import { Joyride, STATUS } from 'react-joyride';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronRight, ChevronLeft, X, Sparkles } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Sparkles } from 'lucide-react';
 import { Outlet } from 'react-router-dom';
 
 const WalkthroughContext = createContext(null);
@@ -12,7 +11,6 @@ export function useWalkthrough() {
 
 // Custom Tooltip Component for premium UI
 const CustomTooltip = ({
-  continuous,
   index,
   step,
   backProps,
@@ -24,29 +22,29 @@ const CustomTooltip = ({
   return (
     <div
       {...tooltipProps}
-      className="bg-white rounded-2xl shadow-[0px_24px_60px_rgba(10,46,36,0.16)] border border-[#E8EAE8] overflow-hidden w-[calc(100vw-32px)] sm:w-80 max-w-[340px] z-[9999] pointer-events-auto transform transition-all duration-300"
+      className="bg-layout-card rounded-2xl shadow-[0px_24px_60px_rgba(10,46,36,0.16)] border border-border overflow-hidden w-[calc(100vw-32px)] sm:w-80 max-w-[340px] z-[9999] pointer-events-auto transform transition-all duration-300"
     >
       <div className="p-6">
         <div className="flex items-start gap-3.5 mb-4">
-          <div className="bg-gradient-to-br from-[#0F6E56] to-[#0a4d3c] p-2.5 rounded-xl text-white shrink-0 mt-0.5 shadow-md">
-            <Sparkles size={18} className="animate-pulse" />
+          <div className="bg-gradient-to-br from-primary to-primary-dark p-2.5 rounded-xl text-white shrink-0 mt-0.5 shadow-md">
+            <Sparkles size={18} aria-hidden="true" />
           </div>
           <div>
             {step.title && (
-              <h3 className="text-[16px] font-bold text-[#141A14] leading-tight tracking-tight">
+              <h3 className="text-[16px] font-bold text-text-main leading-tight tracking-tight">
                 {step.title}
               </h3>
             )}
-            <p className="text-[13px] text-[#4A544A] mt-2 leading-relaxed">
+            <p className="text-[13px] text-text-sub mt-2 leading-relaxed">
               {step.content}
             </p>
           </div>
         </div>
 
-        <div className="flex items-center justify-between pt-4 mt-2 border-t border-[#F1F3F1]">
+        <div className="flex items-center justify-between pt-4 mt-2 border-t border-border">
           <button
             {...closeProps}
-            className="text-[12px] font-semibold text-[#9EA89E] hover:text-[#4A544A] transition-colors"
+            className="text-[12px] font-semibold text-text-dim hover:text-text-sub transition-colors"
           >
             Skip tour
           </button>
@@ -55,14 +53,15 @@ const CustomTooltip = ({
             {index > 0 && (
               <button
                 {...backProps}
-                className="w-8 h-8 rounded-full bg-[#F3F4F3] text-[#4A544A] hover:bg-[#E8EAE8] flex items-center justify-center transition-colors font-medium"
+                aria-label="Previous tour step"
+                className="w-11 h-11 rounded-full bg-surface text-text-sub hover:bg-border flex items-center justify-center transition-colors font-medium"
               >
                 <ChevronLeft size={16} />
               </button>
             )}
             <button
               {...primaryProps}
-              className="px-4 h-9 rounded-full bg-[#0F6E56] text-white text-[13px] font-semibold hover:bg-[#0c5b47] flex items-center gap-1.5 transition-all shadow-md active:scale-95"
+              className="px-4 h-11 rounded-full bg-primary text-white text-[13px] font-semibold hover:bg-primary-dark flex items-center gap-1.5 transition-all shadow-md active:scale-95"
             >
               {index === 0 ? 'Get Started' : isLastStep ? 'Done' : 'Next'}
               {!isLastStep && <ChevronRight size={15} className="-mr-0.5" />}
@@ -254,7 +253,7 @@ export function WalkthroughProvider({ children }) {
         styles={{
           options: {
             zIndex: 9999,
-            primaryColor: '#0F6E56',
+            primaryColor: 'var(--primary)',
           },
           spotlight: {
             borderRadius: '12px',

@@ -12,6 +12,7 @@ import {
   PlusCircle,
   Paperclip,
 } from 'lucide-react'
+import { useDialogFocus } from '../../hooks/useDialogFocus'
 import { useBadges } from '../../hooks/useBadges'
 import { useTenantBranding } from '../../context/TenantBrandingContext'
 
@@ -58,8 +59,8 @@ const EVENT_ICON = {
 
 const STATUS_META = {
   received:    { label: 'Submitted',   bg: 'bg-surface',      text: 'text-text-sub' },
-  in_review:   { label: 'In Review',   bg: 'bg-amber-50',     text: 'text-amber-700' },
-  in_progress: { label: 'In Progress', bg: 'bg-indigo-50',    text: 'text-indigo-700' },
+  in_review:   { label: 'In Review',   bg: 'bg-status-review-bg',     text: 'text-status-review-text' },
+  in_progress: { label: 'In Progress', bg: 'bg-status-progress-bg',    text: 'text-status-progress-text' },
   delivered:   { label: 'Ready',       isBrand: true },
   closed:      { label: 'Done',        bg: 'bg-surface',      text: 'text-text-sub' },
 }
@@ -79,20 +80,20 @@ function parseStatusTransition(notification) {
   return null
 }
 
-function StatusPills({ from, to, accent, accentSoft, accentDark }) {
+function StatusPills({ from, to, accentSoft }) {
   const fromMeta = STATUS_META[from]
   const toMeta   = STATUS_META[to]
   if (!fromMeta || !toMeta) return null
   return (
     <div className="flex items-center gap-1.5 mt-2">
       {fromMeta.isBrand
-        ? <span className="rounded-full px-2 py-0.5 text-[10px] font-bold" style={{ background: accentSoft, color: accentDark }}>{fromMeta.label}</span>
-        : <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${fromMeta.bg} ${fromMeta.text}`}>{fromMeta.label}</span>
+        ? <span className="rounded-full px-2 py-0.5 text-[11px] font-bold" style={{ background: accentSoft, color: 'var(--primary-text)' }}>{fromMeta.label}</span>
+        : <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${fromMeta.bg} ${fromMeta.text}`}>{fromMeta.label}</span>
       }
-      <span className="text-[10px] text-text-dim">→</span>
+      <span className="text-[11px] text-text-dim">→</span>
       {toMeta.isBrand
-        ? <span className="rounded-full px-2 py-0.5 text-[10px] font-bold" style={{ background: accentSoft, color: accentDark }}>{toMeta.label}</span>
-        : <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${toMeta.bg} ${toMeta.text}`}>{toMeta.label}</span>
+        ? <span className="rounded-full px-2 py-0.5 text-[11px] font-bold" style={{ background: accentSoft, color: 'var(--primary-text)' }}>{toMeta.label}</span>
+        : <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${toMeta.bg} ${toMeta.text}`}>{toMeta.label}</span>
       }
     </div>
   )
@@ -136,7 +137,7 @@ function NotificationItem({ notification, onRead, accent, accentSoft }) {
           <Icon
             size={14}
             className={isMessage ? 'text-purple-600' : isDelivery ? 'text-amber-600' : ''}
-            style={isPrimary ? { color: accent } : {}}
+            style={isPrimary ? { color: 'var(--primary-text)' } : {}}
           />
         </div>
         {!notification.is_read && (
@@ -169,7 +170,6 @@ function NotificationItem({ notification, onRead, accent, accentSoft }) {
           <StatusPills
             from={transition.from}
             to={transition.to}
-            accent={accent}
             accentSoft={accentSoft}
           />
         )}
@@ -184,10 +184,9 @@ export default function ClientNotificationBell({ collapsed = false, isMobileNav 
   const [open, setOpen]   = useState(false)
   const [dropdownStyle, setDropdownStyle] = useState({})
   const bellRef     = useRef(null)
-  const dropdownRef = useRef(null)
-  const navigate    = useNavigate()
+  const dropdownRef = useDialogFocus(open, () => setOpen(false))
   const { colors }  = useTenantBranding()
-  const { accent, accentDark, accentSoft } = colors
+  const { accent, accentSoft } = colors
 
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024
 
@@ -246,46 +245,53 @@ export default function ClientNotificationBell({ collapsed = false, isMobileNav 
     <>
       <button
         ref={bellRef}
+        aria-label={`Notifications${unreadCount ? `, ${unreadCount} unread` : ''}`}
+        aria-expanded={open}
         onClick={(e) => { e.stopPropagation(); setOpen(o => !o); }}
         className={isMobileNav
           ? 'relative flex flex-col items-center justify-center gap-1 min-w-[64px] rounded-xl px-1 py-2 transition-all duration-200'
-          : 'relative flex items-center justify-center rounded-xl transition-all duration-200 h-9 w-9'
+          : `relative flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm text-text-sub transition-colors hover:bg-surface ${collapsed ? 'w-11 justify-center' : 'w-full'}`
         }
         style={isMobileNav
           ? { color: open ? accent : undefined }
           : open
-            ? { background: accentSoft, color: accent }
+            ? { background: accentSoft, color: 'var(--primary-text)' }
             : {}
         }
       >
         <div className="relative">
           <Bell size={isMobileNav ? 22 : 18} strokeWidth={2} />
           {unreadCount > 0 && (
-            <span className={`absolute -top-1.5 -right-1.5 flex items-center justify-center rounded-full bg-red-500 text-white text-[9px] font-bold border-2 border-white ${isMobileNav ? 'h-4 w-4' : 'h-4 w-4'}`}>
+            <span className={`absolute -top-1.5 -right-1.5 flex items-center justify-center rounded-full bg-red-500 text-white text-[11px] font-bold border-2 border-white ${isMobileNav ? 'h-4 w-4' : 'h-4 w-4'}`}>
               {unreadCount > 99 ? '99+' : unreadCount}
             </span>
           )}
         </div>
-        {isMobileNav && <span className="text-[9px] font-bold uppercase tracking-wide">Alerts</span>}
+        {!isMobileNav && !collapsed && <span>Notifications</span>}
+        {isMobileNav && <span className="text-xs font-medium">Alerts</span>}
       </button>
 
       {open && typeof document !== 'undefined' && createPortal(
         <div
           ref={dropdownRef}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Notifications"
+          tabIndex={-1}
           className={`
             ${isMobile
-              ? 'fixed inset-0 z-[300] bg-white flex flex-col animate-in slide-in-from-bottom-8 duration-300'
-              : 'z-[300] rounded-2xl border border-border/60 bg-white/95 backdrop-blur-xl shadow-soft overflow-hidden flex flex-col animate-in fade-in slide-in-from-left-2 duration-200'}
+              ? 'fixed inset-0 z-[300] bg-layout-card flex flex-col animate-in slide-in-from-bottom-8 duration-300'
+              : 'z-[300] rounded-2xl border border-border/60 bg-layout-card/95 backdrop-blur-xl shadow-soft overflow-hidden flex flex-col animate-in fade-in slide-in-from-left-2 duration-200'}
           `}
           style={isMobile ? {} : dropdownStyle}
         >
           {/* header */}
-          <div className="flex items-center justify-between px-4 py-4 md:py-3.5 border-b border-border/50 shrink-0 bg-white/50 pt-[max(1rem,env(safe-area-inset-top))]">
+          <div className="flex items-center justify-between px-4 py-4 md:py-3.5 border-b border-border/50 shrink-0 bg-layout-card/50 pt-[max(1rem,env(safe-area-inset-top))]">
             <div className="flex items-center gap-2.5">
               <span className="text-base md:text-sm font-semibold text-text-main">Notifications</span>
               {unreadCount > 0 && (
                 <span
-                  className="text-[10px] font-bold text-white px-2 py-0.5 rounded-full shadow-sm"
+                  className="text-[11px] font-bold text-white px-2 py-0.5 rounded-full shadow-sm"
                   style={{ background: accent }}
                 >
                   {unreadCount}
@@ -297,14 +303,15 @@ export default function ClientNotificationBell({ collapsed = false, isMobileNav 
                 <button
                   onClick={markAllRead}
                   className="text-xs font-medium transition-colors"
-                  style={{ color: accent }}
+                  style={{ color: 'var(--primary-text)' }}
                 >
                   Mark all read
                 </button>
               )}
               <button
+                aria-label="Close notifications"
                 onClick={() => setOpen(false)}
-                className="flex h-8 w-8 md:h-7 md:w-7 items-center justify-center rounded-full md:rounded-lg hover:bg-surface text-text-dim hover:text-text-main transition-colors bg-surface md:bg-transparent"
+                className="flex h-11 w-11 items-center justify-center rounded-full md:rounded-lg hover:bg-surface text-text-dim hover:text-text-main transition-colors bg-surface md:bg-transparent"
               >
                 <X size={16} />
               </button>
@@ -331,7 +338,7 @@ export default function ClientNotificationBell({ collapsed = false, isMobileNav 
                   className="h-12 w-12 rounded-2xl border border-border/50 flex items-center justify-center mb-4 shadow-sm"
                   style={{ background: accentSoft }}
                 >
-                  <Bell size={20} style={{ color: accent }} />
+                  <Bell size={20} style={{ color: 'var(--primary-text)' }} />
                 </div>
                 <p className="text-sm font-semibold text-text-main">All caught up</p>
                 <p className="text-xs text-text-sub mt-1">No notifications yet.</p>
@@ -340,7 +347,7 @@ export default function ClientNotificationBell({ collapsed = false, isMobileNav 
               groupKeys.map(label => (
                 <div key={label}>
                   <div className="px-4 py-2 bg-surface/80 md:bg-surface/50 border-b border-border/50 sticky top-0 z-10 backdrop-blur-sm">
-                    <span className="text-[10px] font-bold tracking-wider uppercase text-text-dim">
+                    <span className="text-[11px] font-bold tracking-wider uppercase text-text-dim">
                       {label}
                     </span>
                   </div>
@@ -351,7 +358,6 @@ export default function ClientNotificationBell({ collapsed = false, isMobileNav 
                       onRead={(id) => { markRead(id); setOpen(false) }}
                       accent={accent}
                       accentSoft={accentSoft}
-                      accentDark={accentDark}
                     />
                   ))}
                 </div>
@@ -361,12 +367,12 @@ export default function ClientNotificationBell({ collapsed = false, isMobileNav 
 
           {/* footer */}
           {notifications.length > 0 && (
-            <div className="shrink-0 border-t border-border/50 px-4 py-4 md:py-3 bg-white md:bg-surface/50 pb-[max(1rem,env(safe-area-inset-bottom))] md:pb-3">
+            <div className="shrink-0 border-t border-border/50 px-4 py-4 md:py-3 bg-layout-card md:bg-surface/50 pb-[max(1rem,env(safe-area-inset-bottom))] md:pb-3">
               <div className="flex items-center justify-center gap-2">
-                <CheckCheck size={14} style={{ color: accent }} />
+                <CheckCheck size={14} style={{ color: 'var(--primary-text)' }} />
                 <p className="text-sm md:text-xs font-medium text-text-sub">
                   {unreadCount > 0
-                    ? <><span className="font-bold" style={{ color: accent }}>{unreadCount}</span> unread</>
+                    ? <><span className="font-bold" style={{ color: 'var(--primary-text)' }}>{unreadCount}</span> unread</>
                     : 'All caught up'
                   }
                 </p>

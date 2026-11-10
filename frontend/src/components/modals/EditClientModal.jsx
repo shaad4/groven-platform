@@ -1,13 +1,15 @@
-import { useState, useRef, useEffect } from 'react'
-import { X, ChevronDown, Check, Loader2 } from 'lucide-react'
+import { useDialogFocus } from '../../hooks/useDialogFocus'
+import { useState, useRef } from 'react'
+import { X, Loader2 } from 'lucide-react'
 import clientsApi from '../../api/clients.api'
-import { getTagColor, BUSINESS_TYPES } from '../../utils/clientHelpers'
+import { BUSINESS_TYPES } from '../../utils/clientHelpers'
 
 // ─── BACKDROP ─────────────────────────────────────────────────
 function Backdrop({ children, onClose }) {
+  const dialogRef = useDialogFocus(true, onClose)
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
+    <div ref={dialogRef} role="dialog" aria-modal="true" tabIndex={-1}
+      className="fixed inset-0 z-[150] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       {children}
@@ -36,11 +38,11 @@ function TagInput({ tags, onChange }) {
 
   return (
     <div
-      className="flex min-h-[48px] flex-wrap items-center gap-2 rounded-xl border border-[#e8eae8] px-3 py-2 cursor-text focus-within:border-[#0f6e56] focus-within:ring-4 focus-within:ring-[#0f6e56]/10 transition-all bg-white"
+      className="flex min-h-[48px] flex-wrap items-center gap-2 rounded-xl border border-border px-3 py-2 cursor-text focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10 transition-all bg-layout-card"
       onClick={() => inputRef.current?.focus()}
     >
       {tags.map(name => {
-        const c = getTagColor(name)
+        const c = { bg: 'var(--primary-light)', dot: 'var(--primary-text)', text: 'var(--primary-text)' }
         return (
           <span
             key={name}
@@ -50,6 +52,7 @@ function TagInput({ tags, onChange }) {
             <span className="h-1.5 w-1.5 rounded-full" style={{ background: c.dot }} />
             {name}
             <button
+              type="button" aria-label={`Remove tag ${name}`}
               onClick={(e) => { e.stopPropagation(); removeTag(name) }}
               className="ml-0.5 opacity-60 hover:opacity-100 transition-opacity"
             >
@@ -59,13 +62,13 @@ function TagInput({ tags, onChange }) {
         )
       })}
       <input
-        ref={inputRef}
+        ref={inputRef} aria-label="Client tags"
         value={input}
         onChange={e => setInput(e.target.value)}
         onKeyDown={onKeyDown}
         onBlur={() => addTag(input)}
         placeholder={tags.length === 0 ? 'Add tag...' : ''}
-        className="min-w-[100px] flex-1 bg-transparent text-[13px] outline-none placeholder:text-[#9ea89e]"
+        className="min-w-[100px] flex-1 bg-transparent text-[13px] outline-none placeholder:text-text-dim"
       />
     </div>
   )
@@ -73,51 +76,11 @@ function TagInput({ tags, onChange }) {
 
 // ─── BUSINESS TYPE DROPDOWN ───────────────────────────────────
 function BusinessTypeSelect({ value, onChange }) {
-  const [open, setOpen] = useState(false)
-  const ref = useRef(null)
-
-  useEffect(() => {
-    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false) }
-    document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
-  }, [])
-
   return (
-    <div ref={ref} className="relative">
-      <button
-        type="button"
-        onClick={() => setOpen(o => !o)}
-        className="flex h-12 w-full items-center justify-between rounded-xl border border-[#e8eae8] bg-white px-4 text-[14px] text-[#141a14] hover:border-[#0f6e56] transition-colors focus:outline-none focus:border-[#0f6e56] focus:ring-4 focus:ring-[#0f6e56]/10"
-      >
-        <span className={value ? 'text-[#141a14]' : 'text-[#9ea89e]'}>
-          {value || 'Select type'}
-        </span>
-        <ChevronDown size={16} className={`text-[#9ea89e] transition-transform ${open ? 'rotate-180' : ''}`} />
-      </button>
-
-      {open && (
-        <div className="absolute z-50 mt-1.5 max-h-56 w-full overflow-y-auto rounded-xl border border-[#e8eae8] bg-white shadow-xl">
-          <button
-            onClick={() => { onChange(''); setOpen(false) }}
-            className="w-full px-4 py-2.5 text-left text-[13px] text-[#9ea89e] hover:bg-[#f7f8f7] transition-colors"
-          >
-            None
-          </button>
-          {BUSINESS_TYPES.map(type => (
-            <button
-              key={type}
-              onClick={() => { onChange(type); setOpen(false) }}
-              className={`flex w-full items-center justify-between px-4 py-2.5 text-left text-[13px] transition-colors hover:bg-[#f7f8f7] ${
-                value === type ? 'text-[#0f6e56] font-medium bg-[#e6f5f0]' : 'text-[#141a14]'
-              }`}
-            >
-              {type}
-              {value === type && <Check size={14} />}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
+    <select aria-label="Business type" value={value} onChange={event => onChange(event.target.value)} className="h-12 w-full rounded-xl border border-border bg-layout-card px-3 text-base text-text-main outline-none transition-colors focus:border-primary sm:text-sm">
+      <option value="">Select business type</option>
+      {BUSINESS_TYPES.map(type => <option key={type} value={type}>{type}</option>)}
+    </select>
   )
 }
 
@@ -153,19 +116,19 @@ export default function EditClientModal({ client, onClose, onSuccess }) {
 
   return (
     <Backdrop onClose={onClose}>
-      <div className="w-full max-w-[520px] rounded-[24px] border border-[#e8eae8] bg-white shadow-[0px_24px_60px_rgba(10,46,36,0.14)] overflow-hidden">
+      <div className="w-full max-h-[calc(100dvh-32px)] max-w-[520px] rounded-[24px] border border-border bg-layout-card shadow-[0px_24px_60px_rgba(10,46,36,0.14)] overflow-y-auto">
 
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-[#f1f3f1] px-6 py-5">
+        <div className="flex items-center justify-between border-b border-border px-6 py-5">
           <div>
-            <h2 className="text-[17px] font-semibold text-[#141a14]">Edit details</h2>
-            <p className="mt-0.5 text-[12px] text-[#9ea89e]">{displayName}</p>
+            <h2 className="text-[17px] font-semibold text-text-main">Edit details</h2>
+            <p className="mt-0.5 text-[12px] text-text-dim">{displayName}</p>
           </div>
           <button
-            onClick={onClose}
-            className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#f7f8f7] hover:bg-[#eef0ee] transition-colors"
+            onClick={onClose} aria-label="Close dialog"
+            className="flex h-9 w-9 items-center justify-center rounded-xl bg-layout-page hover:bg-surface transition-colors"
           >
-            <X size={16} className="text-[#7c867d]" />
+            <X size={16} className="text-text-sub" />
           </button>
         </div>
 
@@ -174,7 +137,7 @@ export default function EditClientModal({ client, onClose, onSuccess }) {
 
           {/* Business Type */}
           <div>
-            <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-[#9ea89e]">
+            <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-text-dim">
               Business Type
             </label>
             <BusinessTypeSelect
@@ -185,49 +148,49 @@ export default function EditClientModal({ client, onClose, onSuccess }) {
 
           {/* Tags */}
           <div>
-            <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-[#9ea89e]">
+            <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-text-dim">
               Tags
             </label>
             <TagInput
               tags={form.tags}
               onChange={(tags) => setForm(f => ({ ...f, tags }))}
             />
-            <p className="mt-1.5 text-[11px] text-[#9ea89e]">Press Enter to add · up to 10 tags</p>
+            <p className="mt-1.5 text-[11px] text-text-dim">Press Enter to add · up to 10 tags</p>
           </div>
 
           {/* Private Note */}
           <div>
-            <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-[#9ea89e]">
+            <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-text-dim">
               Internal Note
             </label>
             <textarea
-              value={form.private_note}
+              aria-label="Internal note" value={form.private_note}
               onChange={(e) => setForm(f => ({ ...f, private_note: e.target.value }))}
               rows={4}
               placeholder="Private notes only visible to you..."
-              className="w-full resize-none rounded-xl border border-[#e8eae8] bg-white px-4 py-3 text-[14px] text-[#141a14] outline-none transition-all placeholder:text-[#9ea89e] focus:border-[#0f6e56] focus:ring-4 focus:ring-[#0f6e56]/10"
+              className="w-full resize-none rounded-xl border border-border bg-layout-card px-4 py-3 text-[14px] text-text-main outline-none transition-all placeholder:text-text-dim focus:border-primary focus:ring-4 focus:ring-primary/10"
             />
           </div>
 
           {error && (
-            <div className="rounded-xl bg-red-50 border border-red-100 px-4 py-3">
-              <p className="text-[13px] text-red-600">{error}</p>
+            <div role="alert" className="rounded-xl bg-status-danger-bg border border-status-danger-text/25 px-4 py-3">
+              <p className="text-[13px] text-status-danger-text">{error}</p>
             </div>
           )}
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-3 border-t border-[#f1f3f1] px-6 py-4">
+        <div className="flex items-center justify-end gap-3 border-t border-border px-6 py-4">
           <button
             onClick={onClose}
-            className="h-10 rounded-xl px-5 text-[13px] font-medium text-[#6b756d] hover:bg-[#f7f8f7] transition-colors"
+            className="h-10 rounded-xl px-5 text-[13px] font-medium text-text-sub hover:bg-layout-page transition-colors"
           >
             Cancel
           </button>
           <button
             onClick={handleSave}
             disabled={loading}
-            className="flex h-10 items-center gap-2 rounded-xl bg-[#0f6e56] px-6 text-[13px] font-medium text-white hover:bg-[#085041] disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+            className="flex h-10 items-center gap-2 rounded-xl bg-primary px-6 text-[13px] font-medium text-on-primary hover:bg-primary-dark disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
           >
             {loading && <Loader2 size={14} className="animate-spin" />}
             Save changes
