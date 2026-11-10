@@ -2,9 +2,9 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Search, Plus, MoreVertical, ChevronRight,
-  Mail, RotateCcw, Trash2, PowerOff, Power,
-  Send, AlertTriangle, Users, Loader2,
-  LayoutGrid, List, Clock, Activity,
+  Mail, Trash2, PowerOff, Power,
+  Send, Users, Loader2,
+  LayoutGrid, List,
   Sparkles,
 } from 'lucide-react'
 import ProviderLayout from '../../components/layout/ProviderLayout'

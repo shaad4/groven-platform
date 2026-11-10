@@ -1,10 +1,9 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
-  ArrowLeft, Trash2, X, Loader2,
+  ArrowLeft, Loader2,
   Clock, Package, Calendar, Mail, Building2,
   ChevronRight, Flag, FileText, ChevronLeft,
-  TrendingUp, AlertCircle, CheckCircle2, Circle,
   Hash, Activity, HelpCircle, UserRound,
 } from 'lucide-react'
 import ProviderLayout from '../../components/layout/ProviderLayout'

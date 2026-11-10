@@ -1,5 +1,5 @@
 import { useDialogFocus } from '../../hooks/useDialogFocus'
-import { useState, useEffect, useRef, useCallback, useId } from 'react'
+import { useState, useEffect, useRef, useId } from 'react'
 import { createPortal } from 'react-dom'
 import { useAuth } from '../../context/AuthContext'
 import {
@@ -13,7 +13,7 @@ import {
 import {
   Building2, Palette, Bell, ShieldCheck, CreditCard,
   Workflow, Trash2, X, Eye, EyeOff, Lock, Unlock,
-  Upload, AlertTriangle, Check, Loader2, ChevronRight,
+  AlertTriangle, Check, Loader2,
   Camera,
 } from 'lucide-react'
 
@@ -460,8 +460,7 @@ function NotificationsSection() {
     const prevPrefs = notifPrefs
     setNotifPrefs(p => ({ ...p, [section]: { ...p[section], [key]: value } }))
     try {
-      const res = await updateNotifications({ [section]: { [key]: value } })
-      console.log('Save response:', res.data)
+      await updateNotifications({ [section]: { [key]: value } })
     } catch (err) {
       console.error('Save failed:', err?.response?.data || err)
       setNotifPrefs(prevPrefs)
@@ -483,6 +482,7 @@ function NotificationsSection() {
   return (
     <div>
       <SectionTitle title="Notifications" description="Control when and how you get notified." />
+      {error && <p role="alert" className="mb-4 text-sm text-status-danger-text">{error}</p>}
 
       <div className="mb-5">
         <p className="text-[11px] font-semibold text-text-dim uppercase tracking-wider mb-3.5">In-app</p>

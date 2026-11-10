@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
-import { useParams, useNavigate, Link } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import {
   ChevronRight, Flag, Calendar, Loader2, AlertCircle,
   Lock, Plus, X, Link2, Upload, FileText,
-  CheckCircle2, Circle, Clock, Send, Paperclip,
-  MoreHorizontal, Copy, ExternalLink, Download, Pencil, Check,
-  GripVertical, ArrowRight, RotateCcw, Video,
+  CheckCircle2, Clock, Send,
+  Download, Pencil, Check,
+  ArrowRight, RotateCcw, Video,
   Sparkles, RefreshCw, MessageSquare,
 } from 'lucide-react'
 import ProviderLayout from '../../components/layout/ProviderLayout'
@@ -15,9 +15,6 @@ import { getAvatarColor, getInitials, timeAgo, formatDate } from '../../utils/cl
 import { useBadges } from '../../hooks/useBadges'
 import ConnectionPill from '../../components/ui/ConnectionPill'
 import ChatPanel from '../../components/chat/ChatPanel'
-import { useSelector } from 'react-redux'
-import { selectAccessToken, selectCurrentUser } from '../../features/auth/authSlice'
-import { useWebSocket } from '../../hooks/useWebSocket'
 import { usePanelResize } from '../../hooks/usePanelResize'
 import { useWebRTC } from '../../hooks/useWebRTC'
 import VideoCall from '../../components/chat/VideoCall'
@@ -54,16 +51,6 @@ const VALID_TRANSITIONS = {
 }
 
 // ── Helpers ───────────────────────────────────────────────────
-function Avatar({ name = '', size = 'md' }) {
-  const c = getAvatarColor(name)
-  const sz = size === 'sm' ? 'h-6 w-6 text-[11px]' : 'h-8 w-8 text-[12px]'
-  return (
-    <div className={`rounded-full flex items-center justify-center font-semibold shrink-0 ${sz} ${c.bg} ${c.text}`}>
-      {getInitials(name)}
-    </div>
-  )
-}
-
 function StatusPill({ status, statusConfig }) {
   const cfg = statusConfig[status] || statusConfig.received
   return (
@@ -370,7 +357,7 @@ function DeliverModal({ request, onClose, onSuccess, isPro }) {
     try {
       new URL(trimmed);
       return true;
-    } catch (_) {
+    } catch {
       return false;
     }
   };
@@ -1079,7 +1066,7 @@ function ActivityLogModal({ requestId, statusConfig, onClose }) {
               {/* Timeline line */}
               <div className="absolute left-[15px] top-2 bottom-2 w-px bg-border" />
               <div className="space-y-1">
-                {[...activities].reverse().map((act, i) => {
+                {[...activities].reverse().map(act => {
                   const meta = EVENT_META[act.event_type] || EVENT_META.note_added
                   const Icon = meta.icon
                   const isStatusChange = act.event_type === 'status_change'
@@ -1188,7 +1175,7 @@ export default function RequestDetailPage() {
     isMuted, isCamOff,
     startCall, acceptCall, declineCall, hangUp,
     handleSignal, toggleMute, toggleCam,
-  } = useWebRTC({ sendSignal, currentUserId: null })
+  } = useWebRTC({ sendSignal })
 
 
   const { width: chatWidth, onMouseDown } = usePanelResize({
@@ -1332,7 +1319,6 @@ export default function RequestDetailPage() {
     </ProviderLayout>
   )
 
-  const cfg = statusConfig[req.status]
   const allowedNext = VALID_TRANSITIONS[req.status] || []
   const clientName = req.client_name || 'Client'
 

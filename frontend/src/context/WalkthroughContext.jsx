@@ -1,7 +1,6 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, useState, useCallback } from 'react';
 import { Joyride, STATUS } from 'react-joyride';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronRight, ChevronLeft, X, Sparkles } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Sparkles } from 'lucide-react';
 import { Outlet } from 'react-router-dom';
 
 const WalkthroughContext = createContext(null);
@@ -12,7 +11,6 @@ export function useWalkthrough() {
 
 // Custom Tooltip Component for premium UI
 const CustomTooltip = ({
-  continuous,
   index,
   step,
   backProps,

@@ -333,7 +333,7 @@ export default function ClientRequestDetailPage() {
     isMuted, isCamOff,
     startCall, acceptCall, declineCall, hangUp,
     handleSignal, toggleMute, toggleCam,
-  } = useWebRTC({ sendSignal, currentUserId: null })
+  } = useWebRTC({ sendSignal })
 
   // ── Data fetching ──────────────────────────────────────────────────────────
 

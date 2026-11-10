@@ -80,7 +80,7 @@ function parseStatusTransition(notification) {
   return null
 }
 
-function StatusPills({ from, to, accent, accentSoft, accentDark }) {
+function StatusPills({ from, to, accentSoft }) {
   const fromMeta = STATUS_META[from]
   const toMeta   = STATUS_META[to]
   if (!fromMeta || !toMeta) return null
@@ -170,7 +170,6 @@ function NotificationItem({ notification, onRead, accent, accentSoft }) {
           <StatusPills
             from={transition.from}
             to={transition.to}
-            accent={accent}
             accentSoft={accentSoft}
           />
         )}
@@ -186,9 +185,8 @@ export default function ClientNotificationBell({ collapsed = false, isMobileNav 
   const [dropdownStyle, setDropdownStyle] = useState({})
   const bellRef     = useRef(null)
   const dropdownRef = useDialogFocus(open, () => setOpen(false))
-  const navigate    = useNavigate()
   const { colors }  = useTenantBranding()
-  const { accent, accentDark, accentSoft } = colors
+  const { accent, accentSoft } = colors
 
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024
 
@@ -360,7 +358,6 @@ export default function ClientNotificationBell({ collapsed = false, isMobileNav 
                       onRead={(id) => { markRead(id); setOpen(false) }}
                       accent={accent}
                       accentSoft={accentSoft}
-                      accentDark={accentDark}
                     />
                   ))}
                 </div>

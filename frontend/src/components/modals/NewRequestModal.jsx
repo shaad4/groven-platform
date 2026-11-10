@@ -91,7 +91,7 @@ function Field({ label, htmlFor, optional, hint, children }) {
 // ─── MAIN MODAL ───────────────────────────────────────────────
 export default function NewRequestModal({ providerName, onClose, onSuccess }) {
   const { colors } = useTenantBranding()
-  const { accent, accentDark, accentSoft, bg1 } = colors
+  const { accent, accentSoft } = colors
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [files, setFiles] = useState([])

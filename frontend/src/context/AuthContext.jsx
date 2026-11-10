@@ -34,9 +34,8 @@ export function AuthProvider({ children }) {
   const logout = async () => {
     setLoggingOut(true)
     
-    try { await authApi.logout() } catch (_) { /* silent */ }
+    try { await authApi.logout() } catch { /* silent */ }
 
-    const role      = user?.role
     const subdomain = getSubdomain()
 
     dispatch(clearAuth())
@@ -75,7 +74,7 @@ export function AuthProvider({ children }) {
             try {
                 const membershipsRes = await authApi.getMemberships(accessToken)
                 dispatch(setMemberships(membershipsRes.data))
-            } catch (_) { /* silent */ }
+            } catch { /* silent */ }
 
         } catch {
             dispatch(clearAuth())

@@ -3,8 +3,6 @@ import re
 from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 
-from apps.tenants.models import Tenant
-
 SLUG_PATTERN = re.compile(r"^[a-z0-9][a-z0-9\-]{1,61}[a-z0-9]$")
 HEX_COLOR_PATTERN = re.compile(r"^#[0-9A-Fa-f]{6}$")
 

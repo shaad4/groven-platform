@@ -2,7 +2,7 @@ import { useEffect, useRef, useCallback, useState } from 'react'
 
 const ICE_SERVERS = [{ urls: import.meta.env.VITE_STUN_URL || 'stun:stun.l.google.com:19302' }]
 
-export function useWebRTC({ sendSignal, currentUserId }) {
+export function useWebRTC({ sendSignal }) {
   const [callState, setCallState]       = useState('idle')
   const [remoteStream, setRemoteStream] = useState(null)
   const [localStream, setLocalStream]   = useState(null)

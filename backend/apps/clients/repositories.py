@@ -1,7 +1,5 @@
 from django.utils import timezone
 
-from apps.tenants.models import Tenant
-
 from .models import Client, ClientTagMap, Invite, Tag
 
 

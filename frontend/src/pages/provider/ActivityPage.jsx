@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import {
   Search, ChevronDown, Loader2, ArrowUpRight,
   CheckCircle2, FileText, MessageSquare, Bell,
-  Lock, Download, Sparkles,
+  Lock, Download,
 } from 'lucide-react'
 import ProviderLayout from '../../components/layout/ProviderLayout'
 import ProviderTopbar from '../../components/layout/ProviderTopbar'
@@ -257,18 +257,6 @@ export default function ActivityPage() {
   const [clients, setClients] = useState([])
   const [clientFilter, setClientFilter] = useState(null)
   const [clientDropdownOpen, setClientDropdownOpen] = useState(false)
-
-  const [isMobile, setIsMobile] = useState(
-    typeof window !== 'undefined' ? window.innerWidth < 1024 : false
-  )
-
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 1024)
-    }
-    window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
-  }, [])
 
   useEffect(() => {
     clientsApi.list().then(res => {

@@ -19,8 +19,7 @@ from .serializers import (EmailNotVerified, ForgotPasswordSerializer,
                           GoogleAuthSerializer, LoginSerializer,
                           ProviderSignupSerializer, ResetPasswordSerializer,
                           WorkspaceSetupSerializer)
-from .services import (InvalidOrExpiredToken, NoProviderMembership,
-                       PasswordResetService, ProviderLoginService,
+from .services import (InvalidOrExpiredToken, PasswordResetService,
                        ProviderSignupService)
 from .utils import set_auth_cookies
 

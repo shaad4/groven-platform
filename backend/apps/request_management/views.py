@@ -1,4 +1,3 @@
-from django.shortcuts import render
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -22,7 +21,7 @@ from .serializers import (AddNoteSerializer, ConfirmUploadSerializer,
                           SetDueDateSerializer, SetUrgentSerializer,
                           UpdateRequestSerializer, UpdateStatusSerializer)
 from .services import (DeliveryNotFound, FileService,
-                       ForbiddenStatusTransition, InvalidReviewAction,
+                       ForbiddenStatusTransition,
                        RequestLimitExceeded, RequestNotEditable,
                        RequestNotFound, RequestService, S3PresignError)
 from .tasks import generate_request_summary

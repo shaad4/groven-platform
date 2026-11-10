@@ -88,7 +88,6 @@ describe('getTagColor helper', () => {
   test('returns consistent color for the same name', () => {
     const colorA1 = getTagColor('design')
     const colorA2 = getTagColor('design')
-    const colorB = getTagColor('billing')
     
     expect(colorA1).toEqual(colorA2)
     expect(colorA1).not.toBeNull()

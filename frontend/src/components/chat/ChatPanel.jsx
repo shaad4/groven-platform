@@ -29,7 +29,7 @@ function formatBytes(bytes) {
 }
 
 //  Attachment bubble (sent/received) 
-function AttachmentBubble({ attachment, isMe, isClient, accent, accentSoft, accentDark }) {
+function AttachmentBubble({ attachment, isMe, isClient }) {
   const { icon: Icon, color, bg } = getFileIcon(
     attachment.file_type,
     attachment.file_name
@@ -599,9 +599,6 @@ export default function ChatPanel({
                                 attachment={att.file || att}
                                 isMe={isMe}
                                 isClient={isClient}
-                                accent={accent}
-                                accentSoft={accentSoft}
-                                accentDark={accentDark}
                               />
                             ))}
                           </div>

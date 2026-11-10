@@ -6,9 +6,8 @@ from io import StringIO
 from django.conf import settings
 from django.core.cache import cache
 from django.db.models import Count, Q
-from django.db.models.functions import ExtractHour, ExtractWeekDay, TruncDate
+from django.db.models.functions import ExtractHour, ExtractWeekDay
 from django.http import StreamingHttpResponse
-from django.shortcuts import render
 from django.utils import timezone
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response

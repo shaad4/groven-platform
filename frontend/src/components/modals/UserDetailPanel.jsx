@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Mail, Send, Ban, RotateCcw } from 'lucide-react'
+import { Send, Ban, RotateCcw } from 'lucide-react'
 import AdminSlidePanel, { PanelHeader, PanelBody } from '../ui/AdminSlidePanel'
 import { RoleBadge, StatusPill } from '../ui/AdminUI'
 import ConfirmActionModal from './ConfirmActionModal'

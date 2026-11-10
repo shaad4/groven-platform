@@ -3,7 +3,6 @@ import secrets
 import stripe
 from django.conf import settings
 from django.core.cache import cache
-from django.core.paginator import Paginator
 from django.db import transaction
 from django.utils import timezone
 
