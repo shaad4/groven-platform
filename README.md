@@ -86,9 +86,11 @@ Browser
 
 ```bash
 # Clone and setup
-git clone https://github.com/shaad4/grove-platform.git
-cd grove-platform
+git clone https://github.com/shaad4/groven-platform.git
+cd groven-platform
 cp .env.example .env
+cp frontend/.env.example frontend/.env
+# Fill in credentials in both files before starting services.
 
 # Start all services
 docker compose up -d
@@ -106,19 +108,13 @@ cd frontend && npm install && npm run dev
 
 ## Environment Variables
 
-```env
-SECRET_KEY=
-DATABASE_URL=
-REDIS_URL=
-FRONTEND_URL=https://groven.in
-EMAIL_HOST_USER=
-EMAIL_HOST_PASSWORD=
-STRIPE_SECRET_KEY=
-STRIPE_WEBHOOK_SECRET=
-GOOGLE_CLIENT_ID=
-GOOGLE_CLIENT_SECRET=
-OPENAI_API_KEY=
-```
+Use [`.env.example`](.env.example) for Django, PostgreSQL, Redis, email, S3, OAuth, AI providers, Stripe, and the platform administrator. Copy it to the repository-root `.env`, which Docker Compose loads into the backend services. Populate the blank credentials and replace the example database password.
+
+Use [`frontend/.env.example`](frontend/.env.example) for Vite. Its values are public and embedded at build time; use the same Google client ID as the backend, and never put API secrets in a `VITE_*` variable.
+
+The local frontend expects HTTPS at `lvh.me:5173` and a separately available HTTPS/WebSocket backend at `api.lvh.me:8443`. The existing Vite proxy forwards `/api` there. The root example uses Docker service names (`postgres`, `redis`); change these hosts when running the backend outside Docker. The supplied Compose Nginx configuration targets `groven.in` with deployment TLS certificates, so it is not a local HTTPS setup by itself.
+
+For deployment, set `DEBUG=False`, configure the backend hosts, frontend URL and cookie domain, and use the production frontend URL examples before building. `VITE_PORT` controls generated links, not the Vite server port. Real `.env` files remain ignored by Git.
 
 ---
 
