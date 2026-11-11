@@ -184,6 +184,15 @@ REST_FRAMEWORK = {
     "EXCEPTION_HANDLER": "config.exceptions.grove_exception_handler",
 }
 
+# WebRTC: the browser receives temporary TURN credentials from an authenticated
+# request endpoint. Never expose TURN_SHARED_SECRET in a VITE_* build variable.
+STUN_URLS = [url.strip() for url in config(
+    "STUN_URLS", default="stun:stun.l.google.com:19302"
+).split(",") if url.strip()]
+TURN_URLS = [url.strip() for url in config("TURN_URLS", default="").split(",") if url.strip()]
+TURN_SHARED_SECRET = config("TURN_SHARED_SECRET", default="")
+TURN_CREDENTIAL_TTL = config("TURN_CREDENTIAL_TTL", default=3600, cast=int)
+
 
 # CORS
 CORS_ALLOWED_ORIGINS = [

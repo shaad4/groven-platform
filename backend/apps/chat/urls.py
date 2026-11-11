@@ -1,8 +1,13 @@
 from django.urls import path
 
-from .views import MarkMessagesReadView, MessageListCreateView
+from .views import CallConfigView, MarkMessagesReadView, MessageListCreateView
 
 urlpatterns = [
+    path(
+        "requests/<uuid:request_id>/call-config/",
+        CallConfigView.as_view(),
+        name="request-call-config",
+    ),
     path(
         "requests/<uuid:request_id>/messages/",
         MessageListCreateView.as_view(),
