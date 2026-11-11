@@ -13,7 +13,7 @@ Groven uses warm light surfaces, neutral charcoal dark surfaces, a locally bundl
 
 ## Responsive interaction
 
-Workspace navigation uses a sidebar on larger screens and labeled bottom navigation on phones. Keep primary actions visible and reserve horizontal scrolling for intentionally scrollable controls or data tables, not the page itself.
+Workspace navigation uses a sidebar on larger screens and a menu drawer below 1024px. Keep the phone header compact, with a 44px menu trigger and primary actions. Below 768px, list pages show a single search-and-filter row; status, sorting, and view controls open in `MobileFilterSheet`. Drawers and sheets trap keyboard focus, close on Escape or breakpoint changes, and restore focus to their trigger. Do not reserve space for bottom navigation. Reserve horizontal scrolling for intentionally scrollable controls or data tables, not the page itself.
 
 Request conversations retain one mounted chat instance while changing between compact panels and wider split layouts. This preserves the draft and connection state. Forms and dialogs use visible labels, keyboard focus, Escape dismissal, and focus restoration through `useDialogFocus`.
 
@@ -32,4 +32,4 @@ npm run build
 
 The redesign was checked in Chromium with isolated API fixtures across public, onboarding, provider, client, and administration flows; light and dark modes; and phone, laptop, and desktop widths (360–1600 px). Checks covered overflow, theme persistence, tenant isolation, search/filtering, request creation/review, dialog keyboard behavior, and draft recovery after failed chat sends. Branding unit tests include invalid colors and contrast adjustment.
 
-Browser fixtures are visual/interaction evidence, not live integration coverage. Before release, verify real email/invitation delivery, OAuth, billing, file transfers, and realtime behavior against the deployment environment. ESLint currently reports warnings but no errors.
+Browser fixtures are visual/interaction evidence, not live integration coverage. Before release, verify real email/invitation delivery, billing, file transfers, and realtime behavior against the deployment environment. ESLint currently reports warnings but no errors.

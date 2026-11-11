@@ -1,10 +1,10 @@
+import MobileFilterSheet from '../../components/ui/MobileFilterSheet'
 import { PageSkeleton } from '../../components/ui/Skeleton'
 import { useState, useEffect, useRef, useCallback, useId } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { createPortal } from 'react-dom'
 import {
   Search, Flag, Calendar, ChevronDown, LayoutList,
-  Columns, Clock, AlertCircle, CheckCircle2, Filter, Check, Sparkles, X
+  Columns, Clock, AlertCircle, CheckCircle2, Filter, Check, Sparkles
 } from 'lucide-react'
 import ProviderLayout from '../../components/layout/ProviderLayout'
 import ProviderTopbar from '../../components/layout/ProviderTopbar'
@@ -449,28 +449,6 @@ export default function RequestsPage() {
     typeof window !== 'undefined' ? window.innerWidth < 768 : false
   )
   const [showMobileFilters, setShowMobileFilters] = useState(false)
-  const filterDialogRef = useRef(null)
-
-  useEffect(() => {
-    if (!showMobileFilters) return
-    const previousFocus = document.activeElement
-    const dialog = filterDialogRef.current
-    const focusable = () => [...dialog.querySelectorAll('button:not([disabled]), select:not([disabled]), input:not([disabled]), [tabindex="0"]')]
-    focusable()[0]?.focus()
-    const handleKey = event => {
-      if (event.key === 'Escape') { event.preventDefault(); setShowMobileFilters(false) }
-      if (event.key === 'Tab') {
-        const controls = focusable()
-        const first = controls[0]
-        const last = controls[controls.length - 1]
-        if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus() }
-        else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus() }
-      }
-    }
-    document.addEventListener('keydown', handleKey)
-    return () => { document.removeEventListener('keydown', handleKey); previousFocus?.focus() }
-  }, [showMobileFilters])
-
   useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth < 768)
@@ -479,7 +457,7 @@ export default function RequestsPage() {
     return () => window.removeEventListener('resize', handleResize)
   }, [])
 
-  const activeFiltersCount = (clientFilter ? 1 : 0) + (dateFilter ? 1 : 0) + (categoryFilter ? 1 : 0) + (sortFilter !== 'newest' ? 1 : 0)
+  const activeFiltersCount = (activeTab !== 'all' ? 1 : 0) + (clientFilter ? 1 : 0) + (dateFilter ? 1 : 0) + (categoryFilter ? 1 : 0) + (sortFilter !== 'newest' ? 1 : 0)
 
   const fetchRequests = useCallback(async () => {
     setLoading(true)
@@ -625,7 +603,7 @@ export default function RequestsPage() {
                   className="h-9 w-52 rounded-xl border border-border bg-layout-card pl-8 pr-4 text-[13px] outline-none placeholder:text-text-dim focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all"
                 />
               </div>
-              <div className="flex items-center rounded-xl border border-border bg-layout-card overflow-hidden">
+              <div className="hidden md:flex items-center rounded-xl border border-border bg-layout-card overflow-hidden">
                 <button
                   onClick={() => setView('list')}
                   title="List view" aria-label="List view" aria-pressed={view === 'list'}
@@ -653,11 +631,11 @@ export default function RequestsPage() {
         `}</style>
 
         {/* Sticky Header Container */}
-        <div className="sticky top-0 z-30 bg-surface pt-6 pb-2">
+        <div className="md:sticky top-0 z-30 bg-layout-page pt-3 pb-0 md:bg-surface md:pt-6 md:pb-2">
 
         {/* Mobile Search and Filter Row */}
         <div className="flex xl:hidden items-center gap-2 mb-4">
-          <div className="relative flex-1">
+          <div className="relative min-w-0 flex-1">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-dim" />
             <input
               value={search}
@@ -669,8 +647,8 @@ export default function RequestsPage() {
           <button
             type="button"
             onClick={() => setShowMobileFilters(true)}
-            aria-haspopup="dialog" aria-expanded={showMobileFilters} aria-controls="request-filters"
-            className={`relative flex min-h-11 items-center justify-center gap-2 rounded-xl border bg-layout-card px-3 text-sm font-medium transition-colors md:hidden ${
+            aria-haspopup="dialog" aria-expanded={showMobileFilters}
+            className={`relative flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl border bg-layout-card px-3 text-sm font-medium transition-colors md:hidden ${
               activeFiltersCount > 0
                 ? 'border-primary bg-primary-light text-primary-ink'
                 : 'border-border text-text-sub hover:bg-surface'
@@ -685,9 +663,9 @@ export default function RequestsPage() {
           </button>
         </div>
 
-        {activeFiltersCount > 0 && <div className="mb-3 flex flex-wrap items-center gap-2 text-xs text-text-sub" aria-live="polite">
+        {activeFiltersCount > 0 && <div className="mb-3 hidden md:flex flex-wrap items-center gap-2 text-xs text-text-sub" aria-live="polite">
           <span className="inline-flex items-center gap-1.5 rounded-lg bg-primary-light px-2.5 py-1.5 font-medium text-primary-ink"><Filter size={12} />{activeFiltersCount} active {activeFiltersCount === 1 ? 'filter' : 'filters'}</span>
-          <button type="button" onClick={() => { setClientFilter(''); setDateFilter(''); setCategoryFilter(''); setSortFilter('newest') }} className="min-h-9 px-2 font-medium text-text-sub underline-offset-4 hover:underline">Clear filters</button>
+          <button type="button" onClick={() => { setActiveTab('all'); setClientFilter(''); setDateFilter(''); setCategoryFilter(''); setSortFilter('newest') }} className="min-h-9 px-2 font-medium text-text-sub underline-offset-4 hover:underline">Clear filters</button>
         </div>}
 
         {/* ── Filter bar ── */}
@@ -767,56 +745,13 @@ export default function RequestsPage() {
 
         {/* ── Pipeline label ── */}
         {view === 'pipeline' && (
-          <div className="mb-4">
+          <div className="mb-4 hidden md:block">
             <h2 className="text-[15px] font-semibold text-text-main">Pipeline View</h2>
             <p className="text-[12px] text-text-dim">Click the list icon in the topbar to switch</p>
           </div>
         )}
 
-        {/* Mobile Switcher Tabs */}
-        <div className="flex md:hidden items-center gap-1.5 overflow-x-auto pb-3 mb-4 no-scrollbar border-b border-border">
-          {['all', 'received', 'in_review', 'in_progress', 'delivered', 'closed', 'flagged', 'overdue'].map(s => {
-            const active = activeTab === s
-            const count = counts[s]
 
-            let label
-            let dotClass
-
-            if (s === 'all') {
-              label = 'All'
-              dotClass = 'bg-gray-400'
-            } else if (s === 'flagged') {
-              label = 'Flagged'
-              dotClass = 'bg-status-review-text'
-            } else if (s === 'overdue') {
-              label = 'Overdue'
-              dotClass = 'bg-red-600'
-            } else {
-              const cfg = statusConfig[s]
-              label = cfg?.label || s
-              dotClass = cfg?.dot || 'bg-gray-400'
-            }
-
-            return (
-              <button
-                key={s}
-                onClick={() => setActiveTab(s)}
-                className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-semibold border transition-all
-                  ${active
-                    ? 'bg-primary-light border-primary text-primary-ink'
-                    : 'bg-layout-card border-border text-text-sub'
-                  }
-                `}
-              >
-                <span className={`h-1.5 w-1.5 rounded-full ${dotClass}`} />
-                <span>{label}</span>
-                <span className={`rounded-full px-1.5 py-0.5 text-[9px] ${active ? 'bg-primary text-on-primary' : 'bg-surface text-text-dim'}`}>
-                  {count}
-                </span>
-              </button>
-            )
-          })}
-        </div>
         </div>
 
         {/* ── Content ── */}
@@ -922,143 +857,12 @@ export default function RequestsPage() {
         )}
       </div>
 
-      {/* Mobile Filters Drawer */}
-      {showMobileFilters && typeof document !== 'undefined' && createPortal(
-        <div className="fixed inset-0 z-[250] flex items-end justify-center bg-black/40 backdrop-blur-sm" onClick={() => setShowMobileFilters(false)}>
-          <div
-            ref={filterDialogRef} id="request-filters" role="dialog" aria-modal="true" aria-labelledby="request-filters-title"
-            className="relative w-full max-h-[85dvh] bg-layout-card rounded-t-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-300 pb-[env(safe-area-inset-bottom)]"
-            onClick={e => e.stopPropagation()}
-          >
-            {/* Header */}
-            <div className="flex items-center justify-between px-4 py-4 border-b border-border">
-              <div className="flex items-center gap-2">
-                <Filter size={16} className="text-primary-ink" />
-                <h2 id="request-filters-title" className="text-base font-semibold text-text-main">Filters & sorting</h2>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowMobileFilters(false)}
-                aria-label="Close filters"
-                className="h-8 w-8 rounded-full bg-surface flex items-center justify-center text-text-sub"
-              >
-                <X size={16} />
-              </button>
-            </div>
-
-            {/* Form contents */}
-            <div className="overflow-y-auto p-4 space-y-5 flex-1">
-              {/* Client Filter */}
-              <div className="space-y-1.5">
-                <label htmlFor="request-client-filter" className="text-xs font-semibold text-text-sub">Client</label>
-                <div className="grid grid-cols-1 gap-2">
-                  <select
-                    id="request-client-filter"
-                    value={clientFilter}
-                    onChange={e => setClientFilter(e.target.value)}
-                    className="w-full h-11 px-3.5 rounded-xl border border-border bg-layout-card text-[14px] text-text-main outline-none focus:border-primary appearance-none"
-                    style={{ backgroundImage: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%239ea89e' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center', backgroundSize: '16px' }}
-                  >
-                    {clientOptions.map(o => (
-                      <option key={o.value} value={o.value}>{o.label}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {/* Date range */}
-              <div className="space-y-1.5">
-                <label className="text-[11px] font-bold text-text-dim uppercase tracking-wider">Date range</label>
-                <div className="flex flex-wrap gap-2">
-                  {dateOptions.map(o => {
-                    const isSelected = dateFilter === o.value
-                    return (
-                      <button
-                        key={o.value}
-                        type="button"
-                        onClick={() => setDateFilter(o.value)} aria-pressed={isSelected}
-                        className={`h-9 px-4 rounded-full text-[13px] font-medium border transition-colors ${
-                          isSelected
-                            ? 'bg-primary-light border-primary text-primary-ink'
-                            : 'bg-surface border-border text-text-sub'
-                        }`}
-                      >
-                        {o.label === 'Date range' ? 'All time' : o.label}
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-
-              {/* Category */}
-              <div className="space-y-1.5">
-                <label className="text-[11px] font-bold text-text-dim uppercase tracking-wider">Category</label>
-                <div className="flex flex-wrap gap-2">
-                  {categoryOptions.map(o => {
-                    const isSelected = categoryFilter === o.value
-                    return (
-                      <button
-                        key={o.value}
-                        type="button"
-                        onClick={() => setCategoryFilter(o.value)} aria-pressed={isSelected}
-                        className={`h-9 px-4 rounded-full text-[13px] font-medium border transition-colors ${
-                          isSelected
-                            ? 'bg-primary-light border-primary text-primary-ink'
-                            : 'bg-surface border-border text-text-sub'
-                        }`}
-                      >
-                        {o.label === 'All categories' ? 'All categories' : o.label}
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-
-              {/* Sort */}
-              <div className="space-y-1.5">
-                <label htmlFor="request-sort-filter" className="text-xs font-semibold text-text-sub">Sort order</label>
-                <div className="grid grid-cols-1 gap-2">
-                  <select
-                    id="request-sort-filter"
-                    value={sortFilter}
-                    onChange={e => setSortFilter(e.target.value)}
-                    className="w-full h-11 px-3.5 rounded-xl border border-border bg-layout-card text-[14px] text-text-main outline-none focus:border-primary appearance-none"
-                    style={{ backgroundImage: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%239ea89e' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center', backgroundSize: '16px' }}
-                  >
-                    {sortOptions.map(o => (
-                      <option key={o.value} value={o.value}>{o.label}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            {/* Footer Actions */}
-            <div className="p-4 border-t border-border flex gap-3 bg-surface">
-              <button
-                type="button"
-                onClick={() => {
-                  setClientFilter('')
-                  setDateFilter('')
-                  setCategoryFilter('')
-                  setSortFilter('newest')
-                }}
-                className="flex-1 h-11 rounded-xl border border-border text-[14px] font-semibold text-text-sub bg-layout-card active:bg-surface transition-all"
-              >
-                Reset All
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowMobileFilters(false)}
-                className="flex-1 h-11 rounded-xl bg-primary text-[14px] font-semibold text-on-primary hover:bg-primary-dark active:scale-[0.98] transition-all"
-              >
-                Show requests
-              </button>
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
+      <MobileFilterSheet open={showMobileFilters} onClose={() => setShowMobileFilters(false)} title="Request filters" onReset={() => { setActiveTab('all'); setClientFilter(''); setDateFilter(''); setCategoryFilter(''); setSortFilter('newest'); setView('list') }}>
+        <p className="text-xs text-text-dim">{activeFiltersCount} active {activeFiltersCount === 1 ? 'filter' : 'filters'} · {filtered.length} requests</p>
+        <fieldset><legend className="mb-2 text-sm font-medium text-text-main">Status</legend><div className="grid grid-cols-2 gap-2">{STATUS_TABS.map(status => <button key={status} type="button" onClick={() => setActiveTab(status)} aria-pressed={activeTab === status} className={`flex min-h-11 items-center justify-between gap-2 rounded-xl border px-3 text-sm ${activeTab === status ? 'border-primary bg-primary-light text-primary-ink' : 'border-border bg-surface text-text-sub'}`}><span>{TAB_LABELS[status]}</span><span className="text-xs tabular-nums">{counts[status] || 0}</span></button>)}</div></fieldset>
+        {[{ label: 'Client', value: clientFilter, options: clientOptions, onChange: setClientFilter }, { label: 'Date range', value: dateFilter, options: dateOptions, onChange: setDateFilter }, { label: 'Category', value: categoryFilter, options: categoryOptions, onChange: setCategoryFilter }, { label: 'Sort order', value: sortFilter, options: sortOptions, onChange: setSortFilter }].map(({ label, value, options, onChange }) => <label key={label} className="block space-y-2 text-sm font-medium text-text-main"><span>{label}</span><select aria-label={label} value={value} onChange={event => onChange(event.target.value)} className="h-11 w-full rounded-xl border border-border bg-layout-card px-3 text-sm font-normal text-text-main">{options.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label>)}
+        <fieldset><legend className="mb-2 text-sm font-medium text-text-main">View</legend><div className="grid grid-cols-2 gap-2">{[{ value: 'list', label: 'List', icon: LayoutList }, { value: 'pipeline', label: 'Pipeline', icon: Columns }].map(({ value, label, icon: Icon }) => <button key={value} type="button" onClick={() => setView(value)} aria-pressed={view === value} className={`flex min-h-11 items-center justify-center gap-2 rounded-xl border text-sm ${view === value ? 'border-primary bg-primary-light text-primary-ink' : 'border-border bg-surface text-text-sub'}`}><Icon size={16} />{label}</button>)}</div></fieldset>
+      </MobileFilterSheet>
     </ProviderLayout>
   )
 }

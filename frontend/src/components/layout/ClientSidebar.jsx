@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useLayoutEffect, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { NavLink } from 'react-router-dom'
-import { LayoutDashboard, FolderOpen, Settings, LogOut, ChevronDown, PanelLeftClose, UserRound } from 'lucide-react'
+import { LayoutDashboard, FolderOpen, Settings, LogOut, ChevronDown, PanelLeftClose } from 'lucide-react'
 import ClientNotificationBell from '../notifications/ClientNotificationBell'
 import { useAuth } from '../../context/AuthContext'
 import { useTenantBranding } from '../../context/TenantBrandingContext'
@@ -10,6 +10,7 @@ import ClientSettingsModal from '../modals/ClientSettingsModal'
 import PortalBrand from '../client/PortalBrand'
 import ThemeToggle from '../ui/ThemeToggle'
 import usePortalDialog from '../client/usePortalDialog'
+import { MobileNavigationDrawer, useMobileNavigation } from './MobileNavigation'
 
 const NAV_ITEMS = [{ to: '/portal', icon: LayoutDashboard, label: 'Overview' }, { to: '/my-requests', icon: FolderOpen, label: 'Requests', badgeKey: 'requests' }]
 
@@ -73,13 +74,13 @@ function AccountPopup({ anchor, user, onClose, onSettings, onLogout }) {
 
 export default function ClientSidebar({ badges = {} }) {
   const { user, tenant, logout } = useAuth()
+  const { closeNavigation } = useMobileNavigation()
   const { tenantInfo } = useTenantBranding()
   const [isCollapsed, setIsCollapsed] = useState(() => { try { return localStorage.getItem('client-sidebar-collapsed') === 'true' } catch { return false } })
   const [menuAnchor, setMenuAnchor] = useState(null)
   const isPopupOpen = Boolean(menuAnchor)
   const [showSettings, setShowSettings] = useState(false)
   const desktopAccountRef = useRef(null)
-  const mobileAccountRef = useRef(null)
   const initials = (user?.display_name || 'Client').split(' ').map(word => word[0]).join('').slice(0, 2).toUpperCase()
 
   const toggleAccount = event => {
@@ -110,13 +111,18 @@ export default function ClientSidebar({ badges = {} }) {
 
       </div>
     </aside>
-    <nav aria-label="Mobile client workspace" className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-layout-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden">
-      <div className="flex h-20 items-center justify-around px-2">
-        {NAV_ITEMS.map(({ to, icon: Icon, label, badgeKey }) => <NavLink key={to} to={to} end={to === '/portal'} className={({ isActive }) => `flex min-h-14 min-w-16 flex-col items-center justify-center gap-1.5 rounded-xl px-2 ${isActive ? 'text-primary-ink' : 'text-text-sub'}`}><span className="relative"><Icon size={21} />{badges[badgeKey] > 0 && <span className="absolute -right-2 -top-2 rounded-full bg-primary px-1 text-xs text-white">{badges[badgeKey]}</span>}</span><span className="text-xs font-medium">{label}</span></NavLink>)}
-        <ClientNotificationBell isMobileNav />
-        <div className="relative"><button ref={mobileAccountRef} onClick={toggleAccount} aria-expanded={isPopupOpen} aria-haspopup="dialog" aria-controls={isPopupOpen ? 'client-account-menu' : undefined} className={`flex min-h-14 min-w-16 flex-col items-center justify-center gap-1.5 rounded-xl px-2 ${isPopupOpen ? 'text-primary-ink' : 'text-text-sub'}`}><UserRound size={21} /><span className="text-xs font-medium">Account</span></button></div>
+    <MobileNavigationDrawer title="Navigation">
+      <div className="space-y-6 p-4">
+        <PortalBrand tenant={tenant} />
+        <nav aria-label="Mobile client workspace" className="space-y-1">
+          {NAV_ITEMS.map(({ to, icon: Icon, label, badgeKey }) => <NavLink key={to} to={to} end={to === '/portal'} onClick={closeNavigation} className={({ isActive }) => `flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-medium ${isActive ? 'bg-primary-light text-primary-ink' : 'text-text-sub hover:bg-surface'}`}><Icon size={19} /><span className="flex-1">{label}</span>{badges[badgeKey] > 0 && <span className="rounded-md bg-primary px-1.5 py-0.5 text-xs text-on-primary">{badges[badgeKey]}</span>}</NavLink>)}
+        </nav>
+        <div className="border-t border-border pt-4"><ClientPortalSwitcher /></div>
+        <div className="border-t border-border pt-4"><p className="truncate text-sm font-semibold">{user?.display_name || 'Client'}</p><p className="mt-1 truncate text-xs text-text-sub">{user?.email}</p><button onClick={() => { closeNavigation(); setShowSettings(true) }} className="mt-3 flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-sm text-text-sub hover:bg-surface"><Settings size={17} />Account settings</button></div>
+        <div className="border-t border-border pt-4"><p className="mb-3 text-xs font-medium text-text-sub">Appearance</p><div onClick={closeNavigation}><ThemeToggle className="w-full justify-between" /></div></div>
+        <button onClick={() => { closeNavigation(); logout() }} className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-sm text-status-danger-text hover:bg-status-danger-bg"><LogOut size={17} />Sign out</button>
       </div>
-    </nav>
+    </MobileNavigationDrawer>
     {menuAnchor && <AccountPopup anchor={menuAnchor} user={user} onClose={closeAccount} onSettings={() => { closeAccount(); setShowSettings(true) }} onLogout={() => { closeAccount(); logout() }} />}
     {showSettings && <ClientSettingsModal open onClose={() => setShowSettings(false)} />}
   </>

@@ -1,10 +1,12 @@
+import MobileFilterSheet from '../../components/ui/MobileFilterSheet'
+import { MobileNavigationButton } from '../../components/layout/MobileNavigation'
 import { PageSkeleton, InlinePending } from '../../components/ui/Skeleton'
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   ArrowLeft, Clock, Package, Calendar, Mail, Building2,
   ChevronRight, Flag, FileText, ChevronLeft,
-  Hash, Activity, HelpCircle, UserRound,
+  Hash, Activity, HelpCircle, UserRound, Pencil, Filter,
 } from 'lucide-react'
 import ProviderLayout from '../../components/layout/ProviderLayout'
 import EditClientModal from '../../components/modals/EditClientModal'
@@ -120,7 +122,7 @@ function PrivateNoteEditor({ client, onSaved }) {
 // ─── TOAST ───────────────────────────────────────────────────
 function Toast({ message, type = 'success' }) {
   return (
-    <div className={`fixed bottom-[calc(92px+env(safe-area-inset-bottom))] lg:bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2.5 rounded-xl px-5 py-3 text-[13px] font-medium text-on-primary shadow-xl shadow-black/20 ${type === 'success' ? 'bg-primary' : 'bg-red-600'}`}>
+    <div className={`fixed bottom-[max(24px,env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 z-50 flex items-center gap-2.5 rounded-xl px-5 py-3 text-[13px] font-medium text-on-primary shadow-xl shadow-black/20 ${type === 'success' ? 'bg-primary' : 'bg-red-600'}`}>
       {message}
     </div>
   )
@@ -192,6 +194,7 @@ export default function ClientDetailPage() {
   const [showDeactivateConfirm, setShowDeactivateConfirm] = useState(false)
   const [actionLoading, setActionLoading] = useState(false)
   const [mobileTab, setMobileTab] = useState('overview')
+  const [showMobileFilters, setShowMobileFilters] = useState(false)
 
   const showToast = (msg, type = 'success') => {
     setToast({ message: msg, type })
@@ -288,8 +291,17 @@ export default function ClientDetailPage() {
       <ProviderLayout fullBleed>
         <div className="flex h-full min-h-0 flex-col overflow-hidden bg-layout-page">
 
+          <div className="flex h-[60px] shrink-0 items-center gap-1 border-b border-border bg-layout-card px-2 md:hidden">
+            <MobileNavigationButton />
+            <button type="button" onClick={() => navigate('/clients')} aria-label="Back to clients" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-text-sub hover:bg-surface"><ArrowLeft size={19} /></button>
+            <div className="min-w-0 flex-1 px-1"><p className="truncate text-sm font-semibold text-text-main">{displayName}</p><p className="text-[11px] text-text-dim">{mobileTab === 'overview' ? 'Overview' : `Requests (${allRequests.length})`}</p></div>
+            <button type="button" onClick={() => setMobileTab(mobileTab === 'overview' ? 'requests' : 'overview')} aria-label={mobileTab === 'overview' ? 'Show client requests' : 'Show client overview'} title={mobileTab === 'overview' ? 'Show requests' : 'Show overview'} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-text-sub hover:bg-surface">{mobileTab === 'overview' ? <FileText size={19} /> : <UserRound size={19} />}</button>
+            <button type="button" onClick={() => setShowEdit(true)} aria-label="Edit client profile" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-primary-ink hover:bg-surface"><Pencil size={18} /></button>
+          </div>
+
           {/* ── STICKY TOPBAR ── */}
-          <div className="sticky top-0 z-30 flex min-h-[76px] flex-wrap items-center gap-3 border-b border-border bg-layout-card px-4 py-3 sm:px-6 shrink-0 ">
+          <div className="sticky top-0 z-30 hidden md:flex min-h-[76px] flex-wrap items-center gap-3 border-b border-border bg-layout-card px-4 py-3 sm:px-6 shrink-0 ">
+            <MobileNavigationButton />
             <button
               onClick={() => navigate('/clients')} aria-label="Back to clients"
               className="flex items-center gap-1.5 text-[13px] text-text-dim hover:text-text-main transition-colors"
@@ -314,30 +326,6 @@ export default function ClientDetailPage() {
               className="ml-auto text-[12px] font-medium text-primary-ink hover:underline"
             >
               Edit profile
-            </button>
-          </div>
-
-          {/* Mobile navigation tabs (overview vs requests) */}
-          <div className="md:hidden flex border-b border-border bg-layout-card shrink-0 z-20">
-            <button
-              onClick={() => setMobileTab('overview')} aria-pressed={mobileTab === 'overview'}
-              className={`flex flex-1 items-center justify-center gap-2 py-3 text-center text-[13px] font-semibold border-b-2 border-t-0 border-x-0 border-t-transparent border-x-transparent bg-transparent outline-none focus:outline-none transition-all ${
-                mobileTab === 'overview'
-                  ? 'border-b-primary text-primary-ink'
-                  : 'border-b-transparent text-text-dim'
-              }`}
-            >
-              <UserRound size={16} aria-hidden="true" /> Overview
-            </button>
-            <button
-              onClick={() => setMobileTab('requests')} aria-pressed={mobileTab === 'requests'}
-              className={`flex flex-1 items-center justify-center gap-2 py-3 text-center text-[13px] font-semibold border-b-2 border-t-0 border-x-0 border-t-transparent border-x-transparent bg-transparent outline-none focus:outline-none transition-all ${
-                mobileTab === 'requests'
-                  ? 'border-b-primary text-primary-ink'
-                  : 'border-b-transparent text-text-dim'
-              }`}
-            >
-              <FileText size={16} aria-hidden="true" /> Requests ({allRequests.length})
             </button>
           </div>
 
@@ -448,16 +436,17 @@ export default function ClientDetailPage() {
 
                 {/* ── Request history ── */}
                 <div className={`rounded-2xl border border-border bg-layout-card overflow-hidden ${mobileTab === 'requests' ? 'block' : 'hidden md:block'}`}>
-                  <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+                  <div className="flex items-center justify-between gap-2 px-5 py-3 md:py-4 border-b border-border">
                     <h2 className="text-[14px] font-semibold text-text-main">Request history</h2>
+                    <button type="button" onClick={() => setShowMobileFilters(true)} aria-haspopup="dialog" aria-expanded={showMobileFilters} className={`flex h-11 items-center gap-2 rounded-xl border px-3 text-sm md:hidden ${activeTab !== 'all' ? 'border-primary bg-primary-light text-primary-ink' : 'border-border text-text-sub'}`}><Filter size={16} />Filters{activeTab !== 'all' && <span className="text-xs">1</span>}</button>
                     {allRequests.length > 0 && (
-                      <span className="text-[12px] text-text-dim">{filteredRequests.length} {activeTab !== 'all' ? 'filtered' : 'total'}</span>
+                      <span className="hidden md:inline text-[12px] text-text-dim">{filteredRequests.length} {activeTab !== 'all' ? 'filtered' : 'total'}</span>
                     )}
                   </div>
 
                   {/* Tabs */}
                   {allRequests.length > 0 && (
-                    <div className="flex items-center gap-1 px-5 py-3 border-b border-border overflow-x-auto no-scrollbar">
+                    <div className="hidden md:flex items-center gap-1 px-5 py-3 border-b border-border overflow-x-auto no-scrollbar">
                       {TABS.map(tab => {
                         const count = tab === 'all'
                           ? allRequests.length
@@ -700,6 +689,11 @@ export default function ClientDetailPage() {
           </div>
         </div>
       )}
+
+      <MobileFilterSheet open={showMobileFilters} onClose={() => setShowMobileFilters(false)} title="Client request filters" onReset={() => { setActiveTab('all'); setPage(1) }}>
+        <p className="text-xs text-text-dim">{activeTab === 'all' ? 'No active filters' : '1 active filter'} · {filteredRequests.length} requests</p>
+        <fieldset><legend className="mb-2 text-sm font-medium text-text-main">Status</legend><div className="grid grid-cols-2 gap-2">{TABS.map(tab => <button key={tab} type="button" onClick={() => { setActiveTab(tab); setPage(1) }} aria-pressed={activeTab === tab} className={`flex min-h-11 items-center justify-between gap-2 rounded-xl border px-3 text-sm capitalize ${activeTab === tab ? 'border-primary bg-primary-light text-primary-ink' : 'border-border bg-surface text-text-sub'}`}><span>{tab.replace(/_/g, ' ')}</span><span className="text-xs tabular-nums">{tab === 'all' ? allRequests.length : tab === 'open' ? openCount : statusCounts[tab] || 0}</span></button>)}</div></fieldset>
+      </MobileFilterSheet>
 
       {showEdit && (
         <EditClientModal client={client} onClose={() => setShowEdit(false)}

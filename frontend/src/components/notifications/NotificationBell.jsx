@@ -357,7 +357,7 @@ export default function NotificationBell() {
         aria-expanded={open}
         aria-haspopup="dialog"
         onClick={() => setOpen((o) => !o)}
-        className={`relative flex h-10 w-10 items-center justify-center rounded-lg border transition-colors ${
+        className={`relative flex h-11 w-11 items-center justify-center rounded-lg border transition-colors ${
           open
             ? 'border-primary/25 bg-primary-light'
             : 'border-border bg-layout-page hover:bg-surface'

@@ -1,3 +1,4 @@
+import MobileFilterSheet from '../../components/ui/MobileFilterSheet'
 import { Skeleton, InlinePending } from '../../components/ui/Skeleton'
 import { useState, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
@@ -5,7 +6,7 @@ import { useNavigate } from 'react-router-dom'
 import {
   Search, Plus, MoreVertical, ChevronRight,
   Mail, Trash2, PowerOff, Power,
-  Send, Users, LayoutGrid, List,
+  Send, Users, LayoutGrid, List, Filter,
   Sparkles,
 } from 'lucide-react'
 import ProviderLayout from '../../components/layout/ProviderLayout'
@@ -392,7 +393,7 @@ const FILTERS = [
 // ─── TOAST ────────────────────────────────────────────────────
 function Toast({ message, type = 'success' }) {
   return (
-    <div className={`fixed bottom-[calc(92px+env(safe-area-inset-bottom))] lg:bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2.5 rounded-xl px-5 py-3 text-[13px] font-medium text-on-primary shadow-xl shadow-black/20 transition-all
+    <div className={`fixed bottom-[max(24px,env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 z-50 flex items-center gap-2.5 rounded-xl px-5 py-3 text-[13px] font-medium text-on-primary shadow-xl shadow-black/20 transition-all
       ${type === 'success' ? 'bg-primary' : 'bg-red-600'}
     `}>
       {message}
@@ -407,6 +408,7 @@ export default function ClientsPage() {
   const [clients, setClients] = useState([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('all')
+  const [showMobileFilters, setShowMobileFilters] = useState(false)
   const [search, setSearch] = useState('')
   const [viewMode, setViewMode] = useState('grid') // 'grid' | 'list'
   const [toast, setToast] = useState(null)
@@ -551,10 +553,10 @@ export default function ClientsPage() {
           `}</style>
 
           {/* ── Sticky Filter + Search bar ── */}
-          <div className="sticky top-0 z-20 -mx-4 -mt-4 mb-6 flex min-w-0 flex-col gap-3 border-b border-border bg-layout-page px-4 py-4 sm:-mx-6 sm:-mt-6 sm:px-6 lg:-mx-8 lg:-mt-8 lg:px-8 xl:flex-row xl:items-center xl:justify-between">
+          <div className="md:sticky top-0 z-20 -mx-4 -mt-4 mb-4 md:mb-6 flex min-w-0 flex-col gap-3 border-b border-border bg-layout-page px-4 py-3 md:py-4 sm:-mx-6 sm:-mt-6 sm:px-6 lg:-mx-8 lg:-mt-8 lg:px-8 xl:flex-row xl:items-center xl:justify-between">
 
             {/* Filter tabs */}
-            <div role="group" aria-label="Filter clients by status" className="grid min-w-0 grid-cols-2 gap-1 rounded-xl border border-border bg-surface p-1 sm:flex sm:w-fit">
+            <div role="group" aria-label="Filter clients by status" className="hidden min-w-0 gap-1 rounded-xl border border-border bg-surface p-1 md:flex md:w-fit">
               {FILTERS.map(({ key, label }) => (
                 <button
                   key={key}
@@ -589,8 +591,12 @@ export default function ClientsPage() {
                 />
               </div>
 
+              <button type="button" onClick={() => setShowMobileFilters(true)} aria-haspopup="dialog" aria-expanded={showMobileFilters}
+                className={`flex h-11 shrink-0 items-center gap-2 rounded-xl border px-3 text-sm font-medium md:hidden ${filter !== 'all' ? 'border-primary bg-primary-light text-primary-ink' : 'border-border bg-layout-card text-text-sub'}`}>
+                <Filter size={16} /><span>Filters</span>{filter !== 'all' && <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[11px] text-on-primary">1</span>}
+              </button>
               {/* View toggle */}
-              <div role="group" aria-label="Client view" className="flex shrink-0 items-center overflow-hidden rounded-xl border border-border bg-layout-card">
+              <div role="group" aria-label="Client view" className="hidden md:flex shrink-0 items-center overflow-hidden rounded-xl border border-border bg-layout-card">
                 <button
                   onClick={() => setViewMode('grid')} aria-label="Grid view" aria-pressed={viewMode === 'grid'}
                   className={`flex h-[42px] w-10 items-center justify-center transition-colors ${
@@ -719,6 +725,14 @@ export default function ClientsPage() {
           )}
         </div>
       </ProviderLayout>
+
+      <MobileFilterSheet open={showMobileFilters} onClose={() => setShowMobileFilters(false)} title="Client filters" onReset={() => { setFilter('all'); setViewMode('grid') }}>
+        <p className="text-xs text-text-dim">{filter === 'all' ? 'No active filters' : '1 active filter'} · {filtered.length} clients</p>
+        <fieldset className="space-y-2"><legend className="mb-2 text-sm font-medium text-text-main">Status</legend>
+          <div className="grid grid-cols-2 gap-2">{FILTERS.map(({ key, label }) => <button key={key} type="button" onClick={() => setFilter(key)} aria-pressed={filter === key} className={`flex min-h-11 items-center justify-between gap-2 rounded-xl border px-3 text-sm ${filter === key ? 'border-primary bg-primary-light text-primary-ink' : 'border-border bg-surface text-text-sub'}`}><span>{label}</span><span className="text-xs tabular-nums">{counts[key]}</span></button>)}</div>
+        </fieldset>
+        <fieldset className="space-y-2"><legend className="mb-2 text-sm font-medium text-text-main">View</legend><div className="grid grid-cols-2 gap-2">{[{ value: 'grid', label: 'Grid', icon: LayoutGrid }, { value: 'list', label: 'List', icon: List }].map(({ value, label, icon: Icon }) => <button key={value} type="button" onClick={() => setViewMode(value)} aria-pressed={viewMode === value} className={`flex min-h-11 items-center justify-center gap-2 rounded-xl border text-sm ${viewMode === value ? 'border-primary bg-primary-light text-primary-ink' : 'border-border bg-surface text-text-sub'}`}><Icon size={16} />{label}</button>)}</div></fieldset>
+      </MobileFilterSheet>
 
       {/* ── Modals ── */}
       {showAdd && (

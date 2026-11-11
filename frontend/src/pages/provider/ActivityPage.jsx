@@ -1,8 +1,9 @@
+import MobileFilterSheet from '../../components/ui/MobileFilterSheet'
 import { PageSkeleton } from '../../components/ui/Skeleton'
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  Search, ArrowUpRight,
+  Search, Filter, ArrowUpRight,
   CheckCircle2, FileText, MessageSquare, Bell,
   Lock, Download,
 } from 'lucide-react'
@@ -257,6 +258,8 @@ export default function ActivityPage() {
   const [searchInput, setSearchInput] = useState('')
   const [clients, setClients] = useState([])
   const [clientFilter, setClientFilter] = useState(null)
+  const [showMobileFilters, setShowMobileFilters] = useState(false)
+  const activeFiltersCount = Number(eventFilter !== 'all') + Number(dateRange !== '7') + Number(Boolean(clientFilter))
 
   useEffect(() => {
     clientsApi.list().then(res => {
@@ -322,7 +325,7 @@ export default function ActivityPage() {
           rightSlot={
             <button
               onClick={handleExport} aria-label="Export activity as CSV"
-              className="flex items-center gap-2 rounded-xl border border-border bg-layout-card px-3 py-2 text-[12px] font-medium text-text-sub hover:border-primary/30 transition-colors"
+              className="flex h-11 min-w-11 items-center justify-center gap-2 rounded-xl border border-border bg-layout-card px-3 text-[12px] font-medium text-text-sub hover:border-primary/30 transition-colors"
             >
               <Download size={13} className="text-text-dim" />
               <span className="hidden sm:inline">Export CSV</span>
@@ -345,8 +348,13 @@ export default function ActivityPage() {
         }
       `}</style>
 
+      <div className="flex items-center gap-2 border-b border-border bg-layout-page px-4 py-3 md:hidden">
+        <div className="relative min-w-0 flex-1"><Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-dim" /><input value={searchInput} onChange={event => setSearchInput(event.target.value)} aria-label="Search activity" placeholder="Search activity…" className="h-11 w-full rounded-xl border border-border bg-layout-card pl-9 pr-3 text-sm text-text-main placeholder:text-text-dim" /></div>
+        <button type="button" onClick={() => setShowMobileFilters(true)} aria-haspopup="dialog" aria-expanded={showMobileFilters} className={`flex h-11 shrink-0 items-center gap-2 rounded-xl border px-3 text-sm font-medium ${activeFiltersCount ? 'border-primary bg-primary-light text-primary-ink' : 'border-border bg-layout-card text-text-sub'}`}><Filter size={16} />Filters{activeFiltersCount > 0 && <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[11px] text-on-primary">{activeFiltersCount}</span>}</button>
+      </div>
+
       {/* Sticky Filters Container for Mobile */}
-      <div className="lg:hidden sticky top-0 z-30 bg-layout-card border-b border-border p-3 space-y-2.5 shadow-sm">
+      <div className="hidden md:block lg:hidden bg-layout-card border-b border-border p-3 space-y-2.5 shadow-sm">
         {/* Row 1: Search + Date filter select */}
         <div className="flex items-center gap-2">
           <div className="relative flex-1">
@@ -474,7 +482,7 @@ export default function ActivityPage() {
             <div className="px-2 lg:px-5 divide-y divide-border">
               {Object.entries(grouped).map(([date, acts]) => (
                 <div key={date} className="pt-2">
-                  <div className="flex items-center justify-between py-2 px-3 sticky top-[138px] lg:top-0 bg-layout-card z-10">
+                  <div className="flex items-center justify-between py-2 px-3 sticky top-0 bg-layout-card z-10">
                     <p className="text-[12px] font-semibold text-text-main">{date}</p>
                     <p className="text-[11px] text-text-dim">{acts.length} logs</p>
                   </div>
@@ -503,6 +511,12 @@ export default function ActivityPage() {
           )}
         </div>
       </div>
+      <MobileFilterSheet open={showMobileFilters} onClose={() => setShowMobileFilters(false)} title="Activity filters" onReset={() => { setEventFilter('all'); setDateRange('7'); setClientFilter(null) }}>
+        <p className="text-xs text-text-dim">{activeFiltersCount} active {activeFiltersCount === 1 ? 'filter' : 'filters'}</p>
+        <fieldset><legend className="mb-2 text-sm font-medium text-text-main">Event type</legend><div className="grid grid-cols-2 gap-2">{FILTER_TABS.map(({ key, label }) => <button key={key} type="button" onClick={() => setEventFilter(key)} aria-pressed={eventFilter === key} className={`min-h-11 rounded-xl border px-3 text-sm ${eventFilter === key ? 'border-primary bg-primary-light text-primary-ink' : 'border-border bg-surface text-text-sub'}`}>{label}</button>)}</div></fieldset>
+        <label className="block space-y-2 text-sm font-medium text-text-main"><span>Date range</span><select aria-label="Activity date range" value={dateRange} onChange={event => setDateRange(event.target.value)} className="h-11 w-full rounded-xl border border-border bg-layout-card px-3 text-sm font-normal">{DATE_OPTIONS.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label>
+        <label className="block space-y-2 text-sm font-medium text-text-main"><span>Client</span><select aria-label="Filter activity by client" value={clientFilter || ''} onChange={event => setClientFilter(event.target.value || null)} className="h-11 w-full rounded-xl border border-border bg-layout-card px-3 text-sm font-normal"><option value="">All clients</option>{clients.map(client => <option key={client.id} value={client.id}>{client.display_name || client.client_name}</option>)}</select></label>
+      </MobileFilterSheet>
     </ProviderLayout>
   )
 }

@@ -1,3 +1,5 @@
+import MobileFilterSheet from '../../components/ui/MobileFilterSheet'
+import { MobileNavigationButton } from '../../components/layout/MobileNavigation'
 import { Skeleton, PageSkeleton, InlinePending } from '../../components/ui/Skeleton'
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
@@ -7,7 +9,7 @@ import {
   CheckCircle2, Clock, Send,
   Download, Pencil, Check,
   ArrowRight, RotateCcw, Video,
-  Sparkles, RefreshCw, MessageSquare,
+  Sparkles, RefreshCw, MessageSquare, MoreHorizontal,
 } from 'lucide-react'
 import ProviderLayout from '../../components/layout/ProviderLayout'
 import requestsApi from '../../api/requests.api'
@@ -1140,6 +1142,8 @@ export default function RequestDetailPage() {
   const [urgentLoading, setUrgentLoading] = useState(false)
   const [showActivityLog, setShowActivityLog] = useState(false)
   const [mobileTab, setMobileTab] = useState('details')
+  const [showMobileActions, setShowMobileActions] = useState(false)
+  const [isPhone, setIsPhone] = useState(() => window.innerWidth < 768)
   const [isCompact, setIsCompact] = useState(
     typeof window !== 'undefined' ? window.innerWidth < 1280 : false
   )
@@ -1147,6 +1151,7 @@ export default function RequestDetailPage() {
   useEffect(() => {
     const handleResize = () => {
       setIsCompact(window.innerWidth < 1280)
+      setIsPhone(window.innerWidth < 768)
     }
     window.addEventListener('resize', handleResize)
     return () => window.removeEventListener('resize', handleResize)
@@ -1410,8 +1415,17 @@ export default function RequestDetailPage() {
           </div>
         </div>
 
+        <div className="flex h-[60px] shrink-0 items-center gap-1 border-b border-border bg-layout-card px-2 md:hidden">
+          <MobileNavigationButton />
+          <button type="button" onClick={() => navigate('/requests')} aria-label="Back to requests" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-text-sub hover:bg-surface"><ChevronRight size={19} className="rotate-180" /></button>
+          <div className="min-w-0 flex-1 px-1"><p className="truncate text-sm font-semibold text-text-main">{req.title}</p><p className="text-[11px] text-text-dim">{mobileTab === 'details' ? 'Request details' : 'Conversation'}</p></div>
+          <button type="button" data-tour={isPhone ? "provider-request-chat" : undefined} onClick={() => setMobileTab(mobileTab === 'details' ? 'chat' : 'details')} aria-label={mobileTab === 'details' ? 'Show conversation' : 'Show request details'} title={mobileTab === 'details' ? 'Show conversation' : 'Show details'} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-text-sub hover:bg-surface">{mobileTab === 'details' ? <MessageSquare size={19} /> : <FileText size={19} />}</button>
+          <button type="button" data-tour={isPhone ? "provider-request-status" : undefined} onClick={() => setShowMobileActions(true)} aria-label="Request actions" aria-haspopup="dialog" aria-expanded={showMobileActions} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-text-sub hover:bg-surface"><MoreHorizontal size={21} /></button>
+        </div>
+
         {/* ── 1. FIXED TOP CONTROL BAR (MOBILE) ── */}
-        <div className="flex xl:hidden sticky top-0 gap-2 border-b border-border bg-layout-card px-3 py-3 items-center justify-between shrink-0 min-h-16 z-30 ">
+        <div className="hidden md:flex xl:hidden sticky top-0 gap-2 border-b border-border bg-layout-card px-3 py-3 items-center justify-between shrink-0 min-h-16 z-30 ">
+          <MobileNavigationButton />
           <div className="flex flex-1 items-center gap-2 min-w-0">
             <button
               onClick={() => navigate('/requests')}
@@ -1428,7 +1442,7 @@ export default function RequestDetailPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0 ml-2" data-tour={isCompact ? "provider-request-status" : undefined}>
+          <div className="flex items-center gap-2 shrink-0 ml-2" data-tour={isCompact && !isPhone ? "provider-request-status" : undefined}>
             <select
               aria-label="Request status"
               value={req.status}
@@ -1478,7 +1492,7 @@ export default function RequestDetailPage() {
         )}
 
         {/* Mobile View Switcher Tabs */}
-        <div className="flex xl:hidden gap-1 bg-layout-card border-b border-border p-2 shrink-0" aria-label="Request views">
+        <div className="hidden md:flex xl:hidden gap-1 bg-layout-card border-b border-border p-2 shrink-0" aria-label="Request views">
           <button
             onClick={() => setMobileTab('details')} aria-pressed={mobileTab === 'details'}
             className={`flex flex-1 min-h-11 items-center justify-center gap-2 text-center text-sm font-semibold rounded-xl transition-colors
@@ -1489,7 +1503,7 @@ export default function RequestDetailPage() {
           </button>
           <button
             onClick={() => setMobileTab('chat')} aria-pressed={mobileTab === 'chat'}
-            data-tour={isCompact ? "provider-request-chat" : undefined}
+            data-tour={isCompact && !isPhone ? "provider-request-chat" : undefined}
             className={`flex flex-1 min-h-11 items-center justify-center gap-2 text-center text-sm font-semibold rounded-xl transition-colors
               ${mobileTab === 'chat' ? 'bg-surface text-primary-ink' : 'text-text-sub'}
             `}
@@ -1823,6 +1837,12 @@ export default function RequestDetailPage() {
           isPro={isPro}
         />
       )}
+      <MobileFilterSheet open={showMobileActions} onClose={() => setShowMobileActions(false)} title="Request actions">
+        <p className="text-sm font-medium text-text-main">{req.title}</p>
+        <label className="block space-y-2 text-sm font-medium text-text-main"><span>Status</span><select aria-label="Request status" value={req.status} disabled={statusLoading} onChange={event => { if (event.target.value === 'delivered') setShowMobileActions(false); handleStatusChange(event.target.value) }} className="h-11 w-full rounded-xl border border-border bg-layout-card px-3 text-sm font-normal disabled:opacity-50">{STATUS_ORDER.map(status => <option key={status} value={status} disabled={status !== req.status && !allowedNext.includes(status)}>{statusConfig[status].label}</option>)}</select></label>
+        {statusLoading && <span className="flex items-center gap-2 text-sm text-text-sub"><InlinePending label="Updating status" />Updating status…</span>}
+        {['in_progress', 'delivered'].includes(req.status) && <button type="button" onClick={() => { setShowMobileActions(false); setShowDeliver(true) }} className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-medium text-on-primary"><Upload size={17} />Deliver files</button>}
+      </MobileFilterSheet>
       <VideoCall
         callState={callState}
         localStream={localStream}
