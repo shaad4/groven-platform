@@ -209,7 +209,7 @@ export default function ChatPanel({
     : null
 
   const handleWsMessage = useCallback((msg) => {
-    if (['call_offer', 'call_answer', 'ice_candidate', 'call_end'].includes(msg.type)){
+    if (['call_offer', 'call_answer', 'ice_candidate', 'call_end', 'call_busy', 'call_media'].includes(msg.type)){
       onSignal?.(msg)
       return
     }

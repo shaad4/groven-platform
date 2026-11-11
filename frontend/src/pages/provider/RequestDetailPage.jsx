@@ -1171,15 +1171,17 @@ export default function RequestDetailPage() {
   const sendSignal = useCallback((payload) => {
     if (chatWsRef.current?.readyState === WebSocket.OPEN){
       chatWsRef.current.send(JSON.stringify(payload))
+      return true
     }
+    return false
   }, [])
 
   const {
     callState, localStream, remoteStream,
-    isMuted, isCamOff,
+    isMuted, isCamOff, callError, mediaNotice, connectedAt, remoteCameraOff, dismissCall,
     startCall, acceptCall, declineCall, hangUp,
     handleSignal, toggleMute, toggleCam,
-  } = useWebRTC({ sendSignal })
+  } = useWebRTC({ sendSignal, requestId })
 
 
   const { width: chatWidth, onMouseDown } = usePanelResize({
@@ -1845,6 +1847,11 @@ export default function RequestDetailPage() {
       </MobileFilterSheet>
       <VideoCall
         callState={callState}
+        callError={callError}
+        mediaNotice={mediaNotice}
+        connectedAt={connectedAt}
+        remoteCameraOff={remoteCameraOff}
+        onDismiss={dismissCall}
         localStream={localStream}
         remoteStream={remoteStream}
         isMuted={isMuted}

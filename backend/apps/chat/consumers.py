@@ -57,13 +57,14 @@ class RequestChatConsumer(AsyncJsonWebsocketConsumer):
             if event == "ping":
                 await self.send_json({"type": "pong"})
 
-            elif event in ("call_offer", "call_answer", "ice_candidate", "call_end"):
+            elif event in ("call_offer", "call_answer", "ice_candidate", "call_end", "call_busy", "call_media"):
                 await self.channel_layer.group_send(
                     self.group_name,
                     {
                         "type": "call_signal",
                         "payload": content,
                         "sender_id": str(self.user.id),
+                        "sender_channel": self.channel_name,
                     },
                 )
         except Exception as e:
@@ -103,9 +104,15 @@ class RequestChatConsumer(AsyncJsonWebsocketConsumer):
 
     async def call_signal(self, event):
         try:
-            if event["sender_id"] == str(self.user.id):
+            if event.get("sender_channel") == self.channel_name:
                 return
-            await self.send_json(event["payload"])
+            same_user = event["sender_id"] == str(self.user.id)
+            if same_user and event["payload"].get("type") not in ("call_answer", "call_end"):
+                return
+            # Sibling tabs dismiss duplicate incoming calls when one tab answers
+            # or declines. Channel identity stays within the channel layer.
+            payload = {key: value for key, value in event["payload"].items() if key != "sender_channel"}
+            await self.send_json({**payload, "same_user": same_user})
         except Exception as e:
             logger.error(f"[RequestChatConsumer.call_signal] Error: {e}")
 

@@ -326,16 +326,18 @@ export default function ClientRequestDetailPage() {
 
     if (chatWsRef.current?.readyState === WebSocket.OPEN){
       chatWsRef.current.send(JSON.stringify(payload))
+      return true
     }
+    return false
 
   }, [])
 
   const {
     callState, localStream, remoteStream,
-    isMuted, isCamOff,
+    isMuted, isCamOff, callError, mediaNotice, connectedAt, remoteCameraOff, dismissCall,
     startCall, acceptCall, declineCall, hangUp,
     handleSignal, toggleMute, toggleCam,
-  } = useWebRTC({ sendSignal })
+  } = useWebRTC({ sendSignal, requestId })
 
   // ── Data fetching ──────────────────────────────────────────────────────────
 
@@ -1071,6 +1073,11 @@ export default function ClientRequestDetailPage() {
 
       <VideoCall
         callState={callState}
+        callError={callError}
+        mediaNotice={mediaNotice}
+        connectedAt={connectedAt}
+        remoteCameraOff={remoteCameraOff}
+        onDismiss={dismissCall}
         localStream={localStream}
         remoteStream={remoteStream}
         isMuted={isMuted}

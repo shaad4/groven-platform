@@ -1,4 +1,5 @@
 from django.db import DatabaseError
+from django.core.exceptions import ImproperlyConfigured
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -7,11 +8,37 @@ from apps.common.logger import logger
 from apps.request_management.models import Request
 
 from .access import get_chat_request
+from .call_config import build_call_config
 from .repositories import MessageRepository
 from .serializers import MessageSerializer
 from .services import create_message, mark_messages_read
 
 # Create your views here.
+
+
+class CallConfigView(APIView):
+    """Use the chat access policy before issuing credentials for a request call."""
+
+    def get(self, request, request_id):
+        req_obj = get_chat_request(request_id, request.tenant, request.user)
+        if req_obj is None:
+            return Response(
+                {"success": False, "message": "Request not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        try:
+            data = build_call_config(request.user.id)
+        except ImproperlyConfigured:
+            # Keep configuration values and shared secrets out of logs/responses.
+            logger.error("[CallConfigView] Invalid call relay configuration")
+            return Response(
+                {"success": False, "message": "Call relay configuration is unavailable."},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+        response = Response({"success": True, "data": data})
+        response["Cache-Control"] = "private, no-store, max-age=0"
+        response["Pragma"] = "no-cache"
+        return response
 
 
 class MessageListCreateView(APIView):

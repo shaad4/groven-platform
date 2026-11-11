@@ -116,6 +116,14 @@ The local frontend expects HTTPS at `lvh.me:5173` and a separately available HTT
 
 For deployment, set `DEBUG=False`, configure the backend hosts, frontend URL and cookie domain, and use the production frontend URL examples before building. `VITE_PORT` controls generated links, not the Vite server port. Real `.env` files remain ignored by Git.
 
+### Call relay configuration
+
+Calls across restrictive networks need a reachable TURN service; this repository does not provision one. Configure `TURN_URLS` and `TURN_SHARED_SECRET` in the backend environment. With coturn, enable `use-auth-secret` and set `static-auth-secret` to the same secret, following the [coturn configuration reference](https://github.com/coturn/coturn/blob/master/examples/etc/turnserver.conf). Configure its public address, realm, TLS certificate, listening ports, and relay firewall range for your deployment. Offer UDP and TLS/TCP relay URLs where available.
+
+The authenticated `GET /api/requests/{id}/call-config/` endpoint checks access to the request and returns `data.ice_servers`, `data.turn_available`, and `data.expires_at`. TURN usernames contain an expiry and user ID; credentials are signed server-side and expire after `TURN_CREDENTIAL_TTL` seconds (default 3600; allowed 300–86400). Fetch configuration when starting or accepting each call. Responses cannot be cached. Never put the shared secret in frontend code or a `VITE_*` variable.
+
+When both TURN settings are empty, the endpoint returns `STUN_URLS` only (default Google STUN). Direct connections can work, but relay-dependent networks will not. Partial or invalid relay configuration returns HTTP 503. Test a deployed relay between separate networks; a local browser test cannot establish relay availability.
+
 ---
 
 ## Deployment
