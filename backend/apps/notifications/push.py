@@ -31,6 +31,9 @@ def deliver_push(tenant_id, user_id, payload, ttl=300):
     if not push_enabled():
         return
     from pywebpush import webpush, WebPushException
+    # Keep encrypted previews within push services' payload limits, including Unicode.
+    payload = {**payload, 'title': str(payload.get('title', 'Workspace update'))[:120],
+               'body': str(payload.get('body', ''))[:240]}
     if payload.get('expires_at') and payload['expires_at'] <= timezone.now().timestamp() * 1000:
         return
     if payload.get('kind') == 'call' and payload.get('request_id'):
