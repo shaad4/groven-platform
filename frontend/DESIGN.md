@@ -7,7 +7,8 @@ Groven uses warm light surfaces, neutral charcoal dark surfaces, a locally bundl
 - `src/index.css` owns light/dark semantic tokens. Use `layout-page`, `layout-card`, `surface`, `border`, and `text-*` utilities rather than hardcoded surface colors.
 - `ThemeProvider` supports Light, Dark, and System inside menu/account settings. The preference persists under `groven-appearance`; the inline bootstrap in `index.html` applies it before React renders. Do not place theme controls in primary page navigation.
 - Use `primary` with `on-primary` for filled controls and `primary-ink` for accent text. Tenant colors are adjusted independently for readable text and button contrast.
-- `TenantBrandingProvider` validates the workspace slug, scopes cached identity to the hostname, and supplies the workspace logo, accent, title, and favicon. Never read the old unscoped `grove_tenant_branding` cache.
+- `TenantBrandingProvider` validates the workspace slug, scopes cached identity to the hostname, and supplies the workspace logo, accent, and favicon. Never read the old unscoped `grove_tenant_branding` cache.
+- `DocumentTitle` owns browser titles for public, provider, client, and admin routes using `Page | Groven`. Tenant branding must not overwrite the active page title.
 - Client entry, invitation, recovery, navigation, and request screens use workspace identity. The tenant homepage redirects to client sign-in or the signed-in workspace; the root domain retains Groven marketing.
 
 ## Responsive interaction

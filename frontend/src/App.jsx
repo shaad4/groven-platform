@@ -5,6 +5,7 @@ import { ProtectedRoute, GuestRoute, SetupRoute } from './routes/ProtectedRoute'
 import TenantRoute from './routes/TenantRoute'
 import TenantGuard from './routes/TenantGuard'
 import ErrorBoundary from './ErrorBoundary'
+import DocumentTitle from './components/DocumentTitle'
 import { useAuth } from './context/AuthContext'
 import { getSubdomain } from './utils/domain'
 import { TenantBrandingProvider } from './context/TenantBrandingContext'
@@ -74,6 +75,7 @@ export default function App() {
   return (
     <ErrorBoundary>
       <BrowserRouter>
+        <DocumentTitle />
         <Suspense fallback={
           <div className="min-h-dvh bg-layout-page"><PageSkeleton label="Loading workspace" /></div>
         }>
