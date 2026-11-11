@@ -1,3 +1,4 @@
+import DeviceNotifications from './DeviceNotifications'
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { createPortal } from 'react-dom'
@@ -332,6 +333,7 @@ export default function ClientNotificationBell({ collapsed = false, isMobileNav 
             </div>
           </div>
 
+          <DeviceNotifications />
           {/* body */}
           <div className="overflow-y-auto flex-1 bg-layout-page md:bg-transparent">
             {!notifLoaded ? (

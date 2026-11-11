@@ -9,6 +9,7 @@ import {
   selectTenant,
   selectIsAuth,
 } from '../features/auth/authSlice'
+import { disableDeviceNotifications } from '../utils/deviceNotifications'
 import { authApi } from '../api/auth.api'
 import { getSubdomain } from '../utils/domain'
 
@@ -32,6 +33,7 @@ export function AuthProvider({ children }) {
   }
 
   const logout = async () => {
+    try { await disableDeviceNotifications() } catch { /* Browser subscription is still revoked when possible. */ }
     setLoggingOut(true)
     
     try { await authApi.logout() } catch { /* silent */ }

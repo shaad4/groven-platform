@@ -77,3 +77,43 @@ class MarkAllReadView(APIView):
         ).update(is_read=True, read_at=timezone.now())
 
         return Response({"detail": "All notifications marked as read."})
+
+
+class PushSubscriptionView(APIView):
+    permission_classes = [IsAuthenticated, BelongsToTenant]
+
+    def get(self, request):
+        from django.conf import settings
+        from .push import push_enabled
+        return Response({'enabled': push_enabled(), 'public_key': settings.WEB_PUSH_PUBLIC_KEY if push_enabled() else ''})
+
+    def post(self, request):
+        import base64
+        from .models import PushSubscription
+        from .push import valid_endpoint, push_enabled
+        if not push_enabled():
+            return Response({'detail': 'Device notifications are not configured yet.'}, status=503)
+        endpoint = request.data.get('endpoint', '')
+        keys = request.data.get('keys', {})
+        try:
+            if not isinstance(endpoint, str) or len(endpoint) > 2048 or not valid_endpoint(endpoint):
+                raise ValueError()
+            if not isinstance(keys, dict):
+                raise ValueError()
+            for key, length in [('p256dh', 65), ('auth', 16)]:
+                value = keys.get(key, '')
+                if not isinstance(value, str) or len(value) > 128 or len(base64.urlsafe_b64decode(value + '=' * (-len(value) % 4))) != length:
+                    raise ValueError()
+        except (ValueError, TypeError):
+            return Response({'detail': 'Invalid push subscription.'}, status=400)
+        PushSubscription.objects.update_or_create(endpoint=endpoint, defaults={
+            'user': request.user, 'tenant': request.tenant,
+            'keys': {key: keys[key] for key in ('p256dh', 'auth')},
+        })
+        return Response({'detail': 'Device notifications enabled.'}, status=201)
+
+    def delete(self, request):
+        from .models import PushSubscription
+        PushSubscription.objects.filter(user=request.user, tenant=request.tenant,
+            endpoint=request.data.get('endpoint', '')).delete()
+        return Response(status=204)

@@ -1,5 +1,5 @@
 from types import SimpleNamespace
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from asgiref.sync import async_to_sync
@@ -59,10 +59,13 @@ def test_other_participant_signals_override_untrusted_same_user_marker(signal_ty
     })
 
 
+@pytest.mark.django_db(transaction=True)
 def test_origin_channel_is_stamped_server_side_for_group_delivery():
     socket = consumer()
-    payload = {"type": "call_answer", "call_id": "call-1", "sender_channel": "forged"}
-    async_to_sync(socket.receive_json)(payload)
+    payload = {"type": "call_media", "call_id": "call-1", "sender_channel": "forged"}
+    socket._get_request = AsyncMock(return_value=SimpleNamespace())
+    with patch('apps.chat.call_sessions.handle', return_value=(True, None)):
+        async_to_sync(socket.receive_json)(payload)
     event = socket.channel_layer.group_send.await_args.args[1]
     assert event["sender_id"] == "receiver"
     assert event["sender_channel"] == "receiver-tab"

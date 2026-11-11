@@ -313,3 +313,6 @@ def notify_overdue_requests():
 
     logger.info(f"[notify_overdue_requests] processed={notified}")
     return notified
+
+# Register Web Push tasks when Celery autodiscovers this app.
+from .push import deliver_push  # noqa: F401,E402

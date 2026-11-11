@@ -6,7 +6,7 @@ import {
   useState,
 } from 'react'
 import { useSelector } from 'react-redux'
-import { Outlet } from 'react-router-dom'
+import { Outlet, useNavigate } from 'react-router-dom'
 
 
 import dashboardApi from '../api/dashboard.api'
@@ -17,6 +17,8 @@ import { useDispatch } from 'react-redux'
 import { setStatus, removeConnection } from '../features/ws/wsSlice'
 
 import { wsUrl } from '../utils/urls'
+
+import { syncDeviceNotifications } from '../utils/deviceNotifications'
 
 export const BadgeContext = createContext(null)
 
@@ -43,6 +45,14 @@ function playNotificationSound() {
 
 export function BadgeProvider({ children }) {
   const { user } = useAuth()
+  const navigate = useNavigate()
+  const [incomingCall, setIncomingCall] = useState(null)
+  useEffect(() => { if (user?.id) syncDeviceNotifications().catch(() => {}) }, [user?.id])
+  useEffect(() => {
+    if (!incomingCall) return
+    const timer = setTimeout(() => setIncomingCall(null), Math.max(0, incomingCall.expires_at - Date.now()))
+    return () => clearTimeout(timer)
+  }, [incomingCall])
   const accessToken = useSelector(selectAccessToken)
   const dispatch = useDispatch()
 
@@ -158,6 +168,9 @@ export function BadgeProvider({ children }) {
       try {
         const msg = JSON.parse(e.data)
 
+        if (msg.type === 'incoming_call' && msg.kind === 'call_closed') setIncomingCall(previous => previous?.call_id === msg.call_id ? null : previous)
+        if (msg.type === 'incoming_call' && msg.expires_at > Date.now() && window.location.pathname !== msg.url) setIncomingCall(msg)
+
         // ── bell notifications (both roles) ───────────────────────────────
         if (msg.type === 'notification') {
           const newNotif = {
@@ -262,6 +275,11 @@ export function BadgeProvider({ children }) {
   return (
     <BadgeContext.Provider value={value}>
       {children ?? <Outlet />}
+      {incomingCall && <div role="alert" className="fixed left-4 right-4 top-[max(1rem,env(safe-area-inset-top))] z-[500] mx-auto flex max-w-md items-center gap-3 rounded-2xl border border-border bg-layout-card p-4 shadow-xl">
+        <div className="min-w-0 flex-1"><p className="text-sm font-semibold text-text-main">{incomingCall.title}</p><p className="mt-1 text-xs text-text-sub">Incoming video call</p></div>
+        <button onClick={() => { navigate(incomingCall.url); setIncomingCall(null) }} className="min-h-11 rounded-xl bg-primary px-4 text-sm font-medium text-on-primary">Open call</button>
+        <button aria-label="Dismiss call alert" onClick={() => setIncomingCall(null)} className="min-h-11 px-2 text-text-sub">×</button>
+      </div>}
     </BadgeContext.Provider>
   )
 }

@@ -45,6 +45,8 @@ class NotificationFeedConsumer(AsyncJsonWebsocketConsumer):
             await self.send_json({"type": "pong"})
 
     async def feed_notification(self, event):
+        if event.get('tenant_id') and event['tenant_id'] != str(self.tenant.id):
+            return
         try:
             await self.send_json(
                 {
@@ -63,6 +65,10 @@ class NotificationFeedConsumer(AsyncJsonWebsocketConsumer):
             )
         except Exception as e:
             logger.error(f"[NotificationFeedConsumer.feed_notification] Error: {e}")
+
+    async def feed_call(self, event):
+        if event.get('tenant_id') == str(self.tenant.id):
+            await self.send_json({'type': 'incoming_call', **event['payload']})
 
     async def feed_activity(self, event):
         try:
