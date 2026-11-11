@@ -1,8 +1,14 @@
 const INITIAL_STATE = {
   callState: 'idle', localStream: null, remoteStream: null,
   isMuted: false, isCamOff: false, remoteCameraOff: false,
-  callError: '', mediaNotice: '', connectedAt: null,
+  callError: '', mediaNotice: '', connectedAt: null, cameraPending: false,
 }
+const cameraMessage = error => ({
+  NotFoundError: 'No camera was detected. Connect a camera, then choose Retry camera.',
+  NotReadableError: 'The camera could not start. Close other camera apps or tabs, then choose Retry camera.',
+  OverconstrainedError: 'The camera could not use the requested settings. Choose Retry camera to use its defaults.',
+  NotAllowedError: 'Camera access was blocked by the browser or device. Check camera permissions, then retry.',
+}[error?.name] || 'The camera stopped or is unavailable. Choose Retry camera to reconnect it.')
 const stopTracks = stream => stream?.getTracks().forEach(track => { track.onended = null; track.stop() })
 const mediaMessage = error => {
   if (['NotAllowedError', 'PermissionDeniedError', 'SecurityError'].includes(error?.name)) return 'Camera or microphone access was denied. Allow access in your browser or iPhone website settings, then try again.'
@@ -37,6 +43,7 @@ export class WebRTCCall {
     this.ringtone.stop()
     const peer = this.peer
     this.peer = null
+    this.videoSender = null
     if (peer) {
       peer.onicecandidate = null; peer.ontrack = null
       peer.onconnectionstatechange = null; peer.oniceconnectionstatechange = null
@@ -67,20 +74,20 @@ export class WebRTCCall {
 
   async acquire(generation) {
     if (!this.mediaDevices?.getUserMedia || !this.PeerConnection) throw new Error('Calling needs a supported browser and a secure HTTPS connection.')
-    let stream, audioOnly = false
+    let stream, cameraError = null
     try {
-      stream = await this.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true }, video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 24, max: 30 } } })
+      stream = await this.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true }, video: true })
     } catch (error) {
       if (generation !== this.generation) return null
       // A denial is final for this attempt: do not immediately show another permission prompt.
       if (!['NotFoundError', 'OverconstrainedError', 'NotReadableError'].includes(error.name)) throw error
       stream = await this.mediaDevices.getUserMedia({ audio: { echoCancellation: true }, video: false })
-      audioOnly = true
+      cameraError = error
     }
     if (generation !== this.generation) { stopTracks(stream); return null }
     if (!stream.getAudioTracks().some(track => track.readyState === 'live')) { stopTracks(stream); throw new Error('A working microphone is required to join this call.') }
     const noCamera = !stream.getVideoTracks().some(track => track.readyState === 'live')
-    this.update({ localStream: stream, isCamOff: noCamera, mediaNotice: audioOnly || noCamera ? 'Camera unavailable. Your microphone is connected for an audio call.' : '' })
+    this.update({ localStream: stream, isCamOff: noCamera, mediaNotice: noCamera ? `${cameraMessage(cameraError)} Your microphone is connected for an audio call.` : '' })
     stream.getTracks().forEach(track => {
       track.onended = () => {
         if (generation !== this.generation) return
@@ -91,7 +98,7 @@ export class WebRTCCall {
     return stream
   }
 
-  async createPeer(generation, stream) {
+  async createPeer(generation, stream, offer = null) {
     const iceServers = await this.getIceServers()
     if (generation !== this.generation) return null
     const peer = new this.PeerConnection({ iceServers })
@@ -123,9 +130,21 @@ export class WebRTCCall {
     }
     peer.onconnectionstatechange = connectionChanged
     peer.oniceconnectionstatechange = connectionChanged
-    stream.getTracks().forEach(track => peer.addTrack(track, stream))
-    // Audio-only callers can still receive the other participant’s camera.
-    if (!stream.getVideoTracks().length) peer.addTransceiver('video', { direction: 'recvonly' })
+    // Apply the offer first so Safari/Chrome reuse its video transceiver in the answer.
+    if (offer) {
+      await peer.setRemoteDescription(offer)
+      if (generation !== this.generation) return null
+    }
+    stream.getAudioTracks().forEach(track => peer.addTrack(track, stream))
+    // Reserve a send/receive video slot so a camera can recover without renegotiation.
+    const incomingVideo = peer.getTransceivers?.().find(item => item.receiver.track.kind === 'video')
+    if (incomingVideo) {
+      incomingVideo.direction = 'sendrecv'
+      incomingVideo.sender.setStreams?.(stream)
+      await incomingVideo.sender.replaceTrack(stream.getVideoTracks()[0] || null)
+      if (generation !== this.generation) return null
+      this.videoSender = incomingVideo.sender
+    } else this.videoSender = peer.addTransceiver(stream.getVideoTracks()[0] || 'video', { direction: 'sendrecv', streams: [stream] }).sender
     return peer
   }
   sendDescription(type, description) {
@@ -173,10 +192,8 @@ export class WebRTCCall {
     try {
       const stream = await this.acquire(generation)
       if (!stream) return
-      const peer = await this.createPeer(generation, stream)
+      const peer = await this.createPeer(generation, stream, offer)
       if (!peer) return
-      await peer.setRemoteDescription(offer)
-      if (generation !== this.generation) return
       await this.flushCandidates(peer, generation)
       if (generation !== this.generation) return
       const answer = await peer.createAnswer()
@@ -197,7 +214,7 @@ export class WebRTCCall {
       return
     }
     if (message.type === 'call_offer') {
-      if (!message.sdp || message.sdp.type !== 'offer') return
+      if (!message.sdp || message.sdp.type !== 'offer' || (message.expires_at && message.expires_at <= Date.now())) return
       if (!['idle', 'error'].includes(this.state.callState)) {
         if (message.call_id !== this.callId) {
           try { this.sendSignal({ type: 'call_busy', call_id: message.call_id }) } catch { /* The active call remains intact. */ }
@@ -209,7 +226,7 @@ export class WebRTCCall {
       this.offer = message.sdp
       this.update({ ...INITIAL_STATE, callState: 'incoming', remoteCameraOff: Boolean(message.camera_off) })
       this.ringtone.start('incoming')
-      this.setupTimer = setTimeout(() => this.end(false), 60000)
+      this.setupTimer = setTimeout(() => this.end(false), message.expires_at ? Math.max(0, message.expires_at - Date.now()) : 60000)
       return
     }
     if (!this.callId || (message.call_id && message.call_id !== this.callId)) return
@@ -243,9 +260,37 @@ export class WebRTCCall {
     const muted = !this.state.isMuted
     tracks.forEach(track => { track.enabled = !muted }); this.update({ isMuted: muted })
   }
+  async retryCamera() {
+    if (!this.peer || !this.videoSender || this.state.cameraPending) return
+    const generation = this.generation, sender = this.videoSender
+    this.update({ cameraPending: true })
+    let capture
+    try {
+      capture = await this.mediaDevices.getUserMedia({ audio: false, video: true })
+      if (generation !== this.generation) { stopTracks(capture); return }
+      const video = capture.getVideoTracks().find(track => track.readyState === 'live')
+      if (!video) throw new Error('No camera track')
+      await sender.replaceTrack(video)
+      if (generation !== this.generation) { stopTracks(capture); return }
+      const previous = this.state.localStream
+      previous.getVideoTracks().forEach(track => { track.onended = null; track.stop() })
+      video.onended = () => {
+        if (generation !== this.generation) return
+        this.update({ isCamOff: true, mediaNotice: cameraMessage() })
+        this.signal({ type: 'call_media', camera_off: true })
+      }
+      this.update({ localStream: new this.Stream([...previous.getAudioTracks(), video]), isCamOff: false, mediaNotice: '' })
+      this.signal({ type: 'call_media', camera_off: false })
+    } catch (error) {
+      stopTracks(capture)
+      if (generation === this.generation) this.update({ mediaNotice: `${cameraMessage(error)} Audio is still connected.` })
+    } finally {
+      if (generation === this.generation) this.update({ cameraPending: false })
+    }
+  }
   toggleCam() {
     const tracks = this.state.localStream?.getVideoTracks().filter(track => track.readyState === 'live') || []
-    if (!tracks.length) return
+    if (!tracks.length) return this.retryCamera()
     const off = !this.state.isCamOff
     tracks.forEach(track => { track.enabled = !off }); this.update({ isCamOff: off })
     this.signal({ type: 'call_media', camera_off: off })

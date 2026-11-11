@@ -12,7 +12,7 @@ class Peer {
   static peers = []
   constructor() { Peer.peers.push(this); this.signalingState = 'stable'; this.connectionState = 'new'; this.added = [] }
   addTrack() {}
-  addTransceiver() {}
+  addTransceiver() { return { sender: { replaceTrack: jest.fn(async () => {}) } } }
   async createOffer() { return { type: 'offer', sdp: 'offer' } }
   async createAnswer() { return { type: 'answer', sdp: 'answer' } }
   async setLocalDescription(value) { this.localDescription = value; this.signalingState = value.type === 'offer' ? 'have-local-offer' : 'stable' }
@@ -108,4 +108,24 @@ test('answering in another tab dismisses the duplicate incoming call without end
   const { call, sendSignal } = setup(); await call.handleSignal(offer)
   await call.handleSignal({ type: 'call_answer', call_id: offer.call_id, same_user: true })
   expect(call.state.callState).toBe('idle'); expect(sendSignal).not.toHaveBeenCalled()
+})
+
+ test('camera recovery replaces the reserved sender without dropping audio', async () => {
+  const audio = new Stream([track('audio')]), video = track('video')
+  const capture = jest.fn().mockRejectedValueOnce(Object.assign(new Error(), { name: 'NotReadableError' }))
+    .mockResolvedValueOnce(audio).mockResolvedValueOnce(new Stream([video]))
+  const { call, sendSignal } = setup(capture)
+  await call.start(); Peer.peers[0].connect()
+  await call.toggleCam()
+  expect(call.videoSender.replaceTrack).toHaveBeenCalledWith(video)
+  expect(call.state.localStream.getAudioTracks()[0]).toBe(audio.getAudioTracks()[0])
+  expect(call.state.mediaNotice).toBe('')
+  expect(sendSignal).toHaveBeenCalledWith(expect.objectContaining({ type: 'call_media', camera_off: false }))
+})
+test('hangup during camera retry stops the late camera', async () => {
+  const { call, mediaDevices } = setup(); await call.start()
+  let resolve; mediaDevices.getUserMedia = jest.fn(() => new Promise(done => { resolve = done }))
+  const retry = call.retryCamera(); call.end()
+  const video = track('video'); resolve(new Stream([video])); await retry
+  expect(video.stop).toHaveBeenCalled(); expect(call.state.callState).toBe('idle')
 })
