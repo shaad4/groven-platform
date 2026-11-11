@@ -2,21 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import requestsApi from '../api/requests.api'
 import { WebRTCCall } from '../utils/webRTCCall'
 
-// Kept behind an adapter so call cleanup always stops audio synchronously.
-function createRingtone() {
-  let audio
-  return {
-    unlock() {},
-    start(type) {
-      this.stop()
-      audio = new Audio(type === 'incoming' ? '/sounds/incoming-ring.mp3' : '/sounds/ringback.wav')
-      audio.loop = true; audio.volume = 0.35
-      audio.play().catch(() => {})
-    },
-    stop() { if (audio) { audio.pause(); audio.currentTime = 0; audio = null } },
-    dispose() { this.stop() },
-  }
-}
+import { createCallRingtone } from '../utils/callRingtone'
 
 export function useWebRTC({ sendSignal, requestId }) {
   const signalRef = useRef(sendSignal)
@@ -35,17 +21,25 @@ export function useWebRTC({ sendSignal, requestId }) {
       } catch (error) {
         throw new Error([403, 404].includes(error.response?.status)
           ? 'This request is no longer available for a call.'
-          : 'Calling is temporarily unavailable. Check your connection and try again shortly.')
+          : 'Calling is temporarily unavailable. Check your connection and try again shortly.', { cause: error })
       }
     },
-    ringtone: createRingtone(),
+    ringtone: createCallRingtone(),
     onChange: setState,
   })
   const call = controllerRef.current
   useEffect(() => {
     const onPageHide = () => call.leave()
+    const unlockAudio = () => call.ringtone.unlock()
     window.addEventListener('pagehide', onPageHide)
-    return () => { window.removeEventListener('pagehide', onPageHide); call.dispose() }
+    document.addEventListener('pointerdown', unlockAudio, { passive: true })
+    document.addEventListener('keydown', unlockAudio)
+    return () => {
+      window.removeEventListener('pagehide', onPageHide)
+      document.removeEventListener('pointerdown', unlockAudio)
+      document.removeEventListener('keydown', unlockAudio)
+      call.dispose()
+    }
   }, [call, requestId])
   return {
     ...(state || call.state),
