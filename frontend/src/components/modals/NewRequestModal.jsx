@@ -1,3 +1,4 @@
+import { InlinePending } from '../ui/Skeleton'
 import { useState, useRef, useMemo } from 'react'
 import {
   X,
@@ -6,8 +7,7 @@ import {
   ArrowRight,
   CheckCircle2,
   AlertCircle,
-  Loader2,
-} from 'lucide-react'
+  } from 'lucide-react'
 import requestsApi from '../../api/requests.api'
 import { useTenantBranding } from '../../context/TenantBrandingContext'
 import { useDialogFocus } from '../../hooks/useDialogFocus'
@@ -592,7 +592,7 @@ export default function NewRequestModal({ providerName, onClose, onSuccess }) {
               style={{ background: accent }}
             >
               {submitting ? (
-                <Loader2 size={18} className="animate-spin" />
+                <><InlinePending label="Submitting request" /> Submitting…</>
               ) : (
                 <>
                   Submit Request

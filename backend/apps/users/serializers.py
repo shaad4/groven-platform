@@ -1,6 +1,5 @@
 import re
 
-import requests as http_requests
 from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 
@@ -121,28 +120,3 @@ class ResetPasswordSerializer(serializers.Serializer):
     def validate_password(self, value):
         validate_password(value)
         return value
-
-
-class GoogleAuthSerializer(serializers.Serializer):
-    access_token = serializers.CharField(write_only=True)
-
-    def validate_access_token(self, value):
-        response = http_requests.get(
-            "https://www.googleapis.com/oauth2/v3/userinfo",
-            headers={"Authorization": f"Bearer {value}"},
-            timeout=10,
-        )
-
-        if response.status_code != 200:
-            raise serializers.ValidationError("Invalid Google access token.")
-
-        info = response.json()
-
-        if not info.get("email_verified"):
-            raise serializers.ValidationError("Google account email is not verified.")
-
-        return {
-            "email": info["email"].lower().strip(),
-            "display_name": info.get("name", ""),
-            "avatar_url": info.get("picture", None),
-        }

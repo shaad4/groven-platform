@@ -8,7 +8,7 @@ const stages = [
 ]
 
 function FileRow({ name, type }) {
-  return <div className="flex min-w-0 items-center gap-3 border-t border-border py-3"><FileText size={17} className="shrink-0 text-text-dim" /><span className="min-w-0 flex-1 break-words text-xs font-medium text-text-main">{name}</span><span className="shrink-0 text-[10px] text-text-dim">{type}</span></div>
+  return <div className="flex min-w-0 items-center gap-3 border-t border-border py-3"><FileText size={17} className="workflow-file-icon shrink-0" /><span className="min-w-0 flex-1 break-words text-xs font-medium text-text-main">{name}</span><span className="shrink-0 text-[10px] text-text-dim">{type}</span></div>
 }
 
 export default function RequestWorkflow() {
@@ -30,14 +30,14 @@ export default function RequestWorkflow() {
   }
 
   return (
-    <div className="min-w-0" aria-label="Interactive example of a client request">
+    <div className="landing-workflow min-w-0" data-stage={active.id} aria-label="Interactive example of a client request">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-[11px] text-text-dim"><span>Inside a request</span><span>Interactive example</span></div>
-      <div className="overflow-hidden rounded-xl border border-border bg-layout-card">
+      <div className="landing-workflow-frame overflow-hidden rounded-xl border border-border bg-layout-card">
         <div role="tablist" aria-label="Example request stages" className="grid grid-cols-3 border-b border-border bg-surface/50">
-          {stages.map((stage, index) => <button key={stage.id} ref={element => { tabRefs.current[index] = element }} type="button" role="tab" id={`${id}-tab-${stage.id}`} aria-controls={`${id}-panel-${stage.id}`} aria-selected={activeIndex === index} tabIndex={activeIndex === index ? 0 : -1} onClick={() => setActiveIndex(index)} onKeyDown={event => handleKeyDown(event, index)} aria-label={stage.label} className={`relative flex min-h-14 items-center justify-center gap-2 px-2 text-xs transition-colors sm:gap-3 ${activeIndex === index ? 'bg-layout-card font-semibold text-text-main' : 'text-text-sub hover:bg-layout-card/70'}`}><span className="text-[10px] font-normal tabular-nums text-text-dim">{stage.number}</span>{stage.label}{activeIndex === index && <span aria-hidden="true" className="absolute inset-x-4 bottom-0 h-0.5 bg-primary" />}</button>)}
+          {stages.map((stage, index) => <button key={stage.id} ref={element => { tabRefs.current[index] = element }} type="button" role="tab" id={`${id}-tab-${stage.id}`} aria-controls={`${id}-panel-${stage.id}`} aria-selected={activeIndex === index} tabIndex={activeIndex === index ? 0 : -1} onClick={() => setActiveIndex(index)} onKeyDown={event => handleKeyDown(event, index)} aria-label={stage.label} className={`workflow-tab relative flex min-h-14 items-center justify-center gap-2 px-2 text-xs transition-colors sm:gap-3 ${activeIndex === index ? 'bg-layout-card font-semibold text-text-main' : 'text-text-sub hover:bg-layout-card/70'}`}><span className="text-[10px] font-normal tabular-nums text-text-dim">{stage.number}</span>{stage.label}{activeIndex === index && <span aria-hidden="true" className="workflow-tab-rule absolute inset-x-4 bottom-0 h-0.5" />}</button>)}
         </div>
         <div className="px-5 pt-6 sm:px-7 sm:pt-7">
-          <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-[10px]"><span className="text-text-dim">North Coffee / Campaign design</span><span className={`inline-flex items-center gap-1.5 ${activeIndex === 2 ? 'text-primary-ink' : 'text-text-sub'}`}>{activeIndex === 2 ? <Check size={12} /> : <span className="h-1.5 w-1.5 rounded-full bg-current" />}{active.status}</span></div>
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-[10px]"><span className="text-text-dim">North Coffee / Campaign design</span><span className={`workflow-status inline-flex items-center gap-1.5 ${activeIndex === 2 ? 'text-primary-ink' : 'text-text-sub'}`}>{activeIndex === 2 ? <Check size={12} /> : <span className="h-1.5 w-1.5 rounded-full bg-current" />}{active.status}</span></div>
           <h2 className="text-xl font-semibold tracking-tight sm:text-[23px]">Spring launch assets</h2>
           <p className="mt-2 border-b border-border pb-5 text-xs text-text-sub">Requested by Jamie at North Coffee</p>
         </div>

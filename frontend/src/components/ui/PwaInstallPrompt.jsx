@@ -81,7 +81,7 @@ export default function PwaInstallPrompt() {
   const logoUrl = isClient ? tenantInfo?.logo_url : null;
 
   return (
-    <div className="fixed bottom-[calc(88px+env(safe-area-inset-bottom))] lg:bottom-4 left-4 right-4 md:left-auto md:right-8 md:w-[380px] bg-layout-card rounded-2xl shadow-2xl border border-gray-200 p-5 z-[9999] animate-in slide-in-from-bottom-5 fade-in duration-300">
+    <div className="fixed bottom-[max(16px,env(safe-area-inset-bottom))] lg:bottom-4 left-4 right-4 md:left-auto md:right-8 md:w-[380px] bg-layout-card rounded-2xl shadow-2xl border border-gray-200 p-5 z-[100] animate-in slide-in-from-bottom-5 fade-in duration-300">
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-3">
           {logoUrl ? (

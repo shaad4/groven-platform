@@ -1,6 +1,7 @@
+import { InlinePending } from '../ui/Skeleton'
 import { useDialogFocus } from '../../hooks/useDialogFocus'
 import { useState, useRef } from 'react'
-import { X, Loader2 } from 'lucide-react'
+import { X } from 'lucide-react'
 import clientsApi from '../../api/clients.api'
 import { BUSINESS_TYPES } from '../../utils/clientHelpers'
 
@@ -192,7 +193,7 @@ export default function EditClientModal({ client, onClose, onSuccess }) {
             disabled={loading}
             className="flex h-10 items-center gap-2 rounded-xl bg-primary px-6 text-[13px] font-medium text-on-primary hover:bg-primary-dark disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
           >
-            {loading && <Loader2 size={14} className="animate-spin" />}
+            {loading && <InlinePending label="Saving client" />}
             Save changes
           </button>
         </div>

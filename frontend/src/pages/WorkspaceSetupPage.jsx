@@ -5,7 +5,6 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { appUrl } from '../utils/urls'
 import {
   Globe,
-  Loader2,
   ArrowRight,
   CheckCircle2,
   XCircle,
@@ -18,6 +17,7 @@ import { useAuth } from '../context/AuthContext'
 
 import BrandMark from '../components/marketing/BrandMark'
 import AppearanceMenu from '../components/marketing/AppearanceMenu'
+import { InlinePending } from '../components/ui/Skeleton'
 
 const schema = z.object({
   business_name: z
@@ -227,7 +227,7 @@ export default function WorkspaceSetupPage() {
                 <span className="text-xs text-text-dim">.groven.in</span>
                 {/* Inline Status Indicators */}
                 {slugStatus === 'checking' && (
-                  <Loader2 size={16} className="animate-spin text-text-dim" />
+                  <InlinePending label="Checking workspace address" />
                 )}
                 {slugStatus === 'available' && (
                   <CheckCircle2 size={16} className="text-primary-ink" />
@@ -265,7 +265,7 @@ export default function WorkspaceSetupPage() {
             >
               {isSubmitting ? (
                 <>
-                  <Loader2 size={16} className="animate-spin" />
+                  <InlinePending label="Creating your workspace" />
                   Creating your workspace…
                 </>
               ) : (

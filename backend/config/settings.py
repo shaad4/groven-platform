@@ -235,7 +235,6 @@ DEFAULT_FROM_EMAIL = config("EMAIL_HOST_USER", default="logonxavi77@gmail.com")
 FRONTEND_URL = config("FRONTEND_URL")
 COOKIE_DOMAIN = config("COOKIE_DOMAIN", default=".lvh.me")
 
-GOOGLE_CLIENT_ID = config("GOOGLE_CLIENT_ID")
 
 # S3 Setup
 AWS_ACCESS_KEY_ID = config("AWS_ACCESS_KEY_ID")

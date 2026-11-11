@@ -1,3 +1,4 @@
+import { PageSkeleton } from '../../components/ui/Skeleton'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowUpRight, TrendingUp, TrendingDown } from 'lucide-react'
@@ -48,8 +49,8 @@ export default function AdminDashboardPage() {
   if (loading) {
     return (
       <AdminLayout>
-        <div className="flex h-full items-center justify-center">
-          <div className="h-7 w-7 rounded-full border-2 border-border border-t-[#1D9E75] animate-spin" />
+        <div className="w-full">
+          <PageSkeleton label="Loading dashboard" variant="dashboard" />
         </div>
       </AdminLayout>
     )
@@ -58,7 +59,7 @@ export default function AdminDashboardPage() {
   if (error) {
     return (
       <AdminLayout>
-        <div className="flex h-full items-center justify-center">
+        <div className="w-full">
           <div className="rounded-xl border border-status-danger-text/20 bg-status-danger-bg px-5 py-4 text-[13px] text-status-danger-text">
             {error}
           </div>

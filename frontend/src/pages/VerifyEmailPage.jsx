@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { Loader2, CheckCircle2, XCircle } from 'lucide-react'
+import { CheckCircle2, XCircle } from 'lucide-react'
 import { authApi } from '../api/auth.api'
 import { useAuth } from '../context/AuthContext'
 import AuthShell from '../components/layout/AuthShell'
 import { appUrl } from '../utils/urls'
+import { Skeleton } from '../components/ui/Skeleton'
 
 export default function VerifyEmailPage() {
   const [params] = useSearchParams()
@@ -48,7 +49,7 @@ export default function VerifyEmailPage() {
   return (
     <AuthShell centered>
       <div role="status" aria-live="polite" className="text-center">
-        <div className={`mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl ${status === 'error' ? 'bg-status-danger-bg text-status-danger-text' : 'bg-primary-light text-primary-ink'}`}>{status === 'verifying' ? <Loader2 size={28} className="animate-spin" /> : status === 'success' ? <CheckCircle2 size={30} /> : <XCircle size={30} />}</div>
+        {status === 'verifying' ? <Skeleton className="mx-auto mb-6 h-16 w-16 rounded-2xl" /> : <div className={`mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl ${status === 'error' ? 'bg-status-danger-bg text-status-danger-text' : 'bg-primary-light text-primary-ink'}`}>{status === 'success' ? <CheckCircle2 size={30} /> : <XCircle size={30} />}</div>}
         <h1 className="text-[30px] font-medium tracking-[-0.04em]">{status === 'verifying' ? 'Verifying your email.' : status === 'success' ? 'Email verified' : 'Verification failed'}</h1>
         <p className="mt-3 text-sm leading-7 text-text-sub">{status === 'verifying' ? 'Just a moment while we confirm your email address.' : status === 'success' ? 'Your email is verified. We’re getting your workspace setup ready.' : 'This verification link is invalid or has expired. Return to sign up to request a new one.'}</p>
         {status === 'success' && <p className="mt-6 text-xs text-text-sub">Taking you to workspace setup</p>}

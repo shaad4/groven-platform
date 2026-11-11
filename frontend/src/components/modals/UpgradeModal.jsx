@@ -1,7 +1,8 @@
+import { InlinePending } from '../ui/Skeleton'
 import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { useSelector, useDispatch } from 'react-redux'
-import { X, Check, Loader2 } from 'lucide-react'
+import { X, Check } from 'lucide-react'
 import { getPlanPricing } from '../../api/plans.api'
 
 import {
@@ -64,7 +65,7 @@ function PlanCard({ name, price, features, highlighted, cta, onCta, loading }) {
               : 'bg-transparent text-text-sub border border-border hover:bg-surface'
           }`}
         >
-          {loading ? <Loader2 size={14} className="animate-spin" /> : cta}
+          {loading ? <><InlinePending label="Opening checkout" /> Opening checkout…</> : cta}
         </button>
       )}
     </div>

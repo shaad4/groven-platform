@@ -2,7 +2,6 @@ import { createContext, useContext, useState, useEffect, useLayoutEffect, useMem
 import { authApi } from '../api/auth.api'
 import { getBrandColors, tenantCacheKey, tenantSlugForHost } from '../utils/branding'
 import { useTheme } from './ThemeContext'
-import { useAuth } from './AuthContext'
 
 const TenantBrandingContext = createContext(null)
 const DOMAIN = import.meta.env.VITE_APP_DOMAIN || 'lvh.me'
@@ -17,7 +16,6 @@ function readCache(host, slug) {
 }
 
 export function TenantBrandingProvider({ children }) {
-  const { user } = useAuth()
   const host = window.location.hostname
   const slug = tenantSlugForHost(host, DOMAIN)
   const { resolvedTheme } = useTheme()
@@ -61,25 +59,22 @@ export function TenantBrandingProvider({ children }) {
   }, [colors, slug, tenantInfo])
 
   useEffect(() => {
-    const previousTitle = document.title
     const icons = Array.from(document.querySelectorAll('link[rel="icon"]'))
     const previousIcons = icons.map(icon => ({ icon, href: icon.getAttribute('href'), type: icon.getAttribute('type'), sizes: icon.getAttribute('sizes') }))
     if (slug && tenantInfo) {
-      document.title = `${tenantInfo.name} — ${user?.role === 'provider' ? 'Workspace' : 'Client portal'}`
       const initials = tenantInfo.name?.split(/\s+/).filter(Boolean).map(word => word[0]).join('').slice(0, 2).toUpperCase() || 'P'
       const safeInitials = initials.replace(/[&<>"']/g, '')
       const fallback = `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><rect width="64" height="64" rx="16" fill="${colors.accent}"/><text x="32" y="42" text-anchor="middle" font-family="sans-serif" font-size="26" fill="white">${safeInitials}</text></svg>`)}`
       icons.forEach(icon => { icon.href = tenantInfo.logo_url || fallback; icon.removeAttribute('type'); icon.removeAttribute('sizes') })
     }
     return () => {
-      document.title = previousTitle
       previousIcons.forEach(({ icon, href, type, sizes }) => {
         if (href) icon.setAttribute('href', href)
         if (type) icon.setAttribute('type', type); else icon.removeAttribute('type')
         if (sizes) icon.setAttribute('sizes', sizes); else icon.removeAttribute('sizes')
       })
     }
-  }, [slug, tenantInfo, colors.accent, user?.role])
+  }, [slug, tenantInfo, colors.accent])
 
   return <TenantBrandingContext.Provider value={{ tenantInfo, colors, loading, error }}>{children}</TenantBrandingContext.Provider>
 }

@@ -1,3 +1,4 @@
+import { PageSkeleton } from '../components/ui/Skeleton'
 import { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import adminAuthApi from '../api/admin/adminAuth.api'
@@ -38,9 +39,7 @@ export default function AdminBootstrap({ children }) {
 
   if (!ready) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-layout-page">
-        <div className="h-7 w-7 rounded-full border-2 border-border border-t-primary animate-spin" />
-      </div>
+      <div className="min-h-dvh bg-layout-page"><PageSkeleton label="Opening workspace" /></div>
     )
   }
 

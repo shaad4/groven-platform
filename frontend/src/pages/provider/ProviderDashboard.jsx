@@ -1,3 +1,4 @@
+import { Skeleton } from '../../components/ui/Skeleton'
 import { useState, useEffect, useCallback } from 'react'
 import { ChevronRight, AlertCircle, Users, Inbox, CheckCircle2, UserX, Sparkles, X } from 'lucide-react'
 import ConnectionPill from '../../components/ui/ConnectionPill'
@@ -71,10 +72,6 @@ function relativeTime(iso) {
   if (hrs < 24)   return `${hrs}h ago`
   const days = Math.floor(hrs / 24)
   return days === 1 ? 'yesterday' : `${days}d ago`
-}
-
-function Skeleton({ className }) {
-  return <div className={`rounded-xl bg-border animate-pulse ${className}`} />
 }
 
 // Stat Card
@@ -527,7 +524,7 @@ export default function ProviderDashboard() {
                 </button>
               </div>
               {loadingStats ? (
-                <div className="space-y-3">{[1,2,3].map(i => <Skeleton key={i} className="h-[100px]" />)}</div>
+                <div role="status" aria-label="Loading recent requests" className="space-y-3">{[1,2,3].map(i => <div key={i} className="space-y-4 rounded-xl border border-border bg-layout-card p-4"><div className="flex items-center justify-between gap-4"><Skeleton className="h-3 w-2/3" /><Skeleton className="h-5 w-16 rounded-full" /></div><div className="flex items-center gap-2"><Skeleton className="h-6 w-6 rounded-full" /><Skeleton className="h-2 w-1/3" /></div></div>)}</div>
               ) : statsError ? (
                 <div className="rounded-2xl border border-status-danger-text/20 bg-status-danger-bg p-5 text-center">
                   <p className="text-[13px] text-status-review-text">Couldn't load stats. Try refreshing.</p>
@@ -559,7 +556,7 @@ export default function ProviderDashboard() {
                 </button>
               </div>
               {loadingClients ? (
-                <div className="space-y-3 mt-3">{[1,2,3].map(i => <Skeleton key={i} className="h-[52px]" />)}</div>
+                <div role="status" aria-label="Loading clients" className="space-y-4 mt-4">{[1,2,3].map(i => <div key={i} className="flex items-center gap-3"><Skeleton className="h-10 w-10 shrink-0 rounded-xl" /><div className="flex-1 space-y-2"><Skeleton className="h-3 w-2/3" /><Skeleton className="h-2 w-1/3" /></div><Skeleton className="h-4 w-6" /></div>)}</div>
               ) : clients.length === 0 ? (
                 <div className="py-8 text-center border-t border-dashed border-border mt-3">
                   <p className="text-[14px] text-text-dim">No clients yet.</p>

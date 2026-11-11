@@ -22,9 +22,6 @@ export const authApi = {
   login: (data) =>
     api.post('/auth/login/', data),
 
-  googleAuth: (accessToken) =>
-    api.post('/auth/google/', { access_token: accessToken }),
-
 
   //Session management 
 

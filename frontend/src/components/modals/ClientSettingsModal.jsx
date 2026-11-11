@@ -6,13 +6,14 @@ import {
   getNotifications, updateNotifications,
 } from '../../api/settings.api'
 import {
-  User, Bell, Trash2, AlertTriangle, X, Eye, EyeOff, Check, Loader2, Camera, Info,
+  User, Bell, Trash2, AlertTriangle, X, Eye, EyeOff, Check, Camera, Info,
 } from 'lucide-react'
 
 import { deleteAccount } from '../../api/settings.api'
 import { useTenantBranding } from '../../context/TenantBrandingContext'
 import { useWalkthrough } from '../../context/WalkthroughContext'
 import usePortalDialog from '../client/usePortalDialog'
+import { PageSkeleton, InlinePending } from '../ui/Skeleton'
 import { RotateCcw } from 'lucide-react'
 
 // Nav 
@@ -24,10 +25,6 @@ const NAV = [
 ]
 
 // Primitives 
-
-function Spinner({ size = 14 }) {
-  return <Loader2 size={size} className="animate-spin" />
-}
 
 function Toggle({ checked, onChange, disabled }) {
   const { colors } = useTenantBranding()
@@ -152,13 +149,13 @@ function Toast({ type, message }) {
   )
 }
 
-function Btn({ children, onClick, loading, variant = 'primary', size = 'md', disabled, className = '' }) {
+function Btn({ children, onClick, loading, pendingLabel = 'Saving…', variant = 'primary', size = 'md', disabled, className = '' }) {
   const { colors } = useTenantBranding()
   const { accent, accentDark } = colors
   const sizes = { sm: 'px-3 py-1.5 text-xs', md: 'px-3.5 py-2 text-sm' }
 
   const isDanger = className.includes('bg-red') || className.includes('text-red')
-  const style = variant === 'primary' && !disabled && !loading && !isDanger
+  const style = variant === 'primary' && !isDanger
     ? { backgroundColor: accent }
     : {}
 
@@ -167,6 +164,7 @@ function Btn({ children, onClick, loading, variant = 'primary', size = 'md', dis
       type="button"
       onClick={onClick}
       disabled={loading || disabled}
+      aria-busy={loading}
       className={`inline-flex items-center justify-center gap-1.5 rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed ${sizes[size]} ${
         variant === 'primary'
           ? 'text-white shadow-sm'
@@ -186,7 +184,7 @@ function Btn({ children, onClick, loading, variant = 'primary', size = 'md', dis
         }
       }}
     >
-      {loading ? <Spinner size={13} /> : children}
+      {loading ? <><InlinePending label={pendingLabel} />{pendingLabel}</> : children}
     </button>
   )
 }
@@ -435,7 +433,7 @@ function NotificationsSection({ tenant }) {
     { key: 'files_delivered', label: 'Files delivered', desc: `Get notified when ${providerName} delivers files or a link.` },
   ]
 
-  if (!notifPrefs) return <div className="flex items-center justify-center h-48"><Spinner size={20} /></div>
+  if (!notifPrefs) return <PageSkeleton label="Loading notification preferences" variant="form" className="!p-0" />
 
   return (
     <div>
@@ -541,6 +539,7 @@ function DangerZoneSection({ tenant }) {
                 variant="primary"
                 onClick={handleLeave}
                 loading={loading}
+                pendingLabel="Deleting account…"
                 disabled={countdown > 0}
                 className="!bg-red-600 hover:!bg-red-700"
               >

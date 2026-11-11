@@ -1,6 +1,7 @@
+import { InlinePending } from '../ui/Skeleton'
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import {
-  Send, Paperclip, Loader2, CheckCircle2,
+  Send, Paperclip, CheckCircle2,
   AlertCircle, X, Lock, Download, FileText,
   Image as ImageIcon, File as FileIcon,
   Sparkles,
@@ -126,7 +127,7 @@ function UploadChip({ attachment, onRemove, isClient }) {
       }
     `}>
       {attachment.status === 'uploading'
-        ? <Loader2 size={12} className={`animate-spin ${isClient ? 'client-chat-upload-loader' : 'text-emerald-600'}`} />
+        ? <InlinePending label="Uploading attachment" className={isClient ? 'client-chat-upload-loader' : 'text-primary-ink'} />
         : attachment.status === 'done'
           ? <CheckCircle2 size={12} className={isClient ? 'client-chat-upload-check' : 'text-emerald-600'} />
           : attachment.status === 'error'
@@ -751,7 +752,8 @@ export default function ChatPanel({
                   ⏎ Send &nbsp;·&nbsp; ⇧⏎ Newline
                 </span>
                 <button
-                  aria-label="Send message"
+                  aria-label={sending ? "Sending message" : "Send message"}
+                  aria-busy={sending}
                   onClick={handleSend}
                   disabled={!canSend || sending}
                   className={`h-11 w-11 flex items-center justify-center rounded-xl transition-all shadow-sm
@@ -762,7 +764,7 @@ export default function ChatPanel({
                   `}
                 >
                   {sending
-                    ? <Loader2 size={15} className="animate-spin" />
+                    ? <InlinePending label="Sending message" />
                     : <Send size={14} className="ml-0.5" />
                   }
                 </button>

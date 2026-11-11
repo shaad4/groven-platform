@@ -1,6 +1,6 @@
 from django.urls import path
 
-from .views import (CheckSlugAPIView, ForgotPasswordView, GoogleAuthView,
+from .views import (CheckSlugAPIView, ForgotPasswordView,
                     LoginView, LogoutView, MembershipsView, MeView,
                     ProviderSignupView, RefreshTokenView, ResetPasswordView,
                     VerifyEmailAPIView, WorkspaceSetupAPIView)
@@ -16,6 +16,5 @@ urlpatterns = [
     path("token/refresh/", RefreshTokenView.as_view(), name="token_refresh"),
     path("me/", MeView.as_view(), name="me"),
     path("logout/", LogoutView.as_view(), name="logout"),
-    path("google/", GoogleAuthView.as_view(), name="google-auth"),
     path("memberships/", MembershipsView.as_view(), name="memberships"),
 ]

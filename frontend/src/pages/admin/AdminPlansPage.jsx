@@ -1,3 +1,4 @@
+import { PageSkeleton } from '../../components/ui/Skeleton'
 import { useEffect, useState, useCallback, useRef } from 'react'
 import AdminLayout from '../../components/layout/AdminLayout'
 import adminPlansApi from '../../api/admin/adminPlans.api'
@@ -98,8 +99,8 @@ export default function AdminPlansPage() {
   if (loading) {
     return (
       <AdminLayout>
-        <div className="flex h-full items-center justify-center">
-          <div className="h-7 w-7 rounded-full border-2 border-border border-t-[#1D9E75] animate-spin" />
+        <div className="w-full">
+          <PageSkeleton label="Loading plans" variant="list" />
         </div>
       </AdminLayout>
     )

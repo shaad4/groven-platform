@@ -13,6 +13,7 @@ import {
   PlusCircle,
 } from 'lucide-react'
 import { useBadges } from '../../hooks/useBadges'
+import { useDialogFocus } from '../../hooks/useDialogFocus'
 
 //Helpers
 
@@ -182,7 +183,8 @@ function NotificationItem({ notification, onRead }) {
 
 export default function NotificationBell() {
   const [open, setOpen] = useState(false)
-  const dropdownRef     = useRef(null)
+  const dropdownRef = useDialogFocus(open, () => setOpen(false))
+  const [position, setPosition] = useState({})
   const bellRef         = useRef(null)
   const [isMobile, setIsMobile] = useState(
     typeof window !== 'undefined' ? window.innerWidth < 768 : false
@@ -197,14 +199,23 @@ export default function NotificationBell() {
     loadNotifications,
   } = useBadges()
 
-  // Track window resizing for mobile takeover
   useEffect(() => {
-    const handleResize = () => {
+    const updatePosition = () => {
       setIsMobile(window.innerWidth < 768)
+      const rect = bellRef.current?.getBoundingClientRect()
+      if (!rect) return
+      const width = Math.min(380, window.innerWidth - 24)
+      const top = Math.min(rect.bottom + 8, Math.max(12, window.innerHeight - 200))
+      setPosition({ top, left: Math.max(12, Math.min(rect.right - width, window.innerWidth - width - 12)), width, maxHeight: Math.min(520, window.innerHeight - top - 12) })
     }
-    window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
-  }, [])
+    updatePosition()
+    window.addEventListener('resize', updatePosition)
+    window.addEventListener('scroll', updatePosition, true)
+    return () => {
+      window.removeEventListener('resize', updatePosition)
+      window.removeEventListener('scroll', updatePosition, true)
+    }
+  }, [open])
 
   // close on outside click
   useEffect(() => {
@@ -253,6 +264,7 @@ export default function NotificationBell() {
             )}
             <button
               type="button"
+              aria-label="Close notifications"
               onClick={() => setOpen(false)}
               className="flex h-8 w-8 md:h-7 md:w-7 items-center justify-center rounded-xl bg-layout-page md:bg-transparent hover:bg-surface md:hover:bg-surface transition-colors"
             >
@@ -337,12 +349,15 @@ export default function NotificationBell() {
   }
 
   return (
-    <div className="relative" ref={dropdownRef}>
+    <div className="relative">
       {/* ── Bell button ── */}
       <button
         ref={bellRef}
+        aria-label={`Notifications${unreadCount ? `, ${unreadCount} unread` : ''}`}
+        aria-expanded={open}
+        aria-haspopup="dialog"
         onClick={() => setOpen((o) => !o)}
-        className={`relative flex h-10 w-10 items-center justify-center rounded-lg border transition-colors ${
+        className={`relative flex h-11 w-11 items-center justify-center rounded-lg border transition-colors ${
           open
             ? 'border-primary/25 bg-primary-light'
             : 'border-border bg-layout-page hover:bg-surface'
@@ -357,19 +372,18 @@ export default function NotificationBell() {
         )}
       </button>
 
-      {/* ── Desktop Dropdown ── */}
-      {open && !isMobile && (
+      {open && createPortal(
         <div
-          className="absolute right-0 top-[calc(100%+8px)] z-[200] w-[380px] rounded-2xl border border-border bg-layout-card shadow-xl shadow-black/[0.08] overflow-hidden flex flex-col"
-          style={{ maxHeight: '520px' }}
+          ref={dropdownRef}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Notifications"
+          tabIndex={-1}
+          className={isMobile
+            ? 'fixed inset-0 z-[300] flex flex-col bg-layout-card pt-[env(safe-area-inset-top)]'
+            : 'fixed z-[300] flex flex-col overflow-hidden rounded-2xl border border-border bg-layout-card shadow-xl'}
+          style={isMobile ? undefined : position}
         >
-          {renderContents()}
-        </div>
-      )}
-
-      {/* ── Mobile Page Takeover ── */}
-      {open && isMobile && typeof document !== 'undefined' && createPortal(
-        <div className="fixed inset-0 z-[300] bg-layout-card flex flex-col animate-in slide-in-from-bottom-8 duration-300 pt-[max(0px,env(safe-area-inset-top))]">
           {renderContents()}
         </div>,
         document.body

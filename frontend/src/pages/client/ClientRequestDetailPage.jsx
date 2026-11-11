@@ -2,11 +2,11 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import ChatPanel from '../../components/chat/ChatPanel'
 import ConnectionPill from '../../components/ui/ConnectionPill'
+import { PageSkeleton, InlinePending } from '../../components/ui/Skeleton'
 import { usePanelResize } from '../../hooks/usePanelResize'
 import { useBadges } from '../../hooks/useBadges'
 import {
   ChevronRight,
-  Loader2,
   AlertCircle,
   CheckCircle2,
   Calendar,
@@ -133,6 +133,7 @@ function DeliveryReviewModal({ delivery, onClose, onSubmit, loading, error }) {
               <button
                 onClick={() => onSubmit(delivery.id, 'approve', '')}
                 disabled={loading}
+                aria-busy={loading}
                 onMouseEnter={() => setHoveredApprove(true)}
                 onMouseLeave={() => setHoveredApprove(false)}
                 className="w-full flex items-center gap-4 rounded-xl border p-4 text-left transition-colors disabled:opacity-50 group shadow-sm"
@@ -146,14 +147,14 @@ function DeliveryReviewModal({ delivery, onClose, onSubmit, loading, error }) {
                   style={{ borderColor: `${accent}20` }}
                 >
                   {loading ? (
-                    <Loader2 size={18} className="animate-spin" style={{ color: 'var(--primary-text)' }} />
+                    <InlinePending label="Approving delivery" />
                   ) : (
                     <CheckCircle2 size={18} style={{ color: 'var(--primary-text)' }} />
                   )}
                 </div>
                 <div>
                   <p className="text-sm font-semibold" style={{ color: 'var(--primary-text)' }}>
-                    Approve & Close
+                    {loading ? 'Approving…' : 'Approve & Close'}
                   </p>
                   <p className="text-xs mt-0.5 font-medium" style={{ color: 'var(--primary-text)' }}>
                     Marks this request as completed
@@ -218,16 +219,17 @@ function DeliveryReviewModal({ delivery, onClose, onSubmit, loading, error }) {
                 <button
                   onClick={() => onSubmit(delivery.id, 'rework', reworkMessage)}
                   disabled={loading}
+                  aria-busy={loading}
                   onMouseEnter={() => setHoveredSubmit(true)}
                   onMouseLeave={() => setHoveredSubmit(false)}
                   className="flex-1 h-10 rounded-xl text-white text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-50 transition-all shadow-sm active:scale-[0.98]"
                   style={{ backgroundColor: hoveredSubmit ? accentDark : accent }}
                 >
                   {loading
-                    ? <Loader2 size={16} className="animate-spin" />
+                    ? <InlinePending label="Sending rework request" />
                     : <RotateCcw size={16} />
                   }
-                  Send Rework Request
+                  {loading ? 'Sending…' : 'Send Rework Request'}
                 </button>
 
               </div>
@@ -416,9 +418,7 @@ export default function ClientRequestDetailPage() {
   if (loading) {
     return (
       <ClientLayout fullBleed>
-        <div className="h-[calc(100vh-64px)] flex items-center justify-center">
-          <Loader2 size={24} className="animate-spin" style={{ color: 'var(--primary-text)' }} />
-        </div>
+        <PageSkeleton label="Loading request" variant="detail" className="h-full overflow-y-auto" />
       </ClientLayout>
     )
   }
@@ -426,7 +426,7 @@ export default function ClientRequestDetailPage() {
   if (!req) {
     return (
       <ClientLayout fullBleed>
-        <div className="h-[calc(100vh-64px)] flex flex-col items-center justify-center text-center px-6">
+        <div className="h-full flex flex-col items-center justify-center text-center px-6">
           <div className="h-16 w-16 rounded-2xl bg-surface border border-border/50 flex items-center justify-center mb-5 shadow-sm">
             <AlertCircle size={28} className="text-text-dim" />
           </div>
@@ -505,26 +505,24 @@ export default function ClientRequestDetailPage() {
         }
       `}</style>
 
-      {/* Spacer to prevent overlap from mobile top-bar in the layout */}
-
       <div className="flex flex-col h-full overflow-hidden bg-layout-page relative">
 
         {/* ── HEADER ──────────────────────────────────────────────────────── */}
-        <header className="flex min-h-[88px] shrink-0 items-center justify-between gap-3 border-b border-border bg-layout-card px-4 py-4 lg:px-6">
+        <header className="flex min-h-[72px] shrink-0 items-center justify-between gap-3 border-b border-border bg-layout-card px-4 py-3 lg:min-h-[88px] lg:px-6 lg:py-4">
           <div className="min-w-0 flex-1">
-            <button onClick={() => navigate('/my-requests')} className="mb-2 flex items-center gap-1.5 text-xs text-text-sub hover:text-text-main">My requests<ChevronRight size={12} /><span>#{String(req.id).slice(0, 6)}</span></button>
-            <h1 className="break-words text-lg font-semibold leading-6 tracking-tight text-text-main sm:text-xl">{req.title}</h1>
+            <button onClick={() => navigate('/my-requests')} className="mb-1 flex items-center gap-1.5 text-xs text-text-sub hover:text-text-main lg:mb-2">My requests<ChevronRight size={12} /><span>#{String(req.id).slice(0, 6)}</span></button>
+            <h1 className="break-words text-base font-semibold leading-6 tracking-tight text-text-main sm:text-xl">{req.title}</h1>
           </div>
           <div className="hidden shrink-0 items-center gap-3 sm:flex"><RequestStatus status={req.status} /><button onClick={() => setShowChat(true)} className="hidden min-h-11 items-center gap-2 rounded-xl border border-border px-3 text-xs font-medium text-text-sub lg:flex 2xl:hidden"><MessageSquare size={16} />Discussion</button></div>
         </header>
 
         {/* ── MOBILE TABS (Details vs Deliveries ONLY) ────────────────────── */}
-        <div className="lg:hidden flex p-3 border-b border-border/50 bg-layout-card shrink-0 z-10">
-          <div className="flex w-full bg-surface/50 p-1.5 rounded-xl border border-border/40">
+        <div className="lg:hidden flex px-3 py-1.5 border-b border-border/50 bg-layout-card shrink-0 z-10">
+          <div className="flex w-full gap-1">
             <button
               onClick={() => setMobileView('details')}
               className={`flex min-h-11 flex-1 items-center justify-center gap-1.5 px-1 text-xs font-semibold rounded-lg transition-all ${
-                mobileView === 'details' ? 'bg-layout-card text-text-main shadow-sm ring-1 ring-border/50' : 'text-text-dim hover:text-text-main'
+                mobileView === 'details' ? 'bg-surface text-text-main' : 'text-text-dim hover:text-text-main'
               }`}
             >
               <FileText size={14} />Details
@@ -532,7 +530,7 @@ export default function ClientRequestDetailPage() {
             <button
               onClick={() => setMobileView('deliveries')}
               className={`min-h-11 flex-1 px-1 text-xs font-semibold rounded-lg transition-all flex items-center justify-center gap-1.5 ${
-                mobileView === 'deliveries' ? 'bg-layout-card text-text-main shadow-sm ring-1 ring-border/50' : 'text-text-dim hover:text-text-main'
+                mobileView === 'deliveries' ? 'bg-surface text-text-main' : 'text-text-dim hover:text-text-main'
               }`}
             >
               <Download size={14} />Deliveries
@@ -561,7 +559,7 @@ export default function ClientRequestDetailPage() {
             style={isDesktopLayout ? { width: `${sidebarWidth}px` } : {}}
             className={`${mobileView === 'details' ? 'flex' : 'hidden'} lg:flex flex-col w-full lg:w-[300px] border-r border-border/50 bg-layout-card overflow-y-auto no-scrollbar shrink-0 h-full`}
           >
-            <div className="p-5 lg:p-6 space-y-6 pb-24 lg:pb-6"> {/* Added pb-24 for mobile FAB clearance */}
+            <div className="space-y-6 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] lg:p-6">
 
               {/* Progress */}
               <div data-tour="client-request-progress">
@@ -719,13 +717,14 @@ export default function ClientRequestDetailPage() {
                       <button
                         onClick={handleEditSave}
                         disabled={editLoading || !editTitle.trim() || !editDesc.trim()}
+                        aria-busy={editLoading}
                         onMouseEnter={() => setHoveredSaveBtn(true)}
                         onMouseLeave={() => setHoveredSaveBtn(false)}
                         className="flex-1 h-10 rounded-xl text-white text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-50 transition-all shadow-sm active:scale-[0.98]"
                         style={{ backgroundColor: hoveredSaveBtn ? accentDark : accent }}
                       >
-                        {editLoading ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle2 size={16} />}
-                        Save Changes
+                        {editLoading ? <InlinePending label="Saving changes" /> : <CheckCircle2 size={16} />}
+                        {editLoading ? 'Saving…' : 'Save Changes'}
                       </button>
                     </div>
                   </div>
@@ -827,7 +826,7 @@ export default function ClientRequestDetailPage() {
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto no-scrollbar p-5 lg:px-5 2xl:px-8 lg:pb-8 pb-24"> {/* Added pb-24 for mobile FAB clearance */}
+            <div className="flex-1 overflow-y-auto no-scrollbar p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] lg:px-5 2xl:px-8 lg:pb-8">
 
               {/* ── Pending review banner ──────────────────────────────────── */}
               {req.status === 'delivered' && deliveries.length > 0 && (
@@ -863,7 +862,7 @@ export default function ClientRequestDetailPage() {
               )}
 
               {deliveries.length === 0 ? (
-                <div className="h-full flex items-center justify-center pb-20">
+                <div className="h-full flex items-center justify-center pb-6">
                   <div className="max-w-sm text-center">
                     <div className="h-16 w-16 rounded-2xl bg-layout-card border border-border/60 shadow-sm flex items-center justify-center mx-auto mb-5">
                       <Send size={24} className="text-text-dim" />
@@ -1046,8 +1045,8 @@ export default function ClientRequestDetailPage() {
               ? `${showChat ? 'flex' : 'hidden'} fixed inset-0 z-[60] flex-col bg-layout-card lg:inset-y-4 lg:left-auto lg:right-4 lg:w-[440px] lg:rounded-2xl lg:border lg:border-border lg:shadow-xl`
               : 'flex h-full shrink-0 flex-col overflow-hidden border-l border-border bg-layout-card'}
           >
-            <div className="flex h-[72px] shrink-0 items-center justify-between border-b border-border bg-layout-card px-5">
-              <div><h2 className="text-base font-semibold tracking-tight text-text-main">Discussion</h2><p className="mt-0.5 text-xs text-text-sub">Keep every detail in context</p></div>
+            <div className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-layout-card px-4 lg:h-[72px] lg:px-5">
+              <div><h2 className="text-base font-semibold tracking-tight text-text-main">Discussion</h2><p className="mt-0.5 hidden text-xs text-text-sub sm:block">Messages and updates</p></div>
               <div className="flex items-center gap-2">
                 {req?.status !== 'closed' && <button onClick={startCall} className="chat-btn-icon flex h-10 w-10 items-center justify-center rounded-xl text-text-sub" title="Start video call" aria-label="Start video call"><Video size={18} /></button>}
                 <ConnectionPill connectionKey={`chat-${requestId}`} />

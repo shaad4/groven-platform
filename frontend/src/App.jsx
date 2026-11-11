@@ -1,9 +1,11 @@
+import { PageSkeleton } from './components/ui/Skeleton'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
 import { ProtectedRoute, GuestRoute, SetupRoute } from './routes/ProtectedRoute'
 import TenantRoute from './routes/TenantRoute'
 import TenantGuard from './routes/TenantGuard'
 import ErrorBoundary from './ErrorBoundary'
+import DocumentTitle from './components/DocumentTitle'
 import { useAuth } from './context/AuthContext'
 import { getSubdomain } from './utils/domain'
 import { TenantBrandingProvider } from './context/TenantBrandingContext'
@@ -56,7 +58,7 @@ import PwaInstallPrompt from './components/ui/PwaInstallPrompt'
 
 function RoleDashboard() {
   const { user, loading } = useAuth()
-  if (loading) return null
+  if (loading) return <PageSkeleton label="Loading workspace" />
   if (user?.role === 'provider') return <ProviderDashboard />
   if (user?.role === 'client')   return <ClientDashboard />
   return <Navigate to="/login" replace />
@@ -65,7 +67,7 @@ function RoleDashboard() {
 function HomeRoute() {
   const { user, isAuth, loading } = useAuth()
   if (!getSubdomain()) return <LandingPage />
-  if (loading) return <div role="status" aria-label="Loading workspace" className="min-h-dvh bg-layout-page" />
+  if (loading) return <PageSkeleton label="Opening workspace" />
   return <Navigate to={isAuth ? (user?.role === 'provider' ? '/dashboard' : '/portal') : '/client-login'} replace />
 }
 
@@ -73,10 +75,9 @@ export default function App() {
   return (
     <ErrorBoundary>
       <BrowserRouter>
+        <DocumentTitle />
         <Suspense fallback={
-          <div role="status" aria-label="Loading workspace" className="flex items-center justify-center min-h-screen bg-layout-page">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-          </div>
+          <div className="min-h-dvh bg-layout-page"><PageSkeleton label="Loading workspace" /></div>
         }>
         {/* Groven Admin */}
         <Routes>
