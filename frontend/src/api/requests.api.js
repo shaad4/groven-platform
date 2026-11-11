@@ -58,6 +58,7 @@ const requestsApi = {
   },
 
   // Chat
+  getCallConfig: (requestId) => api.get(`/requests/${requestId}/call-config/`, { timeout: 10000 }),
   getMessages: (requestId) => api.get(`/requests/${requestId}/messages/`),
   sendMessage: (requestId, data) => api.post(`/requests/${requestId}/messages/`, data),
   markRead: (requestId) => api.post(`/requests/${requestId}/messages/mark-read/`),
