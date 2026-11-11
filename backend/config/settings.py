@@ -399,3 +399,8 @@ CLIENT_INSIGHT_TTL = 60 * 60 * 36
 
 GROVE_ADMIN_EMAIL = config("GROVE_ADMIN_EMAIL")
 GROVE_ADMIN_PASSWORD = config("GROVE_ADMIN_PASSWORD")
+
+# Web Push VAPID keys (one stable pair for the deployment).
+WEB_PUSH_PUBLIC_KEY = config("WEB_PUSH_PUBLIC_KEY", default="")
+WEB_PUSH_PRIVATE_KEY = config("WEB_PUSH_PRIVATE_KEY", default="")
+WEB_PUSH_SUBJECT = config("WEB_PUSH_SUBJECT", default="")

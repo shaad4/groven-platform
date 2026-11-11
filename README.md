@@ -156,3 +156,16 @@ CI/CD via GitHub Actions — every push to `develop` auto-deploys to EC2.
 Built with 🌿 by the Groven team · [groven.in](https://groven.in)
 
 </div>
+
+### PWA device notifications
+
+Web Push delivers workspace updates and incoming-call alerts on Android and installed iOS/iPadOS 16.4+ Home Screen apps. Users enable **Device notifications** inside the notification panel on each device. OS Focus settings and notification permissions still apply. Incoming calls use system notifications; opening one joins the request page, where the user accepts camera/microphone capture. A PWA does not provide an iOS CallKit phone screen or a custom background ringtone.
+
+Deployment setup:
+
+1. Install backend requirements and run `python manage.py migrate`.
+2. Run `python manage.py generate_push_keys` once. Store the generated `WEB_PUSH_PUBLIC_KEY` and `WEB_PUSH_PRIVATE_KEY` securely in the backend environment; do not commit them. Set `WEB_PUSH_SUBJECT` to a monitored `mailto:` address. Keep the same pair across backend and Celery workers and subsequent deployments.
+3. Restart backend and Celery workers. Redis is required for short-lived incoming-call replay. Permit outbound HTTPS to FCM, Mozilla Push, and `*.push.apple.com`.
+4. Open the installed app, enable device notifications, then verify an update and a call with the app backgrounded on a real Android and iPhone. Ringing invitations expire after 60 seconds; ending a call removes the pending signaling. SDP and ICE are never included in notification payloads.
+
+Call connectivity still requires the TURN configuration described above for restrictive networks. Camera retry keeps microphone audio connected and uses default device camera settings. Test hardware capture on the affected device; a granted browser permission cannot guarantee that an OS or another application has released the camera.

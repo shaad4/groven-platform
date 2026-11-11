@@ -3,7 +3,7 @@
 // pass-through (no caching) for anything backend-related — the Django REST
 // API, WebSocket upgrade requests, and the admin site.
 
-const CACHE_VERSION = 'grove-v1';
+const CACHE_VERSION = 'grove-v2';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const PAGES_CACHE = `${CACHE_VERSION}-pages`;
 const OFFLINE_URL = '/offline.html';
@@ -87,9 +87,44 @@ self.addEventListener('fetch', (event) => {
         } catch {
           const cache = await caches.open(PAGES_CACHE);
           const cached = await cache.match(request);
-          return cached || cache.match(OFFLINE_URL);
+          return cached || (await caches.open(STATIC_CACHE)).match(OFFLINE_URL);
         }
       })(),
     );
   }
 });
+
+// Always show a visible notification for push delivery (required by iOS).
+self.addEventListener('push', event => {
+  event.waitUntil((async () => {
+    let payload
+    try { payload = event.data?.json() || {} } catch { payload = {} }
+    if (!payload || typeof payload !== 'object') payload = {}
+    const expired = payload.expires_at && payload.expires_at <= Date.now()
+    const call = payload.kind === 'call'
+    let url
+    try { url = new URL(payload.url || '/', self.location.origin) } catch { url = new URL('/', self.location.origin) }
+    if (url.origin !== self.location.origin) url = new URL('/', self.location.origin)
+    await self.registration.showNotification(expired && call ? 'Missed call' : (payload.title || 'Workspace update'), {
+      body: expired && call ? 'Open your workspace to call back.' : payload.body,
+      icon: '/icons/icon-192x192.png', badge: '/icons/icon-192x192.png',
+      tag: payload.tag || 'workspace-update',
+      data: { url: url.href, call_id: payload.call_id },
+      ...(call && !expired ? { requireInteraction: true, actions: [{ action: 'open', title: 'Open call' }] } : {}),
+    })
+  })())
+})
+self.addEventListener('notificationclick', event => {
+  event.notification.close()
+  event.waitUntil((async () => {
+    const url = new URL(event.notification.data?.url || '/', self.location.origin)
+    if (url.origin !== self.location.origin) return
+    const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true })
+    const existing = windows.find(client => new URL(client.url).origin === url.origin)
+    if (existing) {
+      await existing.navigate(url.href)
+      return existing.focus()
+    }
+    return self.clients.openWindow(url.href)
+  })())
+})

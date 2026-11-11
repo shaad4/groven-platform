@@ -41,11 +41,17 @@ export function useWebRTC({ sendSignal, requestId }) {
       call.dispose()
     }
   }, [call, requestId])
+  const closeCallAlert = () => {
+    if (!call.callId || !('serviceWorker' in navigator)) return
+    const tag = `call-${call.callId}`
+    navigator.serviceWorker.getRegistration('/').then(worker => worker?.getNotifications({ tag }))
+      .then(alerts => alerts?.forEach(alert => alert.close())).catch(() => {})
+  }
   return {
     ...(state || call.state),
-    startCall: () => call.start(), acceptCall: () => call.accept(),
-    declineCall: () => call.end(), hangUp: () => call.end(), dismissCall: () => call.end(false),
-    handleSignal: message => call.handleSignal(message),
+    startCall: () => call.start(), acceptCall: () => { closeCallAlert(); return call.accept() },
+    declineCall: () => { closeCallAlert(); call.end() }, hangUp: () => { closeCallAlert(); call.end() }, dismissCall: () => call.end(false),
+    handleSignal: message => { if (['call_end', 'call_answer'].includes(message.type) && message.call_id === call.callId) closeCallAlert(); return call.handleSignal(message) },
     toggleMute: () => call.toggleMute(), toggleCam: () => call.toggleCam(),
   }
 }

@@ -70,3 +70,11 @@ class Notification(models.Model):
 
     def __str__(self):
         return f"[{self.event_type}] → {self.recipient.email}"
+
+
+class PushSubscription(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='push_subscriptions')
+    tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, related_name='push_subscriptions')
+    endpoint = models.URLField(max_length=2048, unique=True)
+    keys = models.JSONField()
+    updated_at = models.DateTimeField(auto_now=True)

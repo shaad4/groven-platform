@@ -171,7 +171,7 @@ function CallControl({ label, children, onClick, kind = '', pressed, disabled = 
 export default function VideoCall({
   callState = 'idle', localStream, remoteStream, isMuted, isCamOff, clientName,
   onAccept, onDecline, onHangUp, onToggleMute, onToggleCam,
-  callError, mediaNotice, connectedAt, remoteCameraOff = false, onDismiss,
+  callError, mediaNotice, connectedAt, remoteCameraOff = false, onDismiss, cameraPending = false,
 }) {
   const titleId = useId()
   const isOpen = callState !== 'idle'
@@ -240,7 +240,7 @@ export default function VideoCall({
                 <div className="video-call__controls" aria-label="Call controls">
                   <CallControl label={isMuted ? 'Unmute' : 'Mute'} pressed={Boolean(isMuted)} kind={isMuted ? 'selected' : ''} onClick={onToggleMute} disabled={!localMedia.hasLiveAudio || !onToggleMute}>{isMuted ? <MicOff size={21} aria-hidden="true" /> : <Mic size={21} aria-hidden="true" />}</CallControl>
                   <CallControl label={callState === 'acquiring' || callState === 'calling' ? 'Cancel call' : 'End call'} kind="end" onClick={onHangUp}><PhoneOff size={23} aria-hidden="true" /></CallControl>
-                  <CallControl label={!localMedia.hasLiveVideo ? 'Camera off' : isCamOff ? 'Start camera' : 'Stop camera'} pressed={Boolean(isCamOff)} kind={isCamOff ? 'selected' : ''} onClick={onToggleCam} disabled={!localMedia.hasLiveVideo || !onToggleCam}>{isCamOff || !localMedia.hasLiveVideo ? <VideoOff size={21} aria-hidden="true" /> : <Video size={21} aria-hidden="true" />}</CallControl>
+                  <CallControl label={cameraPending ? 'Starting camera…' : !localMedia.hasLiveVideo ? 'Retry camera' : isCamOff ? 'Start camera' : 'Stop camera'} pressed={Boolean(isCamOff)} kind={isCamOff ? 'selected' : ''} onClick={onToggleCam} disabled={!onToggleCam || cameraPending}>{isCamOff || !localMedia.hasLiveVideo ? <VideoOff size={21} aria-hidden="true" /> : <Video size={21} aria-hidden="true" />}</CallControl>
                 </div>
               )}
             </footer>

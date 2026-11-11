@@ -1,3 +1,4 @@
+import DeviceNotifications from './DeviceNotifications'
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { createPortal } from 'react-dom'
@@ -273,6 +274,7 @@ export default function NotificationBell() {
           </div>
         </div>
 
+        <DeviceNotifications />
         {/* body */}
         <div className="overflow-y-auto flex-1 bg-layout-card">
           {!notifLoaded ? (

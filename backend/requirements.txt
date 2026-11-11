@@ -91,3 +91,4 @@ wcwidth==0.7.0
 zope.interface==8.5
 stripe==11.4.0
 gunicorn==23.0.0
+pywebpush==2.5.0

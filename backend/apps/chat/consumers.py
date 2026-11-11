@@ -28,6 +28,12 @@ class RequestChatConsumer(AsyncJsonWebsocketConsumer):
 
             await self.channel_layer.group_add(self.group_name, self.channel_name)
             await self.accept()
+            from .call_sessions import current
+            pending = await database_sync_to_async(current)(self.request_id)
+            if pending and pending['recipient_id'] == str(self.user.id):
+                await self.send_json(pending['offer'])
+                for candidate in pending['candidates']:
+                    await self.send_json({'type': 'ice_candidate', 'call_id': pending['call_id'], 'candidate': candidate})
             logger.info(
                 f"[RequestChatConsumer] {self.user.email} connected to "
                 f"chat {self.request_id}"
@@ -58,6 +64,27 @@ class RequestChatConsumer(AsyncJsonWebsocketConsumer):
                 await self.send_json({"type": "pong"})
 
             elif event in ("call_offer", "call_answer", "ice_candidate", "call_end", "call_busy", "call_media"):
+                request_obj = await self._get_request()
+                if request_obj is None:
+                    return
+                from .call_sessions import handle
+                allowed, alert = await database_sync_to_async(handle)(request_obj, self.user, self.channel_name, content)
+                if not allowed:
+                    if event == 'call_offer':
+                        await self.send_json({'type': 'call_busy', 'call_id': content.get('call_id')})
+                    return
+                if event in ('call_answer', 'call_end'):
+                    from apps.notifications.utils import get_feed_group_name
+                    for user_id in {str(self.user.id), str(request_obj.provider_id), str(request_obj.client.user_id)}:
+                        await self.channel_layer.group_send(get_feed_group_name(user_id), {
+                            'type': 'feed.call', 'payload': {'kind': 'call_closed', 'call_id': content.get('call_id')},
+                            'tenant_id': str(self.tenant.id),
+                        })
+                if alert:
+                    from apps.notifications.utils import get_feed_group_name
+                    await self.channel_layer.group_send(get_feed_group_name(alert[0]), {
+                        'type': 'feed.call', 'payload': alert[1], 'tenant_id': str(self.tenant.id),
+                    })
                 await self.channel_layer.group_send(
                     self.group_name,
                     {

@@ -70,6 +70,7 @@ def create_notification(
 
     payload = {
         "type": "feed.notification",
+        "tenant_id": str(tenant.id),
         "notification_id": str(notification.id),
         "event_type": notification.event_type,
         "title": notification.title,
@@ -94,6 +95,22 @@ def create_notification(
             f"[create_notification] WebSocket push failed for {recipient.email}: {e}"
         )
 
+    from django.db import transaction
+    from .push import deliver_push, push_enabled
+    from apps.tenants.models import TenantMembership
+    role = TenantMembership.objects.filter(tenant=tenant, user=recipient, is_active=True).values_list('role', flat=True).first()
+    path = ('/my-requests/' if role == 'client' else '/requests/') + str(related_request.id) if related_request else ('/portal' if role == 'client' else '/dashboard')
+    def enqueue_push():
+        if not push_enabled():
+            return
+        try:
+            deliver_push.delay(str(tenant.id), str(recipient.id), {
+                'title': title, 'body': body, 'url': path,
+                'tag': f'notification-{notification.id}', 'kind': 'notification',
+            })
+        except Exception:
+            logger.exception('Could not queue device notification')
+    transaction.on_commit(enqueue_push)
     return notification
 
 

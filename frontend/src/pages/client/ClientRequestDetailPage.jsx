@@ -1,3 +1,7 @@
+import { createPortal } from 'react-dom'
+import { useDialogFocus } from '../../hooks/useDialogFocus'
+import useVisualViewport from '../../hooks/useVisualViewport'
+import '../../components/ui/DeliveryDialog.css'
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import ChatPanel from '../../components/chat/ChatPanel'
@@ -78,10 +82,11 @@ function DeliveryReviewModal({ delivery, onClose, onSubmit, loading, error }) {
   const [hoveredApprove, setHoveredApprove] = useState(false)
   const [hoveredSubmit, setHoveredSubmit] = useState(false)
   const [focusedTextarea, setFocusedTextarea] = useState(false)
-  const dialogRef = usePortalDialog(true, () => { if (!loading) onClose() })
+  const dialogRef = useDialogFocus(true, () => { if (!loading) onClose() })
 
-  return (
-    <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center px-0 sm:px-4">
+  const viewportStyle = useVisualViewport()
+  return createPortal(
+    <div style={viewportStyle} className="fixed inset-0 z-[400] flex items-end sm:items-center justify-center px-0 sm:px-4">
 
       {/* Backdrop */}
       <div
@@ -90,7 +95,7 @@ function DeliveryReviewModal({ delivery, onClose, onSubmit, loading, error }) {
       />
 
       {/* Sheet / Modal */}
-      <div ref={dialogRef} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="delivery-review-heading" className="relative max-h-[90dvh] overflow-y-auto w-full sm:max-w-md bg-layout-card sm:rounded-2xl rounded-t-3xl shadow-soft animate-in slide-in-from-bottom-4 sm:slide-in-from-bottom-8 duration-300">
+      <div ref={dialogRef} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="delivery-review-heading" className="delivery-review__sheet relative max-h-[90dvh] overflow-hidden w-full sm:max-w-md bg-layout-card sm:rounded-2xl rounded-t-3xl shadow-soft animate-in slide-in-from-bottom-4 sm:slide-in-from-bottom-8 duration-300">
 
         {/* Handle (mobile) */}
         <div className="flex justify-center pt-3 pb-1 sm:hidden">
@@ -98,7 +103,7 @@ function DeliveryReviewModal({ delivery, onClose, onSubmit, loading, error }) {
         </div>
 
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-border/50">
+        <div className="shrink-0 flex items-center justify-between px-6 py-4 border-b border-border/50">
           <div>
             <h2 id="delivery-review-heading" className="text-base font-semibold text-text-main tracking-tight">
               {step === 'choice' ? 'Review Delivery' : 'Request Rework'}
@@ -112,14 +117,14 @@ function DeliveryReviewModal({ delivery, onClose, onSubmit, loading, error }) {
             aria-label="Close delivery review"
             onClick={onClose}
             disabled={loading}
-            className="h-8 w-8 rounded-full bg-surface flex items-center justify-center text-text-dim hover:text-text-main hover:bg-border/50 transition-colors disabled:opacity-50"
+            className="h-11 w-11 rounded-full bg-surface flex items-center justify-center text-text-dim hover:text-text-main hover:bg-border/50 transition-colors disabled:opacity-50"
           >
             <X size={16} />
           </button>
         </div>
 
         {/* Body */}
-        <div className="p-6">
+        <div className="delivery-review__body p-6">
           {error && <p role="alert" className="mb-4 rounded-xl bg-status-danger-bg p-3 text-sm text-status-danger-text">{error}</p>}
 
           {step === 'choice' ? (
@@ -218,7 +223,7 @@ function DeliveryReviewModal({ delivery, onClose, onSubmit, loading, error }) {
 
                 <button
                   onClick={() => onSubmit(delivery.id, 'rework', reworkMessage)}
-                  disabled={loading}
+                  disabled={loading || !reworkMessage.trim()}
                   aria-busy={loading}
                   onMouseEnter={() => setHoveredSubmit(true)}
                   onMouseLeave={() => setHoveredSubmit(false)}
@@ -240,7 +245,7 @@ function DeliveryReviewModal({ delivery, onClose, onSubmit, loading, error }) {
         </div>
 
       </div>
-    </div>
+    </div>, document.body
   )
 }
 
@@ -334,7 +339,7 @@ export default function ClientRequestDetailPage() {
 
   const {
     callState, localStream, remoteStream,
-    isMuted, isCamOff, callError, mediaNotice, connectedAt, remoteCameraOff, dismissCall,
+    isMuted, isCamOff, callError, mediaNotice, connectedAt, remoteCameraOff, dismissCall, cameraPending,
     startCall, acceptCall, declineCall, hangUp,
     handleSignal, toggleMute, toggleCam,
   } = useWebRTC({ sendSignal, requestId })
@@ -1075,6 +1080,7 @@ export default function ClientRequestDetailPage() {
         callState={callState}
         callError={callError}
         mediaNotice={mediaNotice}
+        cameraPending={cameraPending}
         connectedAt={connectedAt}
         remoteCameraOff={remoteCameraOff}
         onDismiss={dismissCall}
