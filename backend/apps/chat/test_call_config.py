@@ -100,7 +100,7 @@ def test_wrong_tenant_cannot_fetch_call_credentials(provider_client, call_reques
         HTTP_X_TENANT_SLUG=pro_tenant.slug,
     )
     assert response.status_code in (403, 404)
-    assert "data" not in response.data
+    assert "data" not in response.json()
 
 
 @pytest.mark.django_db
