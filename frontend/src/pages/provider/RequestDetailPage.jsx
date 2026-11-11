@@ -1,3 +1,7 @@
+import { createPortal } from 'react-dom'
+import { useDialogFocus } from '../../hooks/useDialogFocus'
+import useVisualViewport from '../../hooks/useVisualViewport'
+import '../../components/ui/DeliveryDialog.css'
 import MobileFilterSheet from '../../components/ui/MobileFilterSheet'
 import { MobileNavigationButton } from '../../components/layout/MobileNavigation'
 import { Skeleton, PageSkeleton, InlinePending } from '../../components/ui/Skeleton'
@@ -396,7 +400,7 @@ function DeliverModal({ request, onClose, onSuccess, isPro }) {
     let hasError = false;
 
     // 1. Prevent submit while uploading
-    if (isCurrentlyUploading) return;
+    if (isCurrentlyUploading || submitting) return;
 
     // 2. Empty delivery preventions based on Mode
     if (mode === 'files' || mode === 'both') {
@@ -466,19 +470,23 @@ function DeliverModal({ request, onClose, onSuccess, isPro }) {
 
       onSuccess()
     } catch {
+      setValidationErrors(prev => ({ ...prev, message: 'Could not send this delivery. Please try again.' }))
       setSubmitting(false)
     }
   }
 
+  const dialogRef = useDialogFocus(true, () => { if (!submitting && !isCurrentlyUploading) onClose() })
+  const viewportStyle = useVisualViewport()
   const clientName = request.client_name || 'Client'
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-2 sm:p-4 backdrop-blur-sm"
-      onClick={(e) => e.target === e.currentTarget && onClose()}
+      style={viewportStyle}
+      className="delivery-dialog fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-2 sm:p-4 backdrop-blur-sm"
+      onClick={(e) => e.target === e.currentTarget && !submitting && !isCurrentlyUploading && onClose()}
     >
-      <div
-        className="
+      <div ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="deliver-heading" tabIndex={-1}
+        className="delivery-dialog__panel
           w-full max-w-[1050px]
           overflow-hidden
           border border-border
@@ -488,10 +496,10 @@ function DeliverModal({ request, onClose, onSuccess, isPro }) {
           max-h-[98vh] md:max-h-[90vh]
         "
       >
-        <div className="flex flex-col lg:grid lg:grid-cols-[320px_1fr] max-h-[98vh] md:max-h-[90vh]">
+        <div className="delivery-dialog__layout flex flex-col lg:grid lg:grid-cols-[320px_1fr] max-h-[98vh] md:max-h-[90vh]">
 
           {/* LEFT PANEL */}
-          <div className="relative overflow-hidden border-b border-border bg-surface p-4 sm:p-5 lg:border-b-0 lg:border-r lg:p-6 flex flex-col justify-between">
+          <div className="delivery-dialog__summary relative overflow-hidden border-b border-border bg-surface p-4 sm:p-5 lg:border-b-0 lg:border-r lg:p-6 flex flex-col justify-between">
 
 
             <div className="relative z-10 flex h-full flex-col justify-between gap-4">
@@ -499,12 +507,12 @@ function DeliverModal({ request, onClose, onSuccess, isPro }) {
               <div className="flex items-start justify-between">
                 <div>
 
-                  <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-border bg-layout-card px-2.5 py-0.5 text-[11px] font-medium text-primary-ink">
+                  <div className="delivery-dialog__eyebrow mb-2 inline-flex items-center gap-2 rounded-full border border-border bg-layout-card px-2.5 py-0.5 text-[11px] font-medium text-primary-ink">
                     <div className="h-1.5 w-1.5 rounded-full bg-primary" />
                     DELIVERY PORTAL
                   </div>
 
-                  <h2 className="text-[24px] sm:text-[26px] font-semibold leading-tight text-text-main">
+                  <h2 id="deliver-heading" className="text-[24px] sm:text-[26px] font-semibold leading-tight text-text-main">
                     Deliver your work
                   </h2>
 
@@ -515,6 +523,8 @@ function DeliverModal({ request, onClose, onSuccess, isPro }) {
 
                 <button
                   onClick={onClose}
+                  disabled={submitting || isCurrentlyUploading}
+                  aria-label="Close delivery"
                   className="flex h-8 w-8 items-center justify-center rounded-lg bg-layout-card/80 backdrop-blur hover:bg-layout-card transition-colors"
                 >
                   <X size={14} className="text-text-sub" />
@@ -522,7 +532,7 @@ function DeliverModal({ request, onClose, onSuccess, isPro }) {
               </div>
 
               {/* Preview Card */}
-              <div className="mt-2 lg:mt-4 rounded-xl border border-border bg-layout-card p-4 shadow-sm">
+              <div className="delivery-dialog__preview mt-2 lg:mt-4 rounded-xl border border-border bg-layout-card p-4 shadow-sm">
 
                 <div className="flex items-start gap-3">
 
@@ -574,7 +584,7 @@ function DeliverModal({ request, onClose, onSuccess, isPro }) {
                 )}
               </div>
 
-              <div className="mt-auto hidden sm:block">
+              <div className="delivery-dialog__hint mt-auto hidden sm:block">
                 <div className="rounded-xl border border-status-progress-text/20 bg-status-progress-bg p-3">
 
                   <div className="flex items-start gap-2.5">
@@ -601,7 +611,7 @@ function DeliverModal({ request, onClose, onSuccess, isPro }) {
           </div>
 
           {/* RIGHT PANEL */}
-          <div className="overflow-y-auto p-4 sm:p-6 lg:p-8 max-h-[calc(98vh-220px)] lg:max-h-[90vh]">
+          <div className="delivery-dialog__fields overflow-y-auto p-4 sm:p-6 lg:p-8 max-h-[calc(98vh-220px)] lg:max-h-[90vh]">
 
             <div className="grid gap-5">
 
@@ -850,7 +860,8 @@ function DeliverModal({ request, onClose, onSuccess, isPro }) {
                                 )
                               }}
                               placeholder="https://figma.com/file/..."
-                              className="flex-1 bg-transparent text-[13px] outline-none placeholder:text-text-dim"
+                              aria-label="Delivery link"
+                              className="min-w-0 flex-1 bg-transparent text-[13px] outline-none placeholder:text-text-dim"
                             />
 
                             {link.url && (
@@ -968,10 +979,12 @@ function DeliverModal({ request, onClose, onSuccess, isPro }) {
               </div>
 
               {/* ACTIONS */}
-              <div className="flex flex-col-reverse gap-2 border-t border-border pt-4 sm:flex-row sm:items-center sm:justify-end">
+              <div className="delivery-dialog__actions flex flex-col-reverse gap-2 border-t border-border pt-4 sm:flex-row sm:items-center sm:justify-end">
 
                 <button
                   onClick={onClose}
+                  disabled={submitting || isCurrentlyUploading}
+                  aria-label="Close delivery"
                   className="h-10 rounded-xl px-4 text-[13px] font-medium text-text-sub hover:bg-surface transition-colors"
                 >
                   Cancel
@@ -1010,7 +1023,7 @@ function DeliverModal({ request, onClose, onSuccess, isPro }) {
 
         </div>
       </div>
-    </div>
+    </div>, document.body
   )
 }
 
@@ -1178,7 +1191,7 @@ export default function RequestDetailPage() {
 
   const {
     callState, localStream, remoteStream,
-    isMuted, isCamOff, callError, mediaNotice, connectedAt, remoteCameraOff, dismissCall,
+    isMuted, isCamOff, callError, mediaNotice, connectedAt, remoteCameraOff, dismissCall, cameraPending,
     startCall, acceptCall, declineCall, hangUp,
     handleSignal, toggleMute, toggleCam,
   } = useWebRTC({ sendSignal, requestId })
@@ -1849,6 +1862,7 @@ export default function RequestDetailPage() {
         callState={callState}
         callError={callError}
         mediaNotice={mediaNotice}
+        cameraPending={cameraPending}
         connectedAt={connectedAt}
         remoteCameraOff={remoteCameraOff}
         onDismiss={dismissCall}
