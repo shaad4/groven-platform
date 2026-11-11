@@ -32,7 +32,6 @@ django-storages==1.14.6
 djangorestframework==3.17.1
 djangorestframework_simplejwt==5.5.1
 flower==2.0.1
-google-auth==2.53.0
 h11==0.16.0
 httpcore==1.0.9
 httpx==0.28.1

@@ -92,7 +92,14 @@ export default function ClientPortalSwitcher({ isMobile = false }) {
   }
 
   return (
-    <div className="relative" ref={ref}>
+    <div className="relative" ref={ref} onKeyDown={event => {
+      if (event.key === 'Escape' && open) {
+        event.preventDefault()
+        event.stopPropagation()
+        setOpen(false)
+        ref.current?.querySelector('button')?.focus()
+      }
+    }}>
       {/* ───────────────── Trigger ───────────────── */}
       <button
         aria-label="Switch workspace"
@@ -141,17 +148,16 @@ export default function ClientPortalSwitcher({ isMobile = false }) {
       {open && !isMobile && (
         <div
           className="
-            absolute
-            left-[calc(100%+8px)]
-            bottom-0
-            z-[80]
-            w-[240px]
-            overflow-hidden
+            mt-2
+            w-full
+            max-h-52
+            overflow-y-auto
+            overscroll-contain
             rounded-xl
             border border-border/50
             bg-layout-card/95 backdrop-blur-xl
             shadow-soft
-            animate-in fade-in slide-in-from-left-2 duration-200
+            animate-in fade-in duration-150
           "
         >
           {/* ───────────────── Workspaces ───────────────── */}

@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { appUrl } from '../utils/urls'
 import { signupSchema, getPasswordStrength } from '../utils/validation'
 
 import {
@@ -15,36 +14,20 @@ import {
 } from 'lucide-react'
 
 import { authApi } from '../api/auth.api'
-import { useGoogleLogin } from '@react-oauth/google'
-import { useAuth } from '../context/AuthContext'
 
 import Button from '../components/Button'
 import VerifyEmailModal from '../components/VerifyEmailModal'
 
 import AuthShell from '../components/layout/AuthShell'
 
-function GoogleIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-      <path d="M17.64 9.20455C17.64 8.56636 17.5827 7.95273 17.4764 7.36364H9V10.845H13.8436C13.635 11.97 13.0009 12.9232 12.0477 13.5614V15.8195H14.9564C16.6582 14.2527 17.64 11.9455 17.64 9.20455Z" fill="#4285F4"/>
-      <path d="M9 18C11.43 18 13.4673 17.1941 14.9564 15.8195L12.0477 13.5614C11.2418 14.1014 10.2109 14.4204 9 14.4204C6.65591 14.4204 4.67182 12.8373 3.96409 10.71H0.957275V13.0418C2.43818 15.9832 5.48182 18 9 18Z" fill="#34A853"/>
-      <path d="M3.96409 10.71C3.78409 10.17 3.68182 9.59318 3.68182 9C3.68182 8.40682 3.78409 7.83 3.96409 7.29V4.95818H0.957275C0.347727 6.17318 0 7.54773 0 9C0 10.4523 0.347727 11.8268 0.957275 13.0418L3.96409 10.71Z" fill="#FBBC05"/>
-      <path d="M9 3.57955C10.3214 3.57955 11.5077 4.03364 12.4405 4.92545L15.0218 2.34409C13.4632 0.891818 11.4259 0 9 0C5.48182 0 2.43818 2.01682 0.957275 4.95818L3.96409 7.29C4.67182 5.16273 6.65591 3.57955 9 3.57955Z" fill="#EA4335"/>
-    </svg>
-  )
-}
-
 // Validation schema and getPasswordStrength helper are imported from ../utils/validation
 
 export default function SignupPage() {
-  const { saveSession } = useAuth()
-
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [serverError, setServerError] = useState('')
   const [verifyModalOpen, setVerifyModalOpen] = useState(false)
   const [signupEmail, setSignupEmail] = useState('')
-  const [googleLoading, setGoogleLoading] = useState(false)
 
   const {
     register,
@@ -58,47 +41,6 @@ export default function SignupPage() {
 
   const password = useWatch({ control, name: 'password', defaultValue: '' })
   const strength = getPasswordStrength(password)
-
-  // Same hook pattern as LoginPage — triggers a popup, returns access_token
-  const googleLogin = useGoogleLogin({
-    onSuccess: async (tokenResponse) => {
-      setServerError('')
-      setGoogleLoading(true)
-      try {
-        const { data } = await authApi.googleAuth(tokenResponse.access_token)
-
-        saveSession({
-          accessToken: data.access,
-          user: data.user,
-          tenant: data.tenant,
-        })
-
-        if (data.needs_workspace) {
-          window.location.replace(
-            appUrl(null, '/setup-workspace')
-          )
-        } else {
-          const slug = data.tenant?.slug
-          window.location.replace(
-            appUrl(slug, '/dashboard')
-          )
-        }
-      } catch (err) {
-        const msg =
-          err.response?.data?.error?.message ||
-          err.response?.data?.message ||
-          'Google sign-up failed. Please try again.'
-        setServerError(msg)
-      } finally {
-        setGoogleLoading(false)
-      }
-    },
-    onError: (err) => {
-      console.error('Google OAuth error:', err)
-      setServerError('Google sign-up failed. Please try again.')
-    },
-    flow: 'implicit',
-  })
 
   const onSubmit = async (data) => {
     setServerError('')
@@ -142,38 +84,6 @@ export default function SignupPage() {
                 {serverError}
               </div>
             )}
-
-            {/* GOOGLE BUTTON */}
-            <div className="mb-6">
-              <button
-                type="button"
-                disabled={googleLoading || isSubmitting}
-                onClick={() => googleLogin()}
-                className="w-full h-12 rounded-xl border border-border bg-layout-card text-sm font-medium text-text-main hover:bg-surface transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-sm"
-              >
-                {googleLoading ? (
-                  <svg
-                    className="animate-spin h-4 w-4 text-text-dim"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
-                  </svg>
-                ) : (
-                  <GoogleIcon />
-                )}
-                <span>{googleLoading ? 'Connecting...' : 'Continue with Google'}</span>
-              </button>
-
-              {/* DIVIDER */}
-              <div className="flex items-center gap-4 mt-5">
-                <div className="h-px flex-1 bg-border" />
-                <span className="text-xs text-text-dim">or sign up with email</span>
-                <div className="h-px flex-1 bg-border" />
-              </div>
-            </div>
 
             {/* FORM */}
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
@@ -307,7 +217,6 @@ export default function SignupPage() {
               <Button
                 type="submit"
                 loading={isSubmitting}
-                disabled={googleLoading}
                 className="mt-2 h-12 w-full rounded-2xl bg-primary text-on-primary transition-all hover:bg-primary-dark"
               >
                 <div className="flex items-center justify-center gap-2">

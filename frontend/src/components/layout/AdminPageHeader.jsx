@@ -1,3 +1,4 @@
+import { InlinePending } from '../ui/Skeleton'
 import { RefreshCw } from 'lucide-react'
 
 export default function AdminPageHeader({ title, subtitle, onRefresh, refreshing }) {
@@ -12,9 +13,10 @@ export default function AdminPageHeader({ title, subtitle, onRefresh, refreshing
           onClick={onRefresh}
           aria-label="Refresh page"
           disabled={refreshing}
+          aria-busy={refreshing}
           className="flex min-h-11 min-w-11 items-center justify-center gap-2 rounded-xl border border-border bg-layout-card px-3 py-1.5 sm:px-3.5 sm:py-2 text-[12px] sm:text-[13px] font-medium text-text-sub hover:bg-surface transition-colors disabled:opacity-60"
         >
-          <RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} />
+          <>{refreshing ? <InlinePending label="Refreshing page" /> : <RefreshCw size={14} />}</>
           <span className="hidden sm:inline">Refresh</span>
         </button>
       )}

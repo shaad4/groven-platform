@@ -1,7 +1,8 @@
+import { PageSkeleton } from '../../components/ui/Skeleton'
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  Search, ChevronDown, Loader2, ArrowUpRight,
+  Search, ArrowUpRight,
   CheckCircle2, FileText, MessageSquare, Bell,
   Lock, Download,
 } from 'lucide-react'
@@ -256,7 +257,6 @@ export default function ActivityPage() {
   const [searchInput, setSearchInput] = useState('')
   const [clients, setClients] = useState([])
   const [clientFilter, setClientFilter] = useState(null)
-  const [clientDropdownOpen, setClientDropdownOpen] = useState(false)
 
   useEffect(() => {
     clientsApi.list().then(res => {
@@ -428,8 +428,8 @@ export default function ActivityPage() {
             </div>
           </div>
 
-          <div className="hidden lg:flex items-center justify-between px-4 py-3 border-b border-border">
-            <div className="flex items-center gap-1">
+          <div className="hidden min-w-0 flex-col gap-3 border-b border-border px-4 py-3 lg:flex xl:flex-row xl:items-center xl:justify-between">
+            <div className="flex min-w-0 items-center gap-1 overflow-x-auto whitespace-nowrap">
               <span className="text-[12px] font-semibold text-text-dim mr-2">Filter by:</span>
               {FILTER_TABS.map(({ key, label }) => (
                 <button
@@ -443,49 +443,27 @@ export default function ActivityPage() {
                 </button>
               ))}
             </div>
-            <div className="relative">
-              <button
-                onClick={() => setClientDropdownOpen(o => !o)}
-                className="flex items-center gap-1.5 h-8 rounded-lg border border-border px-3 text-[12px] font-medium text-text-sub hover:border-primary/30 transition-colors"
-              >
-                {clientFilter ? clients.find(c => c.id === clientFilter)?.display_name || 'Client' : 'All clients'}
-                <ChevronDown size={12} className="text-text-dim" />
-              </button>
-              {clientDropdownOpen && (
-                <div className="absolute right-0 top-10 z-20 w-52 rounded-xl border border-border bg-layout-card shadow-lg py-1">
-                  <button
-                    onClick={() => { setClientFilter(null); setClientDropdownOpen(false) }}
-                    className={`w-full text-left px-3 py-2 text-[13px] hover:bg-surface ${!clientFilter ? 'font-semibold text-primary-ink' : 'text-text-sub'}`}
-                  >
-                    All clients
-                  </button>
-                  {clients.map(c => (
-                    <button
-                      key={c.id}
-                      onClick={() => { setClientFilter(c.id); setClientDropdownOpen(false) }}
-                      className={`w-full text-left px-3 py-2 text-[13px] hover:bg-surface ${clientFilter === c.id ? 'font-semibold text-primary-ink' : 'text-text-sub'}`}
-                    >
-                      {c.display_name || c.client_name}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+            <select
+              aria-label="Filter activity by client" value={clientFilter || ''}
+              onChange={event => setClientFilter(event.target.value || null)}
+              className="h-9 w-full min-w-0 rounded-lg border border-border bg-layout-card px-3 text-[12px] text-text-sub xl:max-w-48"
+            >
+              <option value="">All clients</option>
+              {clients.map(client => <option key={client.id} value={client.id}>{client.display_name || client.client_name}</option>)}
+            </select>
           </div>
 
           {/* Cleaned minimalist event metadata readout block */}
           {!loading && (
             <div className="flex items-center justify-between px-5 py-3.5 border-b border-border bg-surface">
               <p className="text-[12px] text-text-sub">
-                Showing <span className="font-semibold text-text-main">{activities.length} logs</span> matching your tracking timeframe filter selection criteria.
+                <span className="font-semibold text-text-main">{activities.length} events</span> match these filters.
               </p>
             </div>
           )}
 
           {loading ? (
-            <div className="flex items-center justify-center py-20">
-              <Loader2 size={22} className="animate-spin text-primary-ink" />
-            </div>
+            <PageSkeleton label="Loading activity" variant="list" />
           ) : activities.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-center">
               <Bell size={24} className="text-text-dim mb-3" />

@@ -1,8 +1,8 @@
+import { PageSkeleton, InlinePending } from '../../components/ui/Skeleton'
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
-  ArrowLeft, Loader2,
-  Clock, Package, Calendar, Mail, Building2,
+  ArrowLeft, Clock, Package, Calendar, Mail, Building2,
   ChevronRight, Flag, FileText, ChevronLeft,
   Hash, Activity, HelpCircle, UserRound,
 } from 'lucide-react'
@@ -110,7 +110,7 @@ function PrivateNoteEditor({ client, onSaved }) {
         </button>
         <button onClick={handleSave} disabled={loading}
           className="flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-[12px] font-medium text-on-primary hover:bg-primary-dark disabled:opacity-60 transition-colors">
-          {loading && <Loader2 size={12} className="animate-spin" />} Save
+          {loading && <InlinePending label="Saving note" />} {loading ? 'Saving…' : 'Save'}
         </button>
       </div>
     </div>
@@ -238,9 +238,7 @@ export default function ClientDetailPage() {
 
   if (loading) return (
     <ProviderLayout>
-      <div className="flex items-center justify-center p-16">
-        <Loader2 size={24} className="animate-spin text-primary-ink" />
-      </div>
+      <PageSkeleton label="Loading client details" variant="detail" />
     </ProviderLayout>
   )
 
@@ -664,7 +662,7 @@ export default function ClientDetailPage() {
 
       {/* ── CUSTOM DEACTIVATE CONFIRMATION MODAL ── */}
       {showDeactivateConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-fade-in">
+        <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-fade-in">
           <div className="w-full max-w-md rounded-2xl bg-layout-card shadow-2xl border border-border overflow-hidden transform transition-all scale-100">
             <div className="p-6">
               <div className="flex gap-4">
@@ -694,7 +692,7 @@ export default function ClientDetailPage() {
                   onClick={handleDeactivate}
                   className="flex items-center gap-2 rounded-xl bg-red-600 h-10 px-4 text-[13px] font-semibold text-on-primary hover:bg-red-600 shadow-xs transition-colors disabled:opacity-50"
                 >
-                  {actionLoading && <Loader2 size={14} className="animate-spin" />}
+                  {actionLoading && <InlinePending label="Deactivating client access" />}
                   Deactivate Access
                 </button>
               </div>

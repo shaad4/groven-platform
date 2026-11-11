@@ -1,3 +1,4 @@
+import { InlinePending } from '../ui/Skeleton'
 import { useDialogFocus } from '../../hooks/useDialogFocus'
 import { useState, useRef } from 'react'
 import {
@@ -639,25 +640,7 @@ const validate = () => {
                   className="flex h-12 items-center justify-center gap-2 rounded-2xl bg-primary px-6 text-[14px] font-medium text-on-primary transition-all hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {loading ? (
-                    <svg
-                      className="h-4 w-4 animate-spin"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      />
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8v8H4z"
-                      />
-                    </svg>
+                    <><InlinePending label="Sending invitation" /> Sending invite…</>
                   ) : (
                     <>
                       Send invite
@@ -689,10 +672,7 @@ const validate = () => {
             className="flex-1 flex h-12 items-center justify-center gap-2 rounded-xl bg-primary text-[14px] font-medium text-on-primary transition-all hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-60"
           >
             {loading ? (
-              <svg className="h-4 w-4 animate-spin text-on-primary" viewBox="0 0 24 24" fill="none">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-              </svg>
+              <><InlinePending label="Sending invitation" /> Sending invite…</>
             ) : (
               <>
                 Send invite

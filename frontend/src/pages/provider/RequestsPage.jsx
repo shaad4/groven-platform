@@ -1,10 +1,10 @@
+import { PageSkeleton } from '../../components/ui/Skeleton'
 import { useState, useEffect, useRef, useCallback, useId } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { createPortal } from 'react-dom'
 import {
   Search, Flag, Calendar, ChevronDown, LayoutList,
-  Columns, Clock, AlertCircle, Loader2,
-  CheckCircle2, Filter, Check, Sparkles, X
+  Columns, Clock, AlertCircle, CheckCircle2, Filter, Check, Sparkles, X
 } from 'lucide-react'
 import ProviderLayout from '../../components/layout/ProviderLayout'
 import ProviderTopbar from '../../components/layout/ProviderTopbar'
@@ -821,9 +821,7 @@ export default function RequestsPage() {
 
         {/* ── Content ── */}
         {loading ? (
-          <div className="flex items-center justify-center py-20">
-            <Loader2 size={22} className="animate-spin text-primary-ink" />
-          </div>
+          <PageSkeleton label="Loading requests" variant="list" className="!p-0" />
         ) : loadError ? (
           <div role="alert" className="rounded-2xl border border-border bg-layout-card p-8 text-center">
             <AlertCircle size={24} className="mx-auto mb-3 text-status-danger-text" />

@@ -1,10 +1,11 @@
+import { Skeleton, InlinePending } from '../../components/ui/Skeleton'
 import { useState, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import {
   Search, Plus, MoreVertical, ChevronRight,
   Mail, Trash2, PowerOff, Power,
-  Send, Users, Loader2,
-  LayoutGrid, List,
+  Send, Users, LayoutGrid, List,
   Sparkles,
 } from 'lucide-react'
 import ProviderLayout from '../../components/layout/ProviderLayout'
@@ -77,17 +78,47 @@ function InsightBadge({ insight }) {
 // ACTION MENU
 function ActionMenu({ client, onEdit, onDeactivate, onReactivate, onDelete, onResend }) {
   const [open, setOpen] = useState(false)
+  const [position, setPosition] = useState({ top: 0, left: 0 })
   const ref = useRef(null)
+  const menuRef = useRef(null)
+  const buttonRef = useRef(null)
   const status = getClientStatus(client)
 
   useEffect(() => {
-    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false) }
+    if (!open) return
+    const handler = (e) => {
+      if (!ref.current?.contains(e.target) && !menuRef.current?.contains(e.target)) setOpen(false)
+    }
+    const closeOnScroll = (e) => { if (!menuRef.current?.contains(e.target)) setOpen(false) }
+    const closeOnEscape = (e) => {
+      if (e.key === 'Escape') { setOpen(false); buttonRef.current?.focus() }
+    }
+    menuRef.current?.querySelector('button')?.focus()
     document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
-  }, [])
+    document.addEventListener('keydown', closeOnEscape)
+    window.addEventListener('scroll', closeOnScroll, true)
+    window.addEventListener('resize', closeOnScroll)
+    return () => {
+      document.removeEventListener('mousedown', handler)
+      document.removeEventListener('keydown', closeOnEscape)
+      window.removeEventListener('scroll', closeOnScroll, true)
+      window.removeEventListener('resize', closeOnScroll)
+    }
+  }, [open])
+
+  const toggleMenu = (event) => {
+    event.stopPropagation()
+    const rect = event.currentTarget.getBoundingClientRect()
+    setPosition({
+      left: Math.max(12, Math.min(rect.right - 192, window.innerWidth - 204)),
+      top: rect.bottom + 196 > window.innerHeight ? Math.max(12, rect.top - 192) : rect.bottom + 6,
+    })
+    setOpen(value => !value)
+  }
 
   const Item = ({ icon: Icon, label, onClick, danger = false, className = '' }) => (
     <button
+      role="menuitem"
       onClick={(e) => { e.stopPropagation(); setOpen(false); onClick() }}
       className={`flex w-full items-center gap-2.5 px-3 py-2 text-[13px] transition-colors hover:bg-surface ${
         danger ? 'text-status-danger-text hover:bg-status-danger-bg' : 'text-text-main'
@@ -101,14 +132,27 @@ function ActionMenu({ client, onEdit, onDeactivate, onReactivate, onDelete, onRe
   return (
     <div ref={ref} className="relative">
       <button
-        onClick={(e) => { e.stopPropagation(); setOpen(o => !o) }}
-        className="flex h-8 w-8 items-center justify-center rounded-lg text-text-dim hover:bg-surface hover:text-text-sub transition-colors"
+        ref={buttonRef}
+        onClick={toggleMenu}
+        aria-label={`Actions for ${client.display_name || client.client_name || 'client'}`}
+        aria-haspopup="menu" aria-expanded={open}
+        className="flex h-9 w-9 items-center justify-center rounded-lg text-text-sub hover:bg-surface hover:text-text-main transition-colors"
       >
         <MoreVertical size={15} />
       </button>
 
-      {open && (
-        <div className="absolute right-0 top-9 z-30 w-48 rounded-xl border border-border bg-layout-card py-1 shadow-xl shadow-black/10 overflow-hidden">
+      {open && createPortal(
+        <div ref={menuRef} role="menu" aria-label="Client actions" style={position}
+          onClick={event => event.stopPropagation()}
+          onKeyDown={event => {
+            if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) return
+            event.preventDefault()
+            const items = [...event.currentTarget.querySelectorAll('button')]
+            const current = items.indexOf(document.activeElement)
+            const next = event.key === 'Home' ? 0 : event.key === 'End' ? items.length - 1 : (current + (event.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length
+            items[next]?.focus()
+          }}
+          className="fixed z-[120] w-48 rounded-xl border border-border bg-layout-card py-1 shadow-xl shadow-black/10 overflow-hidden">
           <Item icon={Mail} label="Edit details" onClick={onEdit} />
 
           {status === 'pending' && (
@@ -125,7 +169,7 @@ function ActionMenu({ client, onEdit, onDeactivate, onReactivate, onDelete, onRe
 
           <div className="my-1 border-t border-border" />
           <Item icon={Trash2} label="Delete client" onClick={onDelete} danger />
-        </div>
+        </div>, document.body
       )}
     </div>
   )
@@ -507,50 +551,49 @@ export default function ClientsPage() {
           `}</style>
 
           {/* ── Sticky Filter + Search bar ── */}
-          <div className="sticky top-0 z-20 -mx-4 -mt-4 px-4 py-4 mb-6 sm:-mx-6 sm:-mt-6 sm:px-6 lg:-mx-8 lg:-mt-8 lg:px-8 bg-surface/90 backdrop-blur-md border-b border-border flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between transition-all duration-200">
+          <div className="sticky top-0 z-20 -mx-4 -mt-4 mb-6 flex min-w-0 flex-col gap-3 border-b border-border bg-layout-page px-4 py-4 sm:-mx-6 sm:-mt-6 sm:px-6 lg:-mx-8 lg:-mt-8 lg:px-8 xl:flex-row xl:items-center xl:justify-between">
 
             {/* Filter tabs */}
-            <div className="flex items-center gap-1 rounded-xl bg-surface p-1 overflow-x-auto no-scrollbar py-1 shrink-0">
+            <div role="group" aria-label="Filter clients by status" className="grid min-w-0 grid-cols-2 gap-1 rounded-xl border border-border bg-surface p-1 sm:flex sm:w-fit">
               {FILTERS.map(({ key, label }) => (
                 <button
                   key={key}
                   onClick={() => setFilter(key)}
-                  className={`shrink-0 flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[12px] font-medium transition-all ${
+                  aria-pressed={filter === key}
+                  className={`flex min-h-10 min-w-0 items-center justify-between gap-2 whitespace-nowrap rounded-lg px-3 text-[12px] font-medium transition-colors sm:justify-center ${
                     filter === key
                       ? 'bg-layout-card text-text-main shadow-sm'
                       : 'text-text-sub hover:text-text-main'
                   }`}
                 >
                   {label}
-                  {counts[key] > 0 && (
-                    <span className={`rounded-full px-1.5 py-0.5 text-[11px] ${
-                      filter === key ? 'bg-primary-light text-primary-ink' : 'bg-layout-card/60 text-text-dim'
+                    <span className={`inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-md px-1.5 text-[11px] tabular-nums ${
+                      filter === key ? 'bg-primary text-on-primary' : 'bg-layout-card text-text-sub'
                     }`}>
                       {counts[key]}
                     </span>
-                  )}
                 </button>
               ))}
             </div>
 
             {/* Right controls */}
-            <div className="flex items-center justify-between sm:justify-start gap-2 w-full sm:w-auto">
+            <div className="flex w-full min-w-0 items-center gap-2 xl:w-auto">
               {/* Search */}
-              <div className="relative flex-1 sm:flex-initial">
+              <div className="relative min-w-0 flex-1 xl:flex-initial">
                 <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-dim" />
                 <input
                   value={search}
                   onChange={e => setSearch(e.target.value)}
                   aria-label="Search clients" placeholder="Search clients..."
-                  className="h-9 w-full sm:w-56 rounded-xl border border-border bg-layout-card pl-9 pr-4 text-[13px] outline-none transition-all placeholder:text-text-dim focus:border-primary focus:ring-4 focus:ring-primary/10"
+                  className="h-11 w-full rounded-xl border border-border bg-layout-card pl-9 pr-4 text-[13px] outline-none transition-colors placeholder:text-text-dim focus:border-primary focus:ring-4 focus:ring-primary/10 xl:w-52"
                 />
               </div>
 
               {/* View toggle */}
-              <div className="flex items-center rounded-xl border border-border bg-layout-card overflow-hidden shrink-0">
+              <div role="group" aria-label="Client view" className="flex shrink-0 items-center overflow-hidden rounded-xl border border-border bg-layout-card">
                 <button
                   onClick={() => setViewMode('grid')} aria-label="Grid view" aria-pressed={viewMode === 'grid'}
-                  className={`flex h-9 w-9 items-center justify-center transition-colors ${
+                  className={`flex h-[42px] w-10 items-center justify-center transition-colors ${
                     viewMode === 'grid' ? 'bg-primary-light text-primary-ink' : 'text-text-dim hover:text-text-sub'
                   }`}
                 >
@@ -558,7 +601,7 @@ export default function ClientsPage() {
                 </button>
                 <button
                   onClick={() => setViewMode('list')} aria-label="List view" aria-pressed={viewMode === 'list'}
-                  className={`flex h-9 w-9 items-center justify-center transition-colors border-l border-border ${
+                  className={`flex h-[42px] w-10 items-center justify-center transition-colors border-l border-border ${
                     viewMode === 'list' ? 'bg-primary-light text-primary-ink' : 'text-text-dim hover:text-text-sub'
                   }`}
                 >
@@ -570,9 +613,12 @@ export default function ClientsPage() {
 
           {/* ── Content ── */}
           {loading ? (
-            <div className={viewMode === 'grid' ? 'grid gap-4 sm:grid-cols-2 xl:grid-cols-3' : 'rounded-2xl border border-border bg-layout-card overflow-hidden'}>
+            <div role="status" aria-label="Loading clients" aria-busy="true" className={viewMode === 'grid' ? 'grid gap-4 sm:grid-cols-2 xl:grid-cols-3' : 'space-y-2'}>
               {[1, 2, 3, 4, 5, 6].map(i => (
-                <div key={i} className={`animate-pulse bg-layout-card border border-border rounded-2xl ${viewMode === 'grid' ? 'h-[220px]' : 'h-[72px]'}`} />
+                <div key={i} className="rounded-2xl border border-border bg-layout-card p-5">
+                  <div className="flex items-center gap-3"><Skeleton className="h-11 w-11 shrink-0 rounded-full" /><div className="flex-1 space-y-2"><Skeleton className="h-3 w-2/3" /><Skeleton className="h-2 w-1/2" /></div><Skeleton className="h-6 w-16 rounded-full" /></div>
+                  {viewMode === 'grid' && <><div className="mt-6 grid grid-cols-2 gap-6 border-t border-border pt-4">{[1, 2].map(n => <div key={n} className="space-y-2"><Skeleton className="h-6 w-8" /><Skeleton className="h-2 w-20" /></div>)}</div><div className="mt-4 border-t border-border pt-4"><Skeleton className="h-2 w-2/3" /></div></>}
+                </div>
               ))}
             </div>
 
@@ -604,7 +650,7 @@ export default function ClientsPage() {
                 <div key={client.id} className="relative">
                   {actionLoading === client.id && (
                     <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-layout-card/70 backdrop-blur-sm">
-                      <Loader2 size={20} className="animate-spin text-primary-ink" />
+                      <span className="flex items-center gap-2 text-sm text-text-sub"><InlinePending label="Updating client" /> Updating…</span>
                     </div>
                   )}
                   <ClientCard
@@ -655,7 +701,7 @@ export default function ClientsPage() {
                 <div key={client.id} className="relative">
                   {actionLoading === client.id && (
                     <div className="absolute inset-0 z-10 flex items-center justify-center bg-layout-card/70 backdrop-blur-sm">
-                      <Loader2 size={18} className="animate-spin text-primary-ink" />
+                      <span className="flex items-center gap-2 text-sm text-text-sub"><InlinePending label="Updating client" /> Updating…</span>
                     </div>
                   )}
                   <ClientRow

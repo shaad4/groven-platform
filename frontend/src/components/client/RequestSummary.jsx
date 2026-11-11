@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { ArrowUpRight, CheckCircle2, Clock3, FileText, MessageSquareDot, PackageCheck, SearchCheck } from 'lucide-react'
 import { timeAgo } from '../../utils/clientHelpers'
+import { Skeleton } from '../ui/Skeleton'
 
 export const REQUEST_STATUS = {
   received: { label: 'Submitted', icon: FileText, className: 'bg-surface text-text-sub' },
@@ -26,6 +27,15 @@ export function RequestSummary({ request, fresh = false }) {
       </div>
     </div>
   </Link>
+}
+
+export function RequestSummarySkeleton() {
+  return <div className="rounded-2xl border border-border bg-layout-card p-4 sm:p-5">
+    <div className="flex items-start gap-3 sm:gap-4">
+      <Skeleton className="hidden h-10 w-10 shrink-0 rounded-xl sm:block" />
+      <div className="min-w-0 flex-1 space-y-3"><Skeleton className="h-5 w-3/4" /><Skeleton className="h-3 w-1/2" /><div className="flex items-center justify-between gap-4 pt-2"><Skeleton className="h-8 w-28 rounded-lg" /><Skeleton className="h-3 w-20" /></div></div>
+    </div>
+  </div>
 }
 
 export function RequestJourney() {

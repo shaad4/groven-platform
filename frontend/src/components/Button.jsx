@@ -1,5 +1,5 @@
 import { clsx } from 'clsx'
-import { Loader2 } from 'lucide-react'
+import { InlinePending } from './ui/Skeleton'
 
 export default function Button({ children, loading, disabled, className, icon: Icon, variant = 'primary', ...props }) {
   return (
@@ -14,7 +14,7 @@ export default function Button({ children, loading, disabled, className, icon: I
       disabled={loading || disabled}
       aria-busy={loading || undefined}
     >
-      {loading ? <Loader2 size={16} className="animate-spin" aria-hidden="true" /> : Icon && <Icon size={16} aria-hidden="true" />}
+      {loading ? <InlinePending label="Working" /> : Icon && <Icon size={16} aria-hidden="true" />}
       <span>{children}</span>
     </button>
   )

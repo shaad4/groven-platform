@@ -13,10 +13,9 @@ from apps.notifications.tasks import (send_password_reset_email,
                                       send_verification_email)
 from apps.tenants.models import Tenant, TenantMembership
 
-from .models import User
-from .repositories import EmailVerificationTokenRepository, UserRepository
+from .repositories import EmailVerificationTokenRepository
 from .serializers import (EmailNotVerified, ForgotPasswordSerializer,
-                          GoogleAuthSerializer, LoginSerializer,
+                          LoginSerializer,
                           ProviderSignupSerializer, ResetPasswordSerializer,
                           WorkspaceSetupSerializer)
 from .services import (InvalidOrExpiredToken, PasswordResetService,
@@ -520,99 +519,6 @@ class LogoutView(APIView):
                     domain=settings.COOKIE_DOMAIN,
                     path="/",
                 )
-
-        return response
-
-
-class GoogleAuthView(APIView):
-    permission_classes = [AllowAny]
-
-    def post(self, request):
-        serializer = GoogleAuthSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        google_data = serializer.validated_data["access_token"]
-        email = google_data["email"]
-
-        existing = UserRepository.get_by_email(email)
-
-        if existing:
-            if not existing.is_active:
-                return Response(
-                    {"success": False, "message": "This account has been deactivated."},
-                    status=status.HTTP_403_FORBIDDEN,
-                )
-            user = existing
-
-            if not user.is_email_verified:
-                user.is_email_verified = True
-                user.is_active = True
-            if not user.avatar_url and google_data.get("avatar_url"):
-                user.avatar_url = google_data["avatar_url"]
-            user.save()
-        else:
-            user = User(
-                email=email,
-                display_name=google_data["display_name"],
-                avatar_url=google_data.get("avatar_url"),
-                is_active=True,
-                is_email_verified=True,
-            )
-            user.set_unusable_password()
-            user.save()
-
-        update_last_login(None, user)
-        refresh = RefreshToken.for_user(user)
-
-        # Check if this user has a provider workspace yet
-        provider_membership = (
-            TenantMembership.objects.filter(
-                user=user,
-                role=TenantMembership.Role.PROVIDER,
-            )
-            .select_related("tenant")
-            .first()
-        )
-
-        membership_count = TenantMembership.objects.filter(
-            user=user,
-            is_active=True,
-        ).count()
-
-        needs_workspace = provider_membership is None
-        tenant = provider_membership.tenant if provider_membership else None
-
-        response = Response(
-            {
-                "success": True,
-                "access": str(refresh.access_token),
-                "needs_workspace": needs_workspace,
-                "user": _build_user_payload(user, provider_membership),
-                "tenant": _build_tenant_payload(tenant),
-                "membership_count": membership_count,
-            }
-        )
-
-        if tenant:
-            # Single provider — one cookie
-            set_auth_cookies(
-                response, refresh, cookie_name=f"provider_refresh_{tenant.slug}"
-            )
-        else:
-            # Multiple memberships — set a cookie per tenant, same pattern as LoginView
-            all_memberships = TenantMembership.objects.filter(
-                user=user, is_active=True
-            ).select_related("tenant")
-            for m in all_memberships:
-                role_prefix = (
-                    "provider" if m.role == TenantMembership.Role.PROVIDER else "client"
-                )
-                set_auth_cookies(
-                    response,
-                    refresh,
-                    cookie_name=f"{role_prefix}_refresh_{m.tenant.slug}",
-                )
-            set_auth_cookies(response, refresh, cookie_name="refresh_token")
 
         return response
 

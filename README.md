@@ -44,7 +44,7 @@ Analytics & insights        Multi-portal switcher
 | **Database** | PostgreSQL 16 |
 | **Cache/Queue** | Redis 7, Celery, Celery Beat |
 | **Payments** | Stripe (subscriptions + webhooks) |
-| **Auth** | JWT (SimpleJWT), Google OAuth |
+| **Auth** | JWT (SimpleJWT), email and password |
 | **Infra** | Docker, Nginx, AWS EC2 |
 | **CI/CD** | GitHub Actions |
 | **AI** | OpenAI — summaries, categorisation, reply suggestions |
@@ -108,9 +108,9 @@ cd frontend && npm install && npm run dev
 
 ## Environment Variables
 
-Use [`.env.example`](.env.example) for Django, PostgreSQL, Redis, email, S3, OAuth, AI providers, Stripe, and the platform administrator. Copy it to the repository-root `.env`, which Docker Compose loads into the backend services. Populate the blank credentials and replace the example database password.
+Use [`.env.example`](.env.example) for Django, PostgreSQL, Redis, email, S3, AI providers, Stripe, and the platform administrator. Copy it to the repository-root `.env`, which Docker Compose loads into the backend services. Populate the blank credentials and replace the example database password.
 
-Use [`frontend/.env.example`](frontend/.env.example) for Vite. Its values are public and embedded at build time; use the same Google client ID as the backend, and never put API secrets in a `VITE_*` variable.
+Use [`frontend/.env.example`](frontend/.env.example) for Vite. Its values are public and embedded at build time; never put API secrets in a `VITE_*` variable.
 
 The local frontend expects HTTPS at `lvh.me:5173` and a separately available HTTPS/WebSocket backend at `api.lvh.me:8443`. The existing Vite proxy forwards `/api` there. The root example uses Docker service names (`postgres`, `redis`); change these hosts when running the backend outside Docker. The supplied Compose Nginx configuration targets `groven.in` with deployment TLS certificates, so it is not a local HTTPS setup by itself.
 

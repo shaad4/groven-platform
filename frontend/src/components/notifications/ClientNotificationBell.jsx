@@ -188,7 +188,7 @@ export default function ClientNotificationBell({ collapsed = false, isMobileNav 
   const { colors }  = useTenantBranding()
   const { accent, accentSoft } = colors
 
-  const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 1024)
 
   const {
     unreadCount,
@@ -205,8 +205,8 @@ export default function ClientNotificationBell({ collapsed = false, isMobileNav 
     const rect = bellRef.current.getBoundingClientRect()
     const vpW  = window.innerWidth
     const vpH  = window.innerHeight
-    const dropW = 340
-    const dropH = 480
+    const dropW = Math.min(340, vpW - 24)
+    const dropH = Math.min(480, vpH - 24)
 
     let left = rect.right + 12
     let top  = rect.top
@@ -215,6 +215,7 @@ export default function ClientNotificationBell({ collapsed = false, isMobileNav 
     if (top + dropH > vpH - 12) top = vpH - dropH - 12
     if (top < 12) top = 12
 
+    left = Math.max(12, Math.min(left, vpW - dropW - 12))
     return { position: 'fixed', top, left, width: dropW, maxHeight: dropH }
   }, [isMobile])
 
@@ -224,6 +225,19 @@ export default function ClientNotificationBell({ collapsed = false, isMobileNav 
       loadNotifications()
     }
   }, [open, computePosition, loadNotifications])
+
+  useEffect(() => {
+    const reposition = () => {
+      setIsMobile(window.innerWidth < 1024)
+      if (open) setDropdownStyle(computePosition())
+    }
+    window.addEventListener('resize', reposition)
+    window.addEventListener('scroll', reposition, true)
+    return () => {
+      window.removeEventListener('resize', reposition)
+      window.removeEventListener('scroll', reposition, true)
+    }
+  }, [open, computePosition])
 
   useEffect(() => {
     function handler(e) {

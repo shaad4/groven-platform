@@ -1,7 +1,8 @@
+import { Skeleton, PageSkeleton, InlinePending } from '../../components/ui/Skeleton'
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
-  ChevronRight, Flag, Calendar, Loader2, AlertCircle,
+  ChevronRight, Flag, Calendar, AlertCircle,
   Lock, Plus, X, Link2, Upload, FileText,
   CheckCircle2, Clock, Send,
   Download, Pencil, Check,
@@ -105,7 +106,7 @@ function AISummaryCard({ request, requestId, onRegenerate, isPro }) {
             <p className="text-[13px] font-semibold text-text-main">AI Summary</p>
             {!isReady && (
               <span className="flex items-center gap-1 text-[11px] text-text-dim">
-                <Loader2 size={11} className="animate-spin" />
+                <InlinePending label="Generating summary" />
                 Summary pending
               </span>
             )}
@@ -118,9 +119,10 @@ function AISummaryCard({ request, requestId, onRegenerate, isPro }) {
                 onClick={handleRegenerate}
                 disabled={regenerating}
                 title="Regenerate summary"
-                className="h-7 w-7 flex items-center justify-center rounded-lg text-text-dim hover:text-primary-ink hover:bg-primary-light transition-colors disabled:opacity-50"
+                aria-label="Regenerate summary" aria-busy={regenerating}
+                className="h-8 min-w-8 px-1.5 flex items-center justify-center rounded-lg text-text-dim hover:text-primary-ink hover:bg-primary-light transition-colors disabled:opacity-50"
               >
-                <RefreshCw size={13} className={regenerating ? 'animate-spin' : ''} />
+                {regenerating ? <InlinePending label="Regenerating summary" /> : <RefreshCw size={13} />}
               </button>
             )}
           </div>
@@ -133,10 +135,10 @@ function AISummaryCard({ request, requestId, onRegenerate, isPro }) {
         ) : (
           <div className="space-y-2">
             {['92%', '78%', '60%'].map((w) => (
-              <div
+              <Skeleton
                 key={w}
                 style={{ width: w }}
-                className="h-3 rounded-full bg-border animate-pulse"
+                className="h-3 rounded-full"
               />
             ))}
           </div>
@@ -206,12 +208,14 @@ function DueDateEditor({ dueDate, requestId, onUpdate }) {
         <button
           onClick={handleSave}
           disabled={saving}
-          className="h-6 w-6 flex items-center justify-center rounded-md bg-primary text-on-primary hover:bg-primary-dark transition-colors disabled:opacity-60"
+          aria-label="Save due date" aria-busy={saving}
+          className="h-8 min-w-8 px-1.5 flex items-center justify-center rounded-md bg-primary text-on-primary hover:bg-primary-dark transition-colors disabled:opacity-60"
         >
-          {saving ? <Loader2 size={10} className="animate-spin" /> : <Check size={11} />}
+          {saving ? <InlinePending label="Saving due date" /> : <Check size={11} />}
         </button>
         <button
           onClick={handleCancel}
+          aria-label="Cancel due date change"
           className="h-6 w-6 flex items-center justify-center rounded-md border border-border text-text-dim hover:text-text-main transition-colors"
         >
           <X size={11} />
@@ -768,10 +772,7 @@ function DeliverModal({ request, onClose, onSuccess, isPro }) {
                           )}
 
                           {f.status === 'uploading' && (
-                            <Loader2
-                              size={14}
-                              className="animate-spin text-primary-ink"
-                            />
+                            <span className="flex items-center gap-1.5 text-[11px] text-text-sub"><InlinePending label="Uploading file" /> Uploading…</span>
                           )}
 
                           {f.status === 'error' && (
@@ -921,7 +922,7 @@ function DeliverModal({ request, onClose, onSuccess, isPro }) {
                         disabled={suggestingMessage}
                         className="flex items-center gap-1.5 text-[11px] font-medium text-status-progress-text hover:text-status-progress-text transition-colors disabled:opacity-50"
                       >
-                        <Sparkles size={12} className={suggestingMessage ? 'animate-pulse' : ''} />
+                        {suggestingMessage ? <InlinePending label="Drafting delivery message" /> : <Sparkles size={12} />}
                         {suggestingMessage ? 'Drafting…' : 'Suggest message'}
                       </button>
                     )}
@@ -986,11 +987,11 @@ function DeliverModal({ request, onClose, onSuccess, isPro }) {
                   "
                 >
                   {submitting ? (
-                    <Loader2 size={14} className="animate-spin" />
+                    <><InlinePending label="Sending delivery" /> Sending…</>
                   ) : isCurrentlyUploading ? (
                     <>
-                      <Loader2 size={14} className="animate-spin" />
-                      Uploading files...
+                      <InlinePending label="Uploading files" />
+                      Uploading files…
                     </>
                   ) : (
                     <>
@@ -1052,9 +1053,7 @@ function ActivityLogModal({ requestId, statusConfig, onClose }) {
         {/* Body */}
         <div className="overflow-y-auto flex-1 px-6 py-4">
           {loading ? (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 size={20} className="animate-spin text-primary-ink" />
-            </div>
+            <PageSkeleton label="Loading request activity" variant="list" className="!p-0" />
           ) : activities.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <Clock size={28} className="text-text-dim mb-2" />
@@ -1301,9 +1300,7 @@ export default function RequestDetailPage() {
 
   if (loading) return (
     <ProviderLayout fullBleed>
-      <div className="flex items-center justify-center h-full bg-surface">
-        <Loader2 size={24} className="animate-spin text-primary-ink" />
-      </div>
+      <div className="h-full overflow-y-auto"><PageSkeleton label="Loading request details" variant="detail" /></div>
     </ProviderLayout>
   )
 
@@ -1406,7 +1403,7 @@ export default function RequestDetailPage() {
                 disabled={statusLoading}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-layout-card border border-border text-text-sub text-[12px] font-semibold hover:border-text-main hover:text-text-main transition-colors"
               >
-                {statusLoading ? <Loader2 size={12} className="animate-spin" /> : <Lock size={12} />}
+                {statusLoading ? <InlinePending label="Closing request" /> : <Lock size={12} />}
                 Close request
               </button>
             )}
@@ -1529,7 +1526,7 @@ export default function RequestDetailPage() {
                     }
                   `}
                 >
-                  {urgentLoading ? <Loader2 size={12} className="animate-spin" /> : <Flag size={12} className={req.is_urgent ? 'fill-white' : ''} />}
+                  {urgentLoading ? <InlinePending label="Updating priority" /> : <Flag size={12} className={req.is_urgent ? 'fill-white' : ''} />}
                   <span>{req.is_urgent ? 'Urgent Priority' : 'Mark Urgent'}</span>
                 </button>
               </div>
@@ -1740,8 +1737,8 @@ export default function RequestDetailPage() {
                     disabled={addingNote || !noteContent.trim()}
                     className="flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-[12px] font-semibold text-on-primary hover:bg-primary-dark transition-colors disabled:opacity-50"
                   >
-                    {addingNote && <Loader2 size={12} className="animate-spin" />}
-                    Save note
+                    {addingNote && <InlinePending label="Saving note" />}
+                    {addingNote ? 'Saving…' : 'Save note'}
                   </button>
                 </div>
               </div>

@@ -1,3 +1,4 @@
+import { PageSkeleton } from '../components/ui/Skeleton'
 import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { authApi } from '../api/auth.api'
@@ -34,12 +35,7 @@ export default function TenantGuard({ children }) {
   }, [subdomain, location.pathname])
 
   if (status === 'checking') return (
-    <div className="min-h-screen flex items-center justify-center bg-layout-page">
-      <svg className="h-8 w-8 animate-spin text-primary-ink" viewBox="0 0 24 24" fill="none">
-        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
-      </svg>
-    </div>
+    <div className="min-h-dvh bg-layout-page"><PageSkeleton label="Opening workspace" /></div>
   )
 
   return children

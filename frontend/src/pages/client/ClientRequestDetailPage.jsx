@@ -2,11 +2,11 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import ChatPanel from '../../components/chat/ChatPanel'
 import ConnectionPill from '../../components/ui/ConnectionPill'
+import { PageSkeleton, InlinePending } from '../../components/ui/Skeleton'
 import { usePanelResize } from '../../hooks/usePanelResize'
 import { useBadges } from '../../hooks/useBadges'
 import {
   ChevronRight,
-  Loader2,
   AlertCircle,
   CheckCircle2,
   Calendar,
@@ -133,6 +133,7 @@ function DeliveryReviewModal({ delivery, onClose, onSubmit, loading, error }) {
               <button
                 onClick={() => onSubmit(delivery.id, 'approve', '')}
                 disabled={loading}
+                aria-busy={loading}
                 onMouseEnter={() => setHoveredApprove(true)}
                 onMouseLeave={() => setHoveredApprove(false)}
                 className="w-full flex items-center gap-4 rounded-xl border p-4 text-left transition-colors disabled:opacity-50 group shadow-sm"
@@ -146,14 +147,14 @@ function DeliveryReviewModal({ delivery, onClose, onSubmit, loading, error }) {
                   style={{ borderColor: `${accent}20` }}
                 >
                   {loading ? (
-                    <Loader2 size={18} className="animate-spin" style={{ color: 'var(--primary-text)' }} />
+                    <InlinePending label="Approving delivery" />
                   ) : (
                     <CheckCircle2 size={18} style={{ color: 'var(--primary-text)' }} />
                   )}
                 </div>
                 <div>
                   <p className="text-sm font-semibold" style={{ color: 'var(--primary-text)' }}>
-                    Approve & Close
+                    {loading ? 'Approving…' : 'Approve & Close'}
                   </p>
                   <p className="text-xs mt-0.5 font-medium" style={{ color: 'var(--primary-text)' }}>
                     Marks this request as completed
@@ -218,16 +219,17 @@ function DeliveryReviewModal({ delivery, onClose, onSubmit, loading, error }) {
                 <button
                   onClick={() => onSubmit(delivery.id, 'rework', reworkMessage)}
                   disabled={loading}
+                  aria-busy={loading}
                   onMouseEnter={() => setHoveredSubmit(true)}
                   onMouseLeave={() => setHoveredSubmit(false)}
                   className="flex-1 h-10 rounded-xl text-white text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-50 transition-all shadow-sm active:scale-[0.98]"
                   style={{ backgroundColor: hoveredSubmit ? accentDark : accent }}
                 >
                   {loading
-                    ? <Loader2 size={16} className="animate-spin" />
+                    ? <InlinePending label="Sending rework request" />
                     : <RotateCcw size={16} />
                   }
-                  Send Rework Request
+                  {loading ? 'Sending…' : 'Send Rework Request'}
                 </button>
 
               </div>
@@ -416,9 +418,7 @@ export default function ClientRequestDetailPage() {
   if (loading) {
     return (
       <ClientLayout fullBleed>
-        <div className="h-[calc(100vh-64px)] flex items-center justify-center">
-          <Loader2 size={24} className="animate-spin" style={{ color: 'var(--primary-text)' }} />
-        </div>
+        <PageSkeleton label="Loading request" variant="detail" className="h-full overflow-y-auto" />
       </ClientLayout>
     )
   }
@@ -719,13 +719,14 @@ export default function ClientRequestDetailPage() {
                       <button
                         onClick={handleEditSave}
                         disabled={editLoading || !editTitle.trim() || !editDesc.trim()}
+                        aria-busy={editLoading}
                         onMouseEnter={() => setHoveredSaveBtn(true)}
                         onMouseLeave={() => setHoveredSaveBtn(false)}
                         className="flex-1 h-10 rounded-xl text-white text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-50 transition-all shadow-sm active:scale-[0.98]"
                         style={{ backgroundColor: hoveredSaveBtn ? accentDark : accent }}
                       >
-                        {editLoading ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle2 size={16} />}
-                        Save Changes
+                        {editLoading ? <InlinePending label="Saving changes" /> : <CheckCircle2 size={16} />}
+                        {editLoading ? 'Saving…' : 'Save Changes'}
                       </button>
                     </div>
                   </div>

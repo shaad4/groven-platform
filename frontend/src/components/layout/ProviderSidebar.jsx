@@ -53,7 +53,7 @@ export default function ProviderSidebar({ badges = {} }) {
   )
 
   const renderAccountMenu = (mobile = false) => (
-    <div className="overflow-hidden rounded-2xl border border-border bg-layout-card p-1.5 text-text-main shadow-xl">
+    <div className="max-h-[calc(100dvh-120px)] overflow-y-auto rounded-2xl border border-border bg-layout-card p-1.5 text-text-main shadow-xl">
       <div className="border-b border-border px-3 py-3">
         <p className="truncate text-sm font-semibold">{user?.display_name || 'Your account'}</p>
         <p className="mt-1 truncate text-xs text-text-dim">{user?.email || tenant?.name}</p>
@@ -67,7 +67,7 @@ export default function ProviderSidebar({ badges = {} }) {
 
   return (
     <>
-      <aside aria-label="Workspace navigation" className={`relative hidden h-dvh shrink-0 flex-col border-r border-on-primary/10 bg-sidebar transition-[width] duration-200 motion-reduce:transition-none lg:flex ${isCollapsed ? 'w-[80px]' : 'w-[240px] xl:w-[256px]'}`}>
+      <aside aria-label="Workspace navigation" className={`relative z-[60] hidden h-dvh shrink-0 flex-col border-r border-on-primary/10 bg-sidebar transition-[width] duration-200 motion-reduce:transition-none lg:flex ${isCollapsed ? 'w-[80px]' : 'w-[240px] xl:w-[256px]'}`}>
         <div className={`flex min-h-[92px] items-center gap-1 ${isCollapsed ? 'justify-center px-3' : 'px-4'}`}>
           {!isCollapsed && <div className="min-w-0 flex-1"><PortalSwitcher /></div>}
           <button type="button" onClick={() => setIsCollapsed(!isCollapsed)} aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'} title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-on-primary/60 transition-colors hover:bg-on-primary/5 hover:text-on-primary"><PanelLeftClose size={17} className={isCollapsed ? 'rotate-180' : ''} /></button>
@@ -87,10 +87,10 @@ export default function ProviderSidebar({ badges = {} }) {
             {renderAvatar()}
             {!isCollapsed && <><span className="min-w-0 flex-1"><span className="block truncate text-sm font-semibold text-on-primary">{user?.display_name || 'Your account'}</span><span className="mt-0.5 block text-xs capitalize text-on-primary/60">{planName ? `${planName} plan` : 'Workspace account'}</span></span><ChevronDown size={14} className={`text-on-primary/60 ${isPopupOpen ? 'rotate-180' : ''}`} /></>}
           </button>
-          {isPopupOpen && <div className="absolute bottom-full left-3 z-50 mb-2 w-[252px]">{renderAccountMenu()}</div>}
+          {isPopupOpen && <div className="absolute bottom-full left-3 z-50 mb-2 w-[304px] max-w-[calc(100vw-24px)]">{renderAccountMenu()}</div>}
         </div>
       </aside>
-      {isPopupOpen && <div ref={mobilePopupRef} className="fixed bottom-[calc(84px+env(safe-area-inset-bottom))] right-3 z-[90] w-[min(288px,calc(100vw-24px))] lg:hidden">{renderAccountMenu(true)}</div>}
+      {isPopupOpen && <div ref={mobilePopupRef} className="fixed bottom-[calc(84px+env(safe-area-inset-bottom))] right-3 z-[90] w-[min(320px,calc(100vw-24px))] lg:hidden">{renderAccountMenu(true)}</div>}
       <nav ref={mobileRef} aria-label="Mobile navigation" className="fixed inset-x-0 bottom-0 z-[80] border-t border-border bg-layout-card px-2 pb-[env(safe-area-inset-bottom)] lg:hidden">
         <div className="grid h-[76px] grid-cols-5 items-center gap-1">
           {NAV_ITEMS.map(({ to, icon: Icon, label, badgeKey }) => <NavLink key={to} to={to} onClick={() => setIsPopupOpen(false)} className={({ isActive }) => `relative flex min-h-14 min-w-0 flex-col items-center justify-center gap-1.5 rounded-xl transition-colors ${isActive ? 'bg-primary-light text-primary-ink' : 'text-text-dim'}`}><Icon size={19} strokeWidth={1.8} aria-hidden="true" /><span className="text-[10px] font-medium">{label}</span>{badgeKey && Number(badges[badgeKey]) > 0 && <span className="absolute right-3 top-1.5 h-1.5 w-1.5 rounded-full bg-primary" aria-label={`${badges[badgeKey]} updates`} />}</NavLink>)}

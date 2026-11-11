@@ -1,3 +1,4 @@
+import { PageSkeleton } from '../components/ui/Skeleton'
 import { Navigate, Outlet } from 'react-router-dom'
 import { useSelector } from 'react-redux'
 import { getSubdomain } from '../utils/domain'
@@ -14,9 +15,7 @@ export function ProtectedRoute() {
   const { isAuth, loading } = useAuth()
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-layout-page">
-        <div className="h-8 w-8 rounded-full border-2 border-[#D4E9E2] border-t-[#0F6E56] animate-spin" />
-      </div>
+      <div className="min-h-dvh bg-layout-page"><PageSkeleton label="Opening workspace" /></div>
     )
   }
 
@@ -48,9 +47,7 @@ export function GuestRoute() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-layout-page">
-        <div className="h-8 w-8 rounded-full border-2 border-[#D4E9E2] border-t-[#0F6E56] animate-spin" />
-      </div>
+      <div className="min-h-dvh bg-layout-page"><PageSkeleton label="Opening workspace" /></div>
     )
   }
   if (!isAuth) return <Outlet />
@@ -98,9 +95,7 @@ export function SetupRoute() {
   const { isAuth, user, tenant, loading } = useAuth()
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-layout-page">
-        <div className="h-8 w-8 rounded-full border-2 border-[#D4E9E2] border-t-[#0F6E56] animate-spin" />
-      </div>
+      <div className="min-h-dvh bg-layout-page"><PageSkeleton label="Opening workspace" /></div>
     )
   }
 

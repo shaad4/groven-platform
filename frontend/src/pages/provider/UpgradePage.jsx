@@ -1,7 +1,8 @@
+import { PageSkeleton, InlinePending } from '../../components/ui/Skeleton'
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  ArrowLeft, ArrowRight, Check, Minus, Loader2, FileText,
+  ArrowLeft, ArrowRight, Check, Minus, FileText,
   Users, Inbox, MessageSquare, Send, ShieldCheck, HelpCircle,
 } from 'lucide-react'
 
@@ -86,7 +87,7 @@ function PlanCard({ name, price, period, features, highlighted, cta, onCta, load
                 : 'bg-transparent text-text-sub border border-border hover:bg-surface'
             }`}
           >
-            {loading ? <Loader2 size={15} className="animate-spin" /> : (
+            {loading ? <><InlinePending label="Opening billing" /> Opening…</> : (
               <>{cta}{highlighted && <ArrowRight size={14} />}</>
             )}
           </button>
@@ -262,9 +263,7 @@ export default function UpgradePage() {
   // ── Loading guard ──
   if (planLoading) {
     return (
-      <div role="status" aria-label="Loading plan details" className="min-h-screen bg-layout-page flex items-center justify-center">
-        <Loader2 size={22} className="animate-spin text-primary-ink" />
-      </div>
+      <div className="min-h-screen bg-layout-page"><PageSkeleton label="Loading plan details" variant="dashboard" /></div>
     )
   }
 
@@ -299,7 +298,7 @@ export default function UpgradePage() {
               disabled={portalLoading}
               className="h-10 px-5 rounded-lg bg-primary text-on-primary text-[13px] font-medium hover:bg-primary-dark transition-colors disabled:opacity-60 flex items-center justify-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
             >
-              {portalLoading ? <Loader2 size={14} className="animate-spin" /> : 'Manage billing'}
+              {portalLoading ? <><InlinePending label="Opening billing" /> Opening…</> : 'Manage billing'}
             </button>
           </div>
         </div>
@@ -370,7 +369,7 @@ export default function UpgradePage() {
             disabled={checkoutLoading}
             className="inline-flex items-center justify-center gap-1.5 h-11 px-6 rounded-lg bg-primary text-on-primary text-[13px] font-medium hover:bg-primary-dark transition-colors disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-primary"
           >
-            {checkoutLoading ? <Loader2 size={15} className="animate-spin" /> : <>{isAuth ? 'Upgrade to Pro' : 'Get started'} <ArrowRight size={14} /></>}
+            {checkoutLoading ? <><InlinePending label="Opening billing" /> Opening…</> : <>{isAuth ? 'Upgrade to Pro' : 'Get started'} <ArrowRight size={14} /></>}
           </button>
           <p className="flex items-center justify-center gap-1.5 text-[11px] text-text-dim mt-5">
             <ShieldCheck size={12} /> Secure checkout via Stripe

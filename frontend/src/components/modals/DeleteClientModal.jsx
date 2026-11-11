@@ -1,6 +1,7 @@
+import { InlinePending } from '../ui/Skeleton'
 import { useDialogFocus } from '../../hooks/useDialogFocus'
 import { useState } from 'react'
-import { AlertTriangle, Loader2 } from 'lucide-react'
+import { AlertTriangle } from 'lucide-react'
 import clientsApi from '../../api/clients.api'
 
 function Backdrop({ children, onClose }) {
@@ -85,7 +86,7 @@ export default function DeleteClientModal({ client, onClose, onSuccess }) {
             disabled={!canDelete || loading}
             className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-red-600 py-3.5 text-[14px] font-medium text-on-primary transition-all hover:bg-red-700 disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            {loading && <Loader2 size={15} className="animate-spin" />}
+            {loading && <InlinePending label="Deleting client" />}
             Delete client
           </button>
 

@@ -1,3 +1,4 @@
+import { Skeleton, PageSkeleton, InlinePending } from '../ui/Skeleton'
 import { useDialogFocus } from '../../hooks/useDialogFocus'
 import { useState, useEffect, useRef, useId } from 'react'
 import { createPortal } from 'react-dom'
@@ -13,8 +14,7 @@ import {
 import {
   Building2, Palette, Bell, ShieldCheck, CreditCard,
   Workflow, Trash2, X, Eye, EyeOff, Lock, Unlock,
-  AlertTriangle, Check, Loader2,
-  Camera,
+  AlertTriangle, Check, Camera,
 } from 'lucide-react'
 
 import { authApi } from '../../api/auth.api'
@@ -45,10 +45,6 @@ const STATUS_STAGES = [
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
 // Primitives
-
-function Spinner({ size = 14 }) {
-  return <Loader2 size={size} className="animate-spin" />
-}
 
 function Toggle({ checked, onChange, disabled, label }) {
   return (
@@ -147,7 +143,7 @@ function Btn({ children, onClick, loading, variant = 'primary', size = 'md', dis
       disabled={loading || disabled} aria-busy={Boolean(loading)}
       className={`inline-flex items-center justify-center gap-1.5 rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed ${sizes[size]} ${variants[variant]} ${className}`}
     >
-      {loading && <Spinner size={13} />}{children}
+      {loading && <InlinePending label="Saving changes" />}{children}
     </button>
   )
 }
@@ -250,7 +246,7 @@ function BusinessProfileSection({ ws, setWs, logoPreview, handleLogoSelect }) {
     } finally { setLoading(false) }
   }
 
-  if (!ws) return <div className="flex items-center justify-center h-48"><Spinner size={20} /></div>
+  if (!ws) return <PageSkeleton label="Loading workspace settings" variant="form" className="!p-0" />
 
   return (
     <div>
@@ -335,7 +331,7 @@ function PortalBrandingSection({ ws, setWs }) {
     doSave()
   }
 
-  if (!ws) return <div className="flex items-center justify-center h-48"><Spinner size={20} /></div>
+  if (!ws) return <PageSkeleton label="Loading workspace settings" variant="form" className="!p-0" />
 
   return (
     <>
@@ -477,7 +473,7 @@ function NotificationsSection() {
     { key: 'request_overdue',        label: 'Request overdue',        desc: 'A due date passes without delivery.'              },
   ]
 
-  if (!notifPrefs) return <div className="flex items-center justify-center h-48"><Spinner size={20} /></div>
+  if (!notifPrefs) return <PageSkeleton label="Loading workspace settings" variant="form" className="!p-0" />
 
   return (
     <div>
@@ -694,7 +690,7 @@ function PlanBillingSection({ ws }) {
     }
   }
 
-  if (!ws) return <div className="flex items-center justify-center h-48"><Spinner size={20} /></div>
+  if (!ws) return <PageSkeleton label="Loading workspace settings" variant="form" className="!p-0" />
 
   return (
     <div>
@@ -754,9 +750,7 @@ function PlanBillingSection({ ws }) {
         )}
 
         {!historyError && history === null && (
-          <div className="flex items-center gap-2 text-[12px] text-text-dim">
-            <Spinner size={13} /> Loading…
-          </div>
+          <div role="status" aria-label="Loading billing history" className="space-y-3">{[1, 2, 3].map(i => <div key={i} className="flex items-center justify-between gap-4 rounded-lg border border-border p-3"><Skeleton className="h-3 w-1/3" /><Skeleton className="h-3 w-16" /><Skeleton className="h-6 w-16 rounded-full" /></div>)}</div>
         )}
 
         {!historyError && history?.length === 0 && (

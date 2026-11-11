@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useLayoutEffect, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import { NavLink } from 'react-router-dom'
 import { LayoutDashboard, FolderOpen, Settings, LogOut, ChevronDown, PanelLeftClose, UserRound } from 'lucide-react'
 import ClientNotificationBell from '../notifications/ClientNotificationBell'
@@ -8,37 +9,85 @@ import ClientPortalSwitcher from './ClientPortalSwitcher'
 import ClientSettingsModal from '../modals/ClientSettingsModal'
 import PortalBrand from '../client/PortalBrand'
 import ThemeToggle from '../ui/ThemeToggle'
+import usePortalDialog from '../client/usePortalDialog'
 
 const NAV_ITEMS = [{ to: '/portal', icon: LayoutDashboard, label: 'Overview' }, { to: '/my-requests', icon: FolderOpen, label: 'Requests', badgeKey: 'requests' }]
 
-function UserPopup({ user, isMobile = false, onSettings, onLogout, onAppearanceChange }) {
-  return <div className="w-72 rounded-2xl border border-border bg-layout-card p-2 shadow-xl">
+function AccountPopup({ anchor, user, onClose, onSettings, onLogout }) {
+  const dialogRef = usePortalDialog(true, onClose)
+  const [position, setPosition] = useState({ left: 12, top: 12, width: 320, maxHeight: 'calc(100dvh - 24px)' })
+
+  useLayoutEffect(() => {
+    const panel = dialogRef.current
+    const updatePosition = () => {
+      if (!anchor.getClientRects().length) { onClose(); return }
+      const viewport = window.visualViewport
+      const width = viewport?.width || window.innerWidth
+      const height = viewport?.height || window.innerHeight
+      const offsetX = viewport?.offsetLeft || 0
+      const offsetY = viewport?.offsetTop || 0
+      const rect = anchor.getBoundingClientRect()
+      const panelWidth = Math.min(320, width - 24)
+      const panelHeight = Math.min(panel.scrollHeight, height - 24)
+      const preferredLeft = window.innerWidth < 1024 ? rect.right - panelWidth : rect.left
+      const above = rect.top - panelHeight - 8
+      const preferredTop = above >= offsetY + 12 ? above : rect.bottom + 8
+      const nextPosition = {
+        left: Math.max(offsetX + 12, Math.min(preferredLeft, offsetX + width - panelWidth - 12)),
+        top: Math.max(offsetY + 12, Math.min(preferredTop, offsetY + height - panelHeight - 12)),
+        width: panelWidth,
+        maxHeight: height - 24,
+      }
+      setPosition(current => Object.keys(nextPosition).every(key => current[key] === nextPosition[key]) ? current : nextPosition)
+    }
+    updatePosition()
+    const observer = new ResizeObserver(updatePosition)
+    observer.observe(panel)
+    window.addEventListener('resize', updatePosition)
+    window.addEventListener('scroll', updatePosition, true)
+    window.visualViewport?.addEventListener('resize', updatePosition)
+    window.visualViewport?.addEventListener('scroll', updatePosition)
+    return () => {
+      observer.disconnect()
+      window.removeEventListener('resize', updatePosition)
+      window.removeEventListener('scroll', updatePosition, true)
+      window.visualViewport?.removeEventListener('resize', updatePosition)
+      window.visualViewport?.removeEventListener('scroll', updatePosition)
+    }
+  }, [anchor, dialogRef, onClose])
+
+  useEffect(() => {
+    const dismiss = event => { if (!dialogRef.current?.contains(event.target) && !anchor.contains(event.target)) onClose() }
+    document.addEventListener('pointerdown', dismiss)
+    return () => document.removeEventListener('pointerdown', dismiss)
+  }, [anchor, dialogRef, onClose])
+
+  return createPortal(<div id="client-account-menu" ref={dialogRef} role="dialog" aria-label="Account menu" tabIndex={-1} style={position} className="fixed z-[90] overflow-y-auto overscroll-contain rounded-2xl border border-border bg-layout-card p-2 text-text-main shadow-xl">
     <div className="border-b border-border px-3 py-3"><p className="truncate text-sm font-semibold">{user?.display_name || 'Client'}</p><p className="mt-1 truncate text-xs text-text-sub">{user?.email}</p></div>
-    <div className="border-b border-border py-2"><ClientPortalSwitcher isMobile={isMobile} /></div>
+    <div className="border-b border-border py-2"><ClientPortalSwitcher /></div>
     <button onClick={onSettings} className="mt-1 flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-sm text-text-sub hover:bg-surface"><Settings size={16} />Account settings</button>
-    <div className="border-y border-border px-1 py-3"><p className="mb-2 px-2 text-xs font-medium text-text-sub">Appearance</p><div onClick={onAppearanceChange}><ThemeToggle className="w-full justify-between" /></div></div>
+    <div className="border-y border-border px-1 py-3"><p className="mb-2 px-2 text-xs font-medium text-text-sub">Appearance</p><div onClick={onClose}><ThemeToggle className="w-full justify-between" /></div></div>
     <button onClick={onLogout} className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-sm text-status-danger-text hover:bg-status-danger-bg"><LogOut size={16} />Sign out</button>
-  </div>
+  </div>, document.body)
 }
 
 export default function ClientSidebar({ badges = {} }) {
   const { user, tenant, logout } = useAuth()
   const { tenantInfo } = useTenantBranding()
   const [isCollapsed, setIsCollapsed] = useState(() => { try { return localStorage.getItem('client-sidebar-collapsed') === 'true' } catch { return false } })
-  const [isPopupOpen, setIsPopupOpen] = useState(false)
+  const [menuAnchor, setMenuAnchor] = useState(null)
+  const isPopupOpen = Boolean(menuAnchor)
   const [showSettings, setShowSettings] = useState(false)
-  const popupRef = useRef(null)
-  const mobileRef = useRef(null)
   const desktopAccountRef = useRef(null)
   const mobileAccountRef = useRef(null)
   const initials = (user?.display_name || 'Client').split(' ').map(word => word[0]).join('').slice(0, 2).toUpperCase()
 
-  useEffect(() => {
-    const dismiss = event => { if (!popupRef.current?.contains(event.target) && !mobileRef.current?.contains(event.target)) setIsPopupOpen(false) }
-    const escape = event => { if (event.key === 'Escape') setIsPopupOpen(false) }
-    document.addEventListener('mousedown', dismiss); document.addEventListener('keydown', escape)
-    return () => { document.removeEventListener('mousedown', dismiss); document.removeEventListener('keydown', escape) }
-  }, [])
+  const toggleAccount = event => {
+    const trigger = event.currentTarget
+    setMenuAnchor(current => current === trigger ? null : trigger)
+  }
+  const closeAccount = useCallback(() => setMenuAnchor(null), [])
+
   useEffect(() => { try { localStorage.setItem('client-sidebar-collapsed', String(isCollapsed)) } catch { /* optional preference */ } }, [isCollapsed])
 
 
@@ -53,21 +102,22 @@ export default function ClientSidebar({ badges = {} }) {
         <div className="pt-2"><ClientNotificationBell collapsed={isCollapsed} /></div>
       </nav>
       {!isCollapsed && tenantInfo?.tagline && <p className="px-6 pb-6 text-xs leading-5 text-text-dim">{tenantInfo.tagline}</p>}
-      <div className="relative border-t border-border p-3" ref={popupRef}>
-        <button ref={desktopAccountRef} onClick={() => setIsPopupOpen(value => !value)} aria-label="Open account menu" aria-expanded={isPopupOpen} className={`flex min-h-12 w-full items-center gap-3 rounded-xl p-2 hover:bg-surface ${isCollapsed ? 'justify-center' : ''}`}>
+      <div className="relative border-t border-border p-3">
+        <button ref={desktopAccountRef} onClick={toggleAccount} aria-label="Open account menu" aria-expanded={isPopupOpen} aria-haspopup="dialog" aria-controls={isPopupOpen ? 'client-account-menu' : undefined} className={`flex min-h-12 w-full items-center gap-3 rounded-xl p-2 hover:bg-surface ${isCollapsed ? 'justify-center' : ''}`}>
           {user?.avatar_url ? <img src={user.avatar_url} alt="" className="h-9 w-9 shrink-0 rounded-full object-cover" /> : <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-surface text-xs font-semibold text-text-sub">{initials}</span>}
           {!isCollapsed && <><span className="min-w-0 flex-1 text-left"><span className="block truncate text-sm font-semibold">{user?.display_name || 'Client'}</span><span className="mt-0.5 block text-xs text-text-dim">Your account</span></span><ChevronDown size={15} className="text-text-dim" /></>}
         </button>
-        {isPopupOpen && <div className={`absolute bottom-[80px] z-[60] ${isCollapsed ? 'left-4' : 'left-3'}`}><UserPopup user={user} onAppearanceChange={() => { setIsPopupOpen(false); desktopAccountRef.current?.focus() }} onSettings={() => { setIsPopupOpen(false); setShowSettings(true) }} onLogout={() => { setIsPopupOpen(false); logout() }} /></div>}
+
       </div>
     </aside>
     <nav aria-label="Mobile client workspace" className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-layout-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden">
-      <div className="flex h-20 items-center justify-around px-2" ref={mobileRef}>
+      <div className="flex h-20 items-center justify-around px-2">
         {NAV_ITEMS.map(({ to, icon: Icon, label, badgeKey }) => <NavLink key={to} to={to} end={to === '/portal'} className={({ isActive }) => `flex min-h-14 min-w-16 flex-col items-center justify-center gap-1.5 rounded-xl px-2 ${isActive ? 'text-primary-ink' : 'text-text-sub'}`}><span className="relative"><Icon size={21} />{badges[badgeKey] > 0 && <span className="absolute -right-2 -top-2 rounded-full bg-primary px-1 text-xs text-white">{badges[badgeKey]}</span>}</span><span className="text-xs font-medium">{label}</span></NavLink>)}
         <ClientNotificationBell isMobileNav />
-        <div className="relative"><button ref={mobileAccountRef} onClick={() => setIsPopupOpen(value => !value)} aria-expanded={isPopupOpen} className={`flex min-h-14 min-w-16 flex-col items-center justify-center gap-1.5 rounded-xl px-2 ${isPopupOpen ? 'text-primary-ink' : 'text-text-sub'}`}><UserRound size={21} /><span className="text-xs font-medium">Account</span></button>{isPopupOpen && <div className="absolute bottom-[72px] right-0"><UserPopup user={user} isMobile onAppearanceChange={() => { setIsPopupOpen(false); mobileAccountRef.current?.focus() }} onSettings={() => { setIsPopupOpen(false); setShowSettings(true) }} onLogout={() => { setIsPopupOpen(false); logout() }} /></div>}</div>
+        <div className="relative"><button ref={mobileAccountRef} onClick={toggleAccount} aria-expanded={isPopupOpen} aria-haspopup="dialog" aria-controls={isPopupOpen ? 'client-account-menu' : undefined} className={`flex min-h-14 min-w-16 flex-col items-center justify-center gap-1.5 rounded-xl px-2 ${isPopupOpen ? 'text-primary-ink' : 'text-text-sub'}`}><UserRound size={21} /><span className="text-xs font-medium">Account</span></button></div>
       </div>
     </nav>
+    {menuAnchor && <AccountPopup anchor={menuAnchor} user={user} onClose={closeAccount} onSettings={() => { closeAccount(); setShowSettings(true) }} onLogout={() => { closeAccount(); logout() }} />}
     {showSettings && <ClientSettingsModal open onClose={() => setShowSettings(false)} />}
   </>
 }
